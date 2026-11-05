@@ -22,11 +22,40 @@ returns null); raw `enabled_*` settings reads throw `SecurityException` on new A
 `POST_NOTIFICATIONS` was required but not in the manifest, so it could never be granted (manifest + test);
 worker exceptions arrived as `ExecutionException` (now unwrapped); locking left pushed screens visible.
 
-## Open
+## What still needs to be done
 
-1. Push: real FCM sender behind `PushSender` (service uses `RecordingPush` until the Firebase test project exists).
-2. Decisions needed: age brackets and thresholds (placeholders in `session.dart` `defaultThresholds`), the
-   high-severity delivery time (heartbeat is 15 min; alerts are sent at once when online).
-3. Not yet: second guardian, removing a child that never paired, deletion approvals (no Casefile event yet),
-   lg / nyn / sw strings, tests on Android 5.0 and a low-end phone.
-4. `:core-android:lintDebug` fails with "more than one jar in lintPublish" (pre-existing, Core).
+### Blocked on a decision (team / product owner)
+- [ ] **Age brackets and thresholds.** `age-brackets.yaml` and `defaultThresholds()` in
+      `flutter/lib/src/session.dart` are placeholders. Changing bracket ids is a contract change.
+- [ ] **Agreed delivery time for high-severity alerts.** Alerts are sent as soon as the phone is online;
+      the heartbeat (`GuardianConfig.heartbeatMinutes`, 15) and the tamper window (`TAMPER_AFTER`, 60 min,
+      mirrored as `silentAfter` in `children_screen.dart`) should be set from it.
+
+### Blocked on setup
+- [ ] **Push notifications (FCM).** Create the Firebase test project, put keys in `.env`, write a real
+      `PushSender` in `service/kuuma_guardian_service/app.py` (it uses `RecordingPush` now), and register the
+      parent app's FCM token with the service (needs a contract change: a token field or endpoint).
+- [ ] **Full local stack.** Run `make dev` (Docker) and repeat the emulator run with every service, so the
+      Casefile share upload also completes after approval (it currently fails with only Guardian running).
+
+### Still to build
+- [ ] **Second guardian** (brief: "a second guardian can be added"): invite flow, sharing the family key
+      with a second parent phone, approvals from either.
+- [ ] **Remove a child / cancel a pairing** that never completed (unpaired children stay in the list).
+- [ ] **Deletion approvals:** Casefile has no deletion-request event yet; add it to contracts, then the
+      approval kind is already in place (`ApprovalKind`).
+- [ ] **Runtime permission prompt** for notifications on Android 13+ (the wizard opens app settings today).
+- [ ] **Translations:** lg / nyn / sw for `guardian.*` strings (only a few sw keys exist); Sentinel and
+      Companion have no translations for their permission reason keys (the wizard falls back to plain names).
+- [ ] **Advice depth and child screens by bracket** (brief: the bracket decides these): agree with Companion
+      how `guardian.policy.updated` should change what the child sees.
+- [ ] **Mark alerts as read** on the parent's phone (the `read` field exists but is never set).
+
+### Still to verify
+- [ ] Android 5.0 (API 21) emulator, for both apps (`flutter_secure_storage`, `mobile_scanner`, `local_auth`).
+- [ ] A low-end physical phone: real QR scan, battery use of the heartbeat, fingerprint unlock.
+- [ ] Done criteria in the brief: a parent sets up a phone in one sitting without help (user test).
+- [ ] CI on GitHub for this branch, then a PR into `main` (contract change → owner approval).
+
+### Not Guardian's, but found here
+- [ ] `:core-android:lintDebug` fails: "more than one jar in lintPublish" (Core).
