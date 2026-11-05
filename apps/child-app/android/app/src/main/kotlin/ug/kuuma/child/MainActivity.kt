@@ -51,7 +51,8 @@ class MainActivity : FlutterFragmentActivity() {
                 val args = (call.arguments as? Map<String, Any?>).orEmpty()
                 moduleCalls.execute {
                     try {
-                        val value = module.onCall(call.method, args)
+                        // Unit (a call with no answer) goes back as null: the codec cannot encode it.
+                        val value = module.onCall(call.method, args).takeUnless { it is Unit }
                         main.post { result.success(value) }
                     } catch (e: UnsupportedOperationException) {
                         main.post { result.notImplemented() }

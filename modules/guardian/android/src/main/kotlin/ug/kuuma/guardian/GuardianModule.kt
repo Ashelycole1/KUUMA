@@ -1,15 +1,21 @@
 package ug.kuuma.guardian
 
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.view.accessibility.AccessibilityManager
+import android.view.inputmethod.InputMethodManager
 import androidx.sqlite.db.SupportSQLiteDatabase
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.KSerializer
@@ -73,6 +79,9 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
         }
     }
     private lateinit var engine: GuardianEngine
+
+    /** The server's id for this phone once paired; HttpGuardianApi signs with it. */
+    val serverDeviceId: String? get() = if (::engine.isInitialized) engine.serverDeviceId else null
 
     override fun onRegister(context: ModuleContext) {
         worker.execute {
@@ -170,7 +179,12 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
         }
     }
 
-    fun <T> onWorker(work: () -> T): T = worker.submit<T> { work() }.get(30, TimeUnit.SECONDS)
+    /** Runs on Guardian's thread. Rethrows the work's own exception, not ExecutionException. */
+    fun <T> onWorker(work: () -> T): T = try {
+        worker.submit<T> { work() }.get(30, TimeUnit.SECONDS)
+    } catch (e: ExecutionException) {
+        throw e.cause ?: e
+    }
 
     fun awaitIdle() {
         worker.submit {}.get(10, TimeUnit.SECONDS)
@@ -193,29 +207,38 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
     private fun granted(p: KuumaPermission): Boolean {
         val ctx = config.androidContext ?: return true
         if (!p.appliesTo(Build.VERSION.SDK_INT)) return true
-        return when (p.permission) {
-            "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" ->
-                Settings.Secure.getString(
-                    ctx.contentResolver,
-                    "enabled_notification_listeners"
-                )?.contains(ctx.packageName) ==
-                    true
-            "android.permission.BIND_ACCESSIBILITY_SERVICE" ->
-                Settings.Secure.getString(
-                    ctx.contentResolver,
-                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-                )?.contains(ctx.packageName) ==
-                    true
-            "android.permission.BIND_INPUT_METHOD" ->
-                Settings.Secure.getString(
-                    ctx.contentResolver,
-                    Settings.Secure.ENABLED_INPUT_METHODS
-                )?.contains(ctx.packageName) ==
-                    true
-            else ->
-                p.kind == GrantKind.INSTALL ||
-                    Build.VERSION.SDK_INT < 23 ||
-                    ctx.checkSelfPermission(p.permission) == PackageManager.PERMISSION_GRANTED
+        // Public APIs only: newer Android refuses reads of the raw "enabled ..." settings.
+        return runCatching {
+            when (p.permission) {
+                "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" -> notificationListenerOn(ctx)
+                "android.permission.BIND_ACCESSIBILITY_SERVICE" ->
+                    (ctx.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager)
+                        .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+                        .any { it.resolveInfo.serviceInfo.packageName == ctx.packageName }
+                "android.permission.BIND_INPUT_METHOD" ->
+                    (ctx.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                        .enabledInputMethodList.any { it.packageName == ctx.packageName }
+                else ->
+                    p.kind == GrantKind.INSTALL ||
+                        Build.VERSION.SDK_INT < 23 ||
+                        ctx.checkSelfPermission(p.permission) == PackageManager.PERMISSION_GRANTED
+            }
+        }.getOrDefault(false)
+    }
+
+    /** Is any of this app's notification listeners (declared by whichever module) enabled? */
+    private fun notificationListenerOn(ctx: Context): Boolean {
+        if (Build.VERSION.SDK_INT < 27) {
+            return Settings.Secure.getString(ctx.contentResolver, "enabled_notification_listeners")
+                ?.contains(ctx.packageName) == true
+        }
+        val nm = ctx.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val listeners = ctx.packageManager.queryIntentServices(
+            Intent("android.service.notification.NotificationListenerService").setPackage(ctx.packageName),
+            0
+        )
+        return listeners.any {
+            nm.isNotificationListenerAccessGranted(ComponentName(it.serviceInfo.packageName, it.serviceInfo.name))
         }
     }
 

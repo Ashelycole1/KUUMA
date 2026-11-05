@@ -126,8 +126,7 @@ class DeviceKey {
     final pair = gen.generateKeyPair();
     final pub = pair.publicKey as ECPublicKey;
     final d = (pair.privateKey as ECPrivateKey).d!;
-    final scalar = Uint8List.fromList(
-        List.generate(32, (i) => ((d >> (8 * (31 - i))) & BigInt.from(0xff)).toInt()));
+    final scalar = Uint8List.fromList(List.generate(32, (i) => ((d >> (8 * (31 - i))) & BigInt.from(0xff)).toInt()));
     return DeviceKey._(scalar, Uint8List.fromList([..._spkiPrefix, ...pub.Q!.getEncoded(false)]));
   }
 

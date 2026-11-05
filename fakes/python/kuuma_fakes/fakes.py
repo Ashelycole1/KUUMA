@@ -239,6 +239,31 @@ class FakeGuardian(BaseFake):
         self.bus.subscribe("casefile.case.escalated", self.on_escalated)
         self.bus.subscribe("casefile.share.requested", self.on_share_requested)
 
+    SAMPLE_CHILD = "5a3c1e2d-7b4f-4a6e-9c8d-1f2e3d4c5b6a"
+    SAMPLE_DEVICE = "6b4d2f3e-8c5a-4b7f-8d9e-2a3f4e5d6c7b"
+
+    def announce_sample_child(self) -> None:
+        """A sample child paired with a sample policy. Called explicitly, never on its own."""
+        bracket = "age_placeholder_b"
+        self.publish(
+            "guardian.pairing.completed",
+            {"childId": self.SAMPLE_CHILD, "deviceId": self.SAMPLE_DEVICE, "ageBracket": bracket},
+        )
+        self.publish(
+            "guardian.policy.updated",
+            {
+                "childId": self.SAMPLE_CHILD,
+                "ageBracket": bracket,
+                "watchedApps": ["whatsapp", "sms"],
+                "thresholds": {
+                    "flagMinConfidence": 0.5,
+                    "alertMinSeverity": "medium",
+                    "captureMinSeverity": "medium",
+                },
+                "policyVersion": 1,
+            },
+        )
+
     def on_share_requested(self, ev: dict) -> None:
         """A fake parent who approves every share request at once."""
         self.now = dt.datetime.fromisoformat(ev["occurredAt"])

@@ -1,6 +1,7 @@
 package ug.kuuma.fakes
 
 import java.util.UUID
+import ug.kuuma.contracts.AgeBracket
 import ug.kuuma.contracts.AppSource
 import ug.kuuma.contracts.CapturedMessage
 import ug.kuuma.contracts.CasefileCaseEscalatedPayload
@@ -13,6 +14,8 @@ import ug.kuuma.contracts.EventType
 import ug.kuuma.contracts.Events
 import ug.kuuma.contracts.GroomingStage
 import ug.kuuma.contracts.GuardianAlertSentPayload
+import ug.kuuma.contracts.GuardianPairingCompletedPayload
+import ug.kuuma.contracts.GuardianPolicyUpdatedPayload
 import ug.kuuma.contracts.GuardianShareApprovedPayload
 import ug.kuuma.contracts.HarmCategory
 import ug.kuuma.contracts.Language
@@ -22,6 +25,7 @@ import ug.kuuma.contracts.SentinelConversationActivePayload
 import ug.kuuma.contracts.SentinelFlagUpdatedPayload
 import ug.kuuma.contracts.SentinelMessageFlaggedPayload
 import ug.kuuma.contracts.Severity
+import ug.kuuma.contracts.Thresholds
 import ug.kuuma.contracts.ai.ClassifyContext
 import ug.kuuma.contracts.ai.HarmClassifier
 import ug.kuuma.core.bus.EventBus
@@ -171,6 +175,26 @@ class FakeCasefile(private val world: FakeWorld) : BaseFake(Namespace.CASEFILE) 
 }
 
 class FakeGuardian : BaseFake(Namespace.GUARDIAN) {
+    /**
+     * A sample child, paired with a sample policy, for modules that react to Guardian's
+     * policy. Called by tests or the debug console, never on its own, so it cannot overwrite
+     * a real parent's policy.
+     */
+    fun announceSampleChild(childId: String = SAMPLE_CHILD, deviceId: String = SAMPLE_DEVICE) {
+        val bracket = AgeBracket.AGE_PLACEHOLDER_B
+        publish(Events.GUARDIAN_PAIRING_COMPLETED, GuardianPairingCompletedPayload(childId, deviceId, bracket))
+        publish(
+            Events.GUARDIAN_POLICY_UPDATED,
+            GuardianPolicyUpdatedPayload(
+                childId,
+                bracket,
+                listOf(AppSource.WHATSAPP, AppSource.SMS),
+                Thresholds(0.5, Severity.MEDIUM, Severity.MEDIUM),
+                1
+            )
+        )
+    }
+
     override fun subscribe() {
         on(Events.CASEFILE_CASE_ESCALATED) { p, caseId ->
             publish(
@@ -187,6 +211,11 @@ class FakeGuardian : BaseFake(Namespace.GUARDIAN) {
                 caseId
             )
         }
+    }
+
+    companion object {
+        const val SAMPLE_CHILD = "5a3c1e2d-7b4f-4a6e-9c8d-1f2e3d4c5b6a"
+        const val SAMPLE_DEVICE = "6b4d2f3e-8c5a-4b7f-8d9e-2a3f4e5d6c7b"
     }
 }
 

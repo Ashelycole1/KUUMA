@@ -1,59 +1,61 @@
-# Guardian build — where it stands (2026-11-05)
-
-Branch: `guardian/continue` (off `main` after PR #3). Pick up from here.
+# Guardian build — where it stands (2026-11-06)
 
 ## Done and verified
 
 | Part | State | Check |
 | --- | --- | --- |
-| Service (`service/`) | Parents, pairing codes, pairing, signed policies, alerts, approvals, heartbeat, tamper sweep. `GET /approvals` now returns `childId`. | `uv run pytest modules/guardian/service packages/contracts/tests` → 53 pass; ruff clean |
-| Child-phone agent (`android/`) | `GuardianEngine`, `FamilyCrypto`, `GuardianModule`, `HttpGuardianApi`, `SqlGuardianStore`. Flags that already carry a `caseId` now alert at once. | `./gradlew :guardian:testDebugUnitTest :guardian:ktlintCheck` (JDK 17) → 19 tests pass, ktlint clean |
-| Contract | `api/approval.json` gains optional `childId` (additive). Codegen re-run. | contract tests pass |
+| Service (`service/`) | Parents, pairing codes, pairing, signed policies, alerts, approvals, heartbeat, tamper sweep. | `uv run pytest modules/guardian/service` |
+| Child-phone agent (`android/`) | `GuardianEngine`, `FamilyCrypto`, `GuardianModule`, `HttpGuardianApi`, `SqlGuardianStore`; wired into the child app's `KuumaRuntime` with the real API, device key and Core's permission registry. | `./gradlew :guardian:testDebugUnitTest :guardian:ktlintCheck` |
+| Parent app (`flutter/`, `apps/parent-app`) | `ParentGate` (create account + PIN, then PIN/fingerprint; locks when the app is backgrounded, above the navigator so open screens are hidden too), Children (status, add child → QR, signed policy editor), Alerts (per-child filter, 7-day severity trend, guidance per category/kind, message decrypted on demand), Requests (signed approve/decline). | `flutter test` in `modules/guardian/flutter` (23) and `apps/parent-app` |
+| Child setup wizard (`flutter/`) | Intro → consent → scan QR (`mobile_scanner`) → permissions from Core's registry → done; afterwards a read-only "Managed by your parent" view. Pull down to check in now. | widget tests with a mocked module channel |
+| Fakes | `FakeGuardian.announceSampleChild()` / `announce_sample_child()` emit `guardian.pairing.completed` + `guardian.policy.updated`. The fake is off in debug builds (the real module handles shares); switch it on in the debug console to auto-approve. | fakes tests |
 
-**Bug fixed:** the signed decision message was `approvalId|requestId|decision|decidedAt`, but the server
-stamps `decidedAt` *after* the parent signs, so no real decision could ever verify. It is now
-`approvalId|requestId|decision` (Kotlin and Dart).
+**Emulator run (2026-11-06, API 35, service on the laptop via uvicorn, no Docker):** parent account created →
+child added → pairing code pasted into the child's wizard (debug builds can copy/paste the code because the
+emulator has no camera) → child verified the parent-signed policy → signed heartbeats → `english-threat`
+scenario raised an alert in under a second → parent decrypted the offending message → child's share request
+approved on the parent's phone → decision delivered at the next check-in → Casefile continued the share.
+A tamper alert also fired, correctly, while a required permission was off.
 
-**Shared crypto test vectors** (key = bytes `(i*7+3) & 0xff`, i = 0..31), already asserted in the Kotlin test;
-add the same asserts to the Dart test:
-- key b64url `AwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dw`
-- policy `age_placeholder_b|sms,whatsapp|0.500|medium|medium|1` → signature `HTf5k54Ky4WK7qoii-xrLoP0AsX-OyhchvkcHdP0p-Y`
-- sealed `AQIDBAUGBwgJCgsMHkkPkEcmYMuc3ecpeDg1Z9Np9K2c4ZXLkL4QaXM_` opens to `Nkuba ku ssimu`
+**Bugs found on the emulator and fixed:** `Unit` results crashed the module channel (child app bridge now
+returns null); raw `enabled_*` settings reads throw `SecurityException` on new Android (now public APIs);
+`POST_NOTIFICATIONS` was required but not in the manifest, so it could never be granted (manifest + test);
+worker exceptions arrived as `ExecutionException` (now unwrapped); locking left pushed screens visible.
 
-## Written but NOT yet compiled or tested (Flutter, `flutter/`)
+## What still needs to be done
 
-- `pubspec.yaml`: added exact pins `crypto 3.0.6`, `pointycastle 3.9.1`, `http 1.2.2`, `qr_flutter 4.1.0`,
-  `mobile_scanner 5.2.3`, `flutter_secure_storage 9.2.2`, plus `kuuma_lang`. `pub get` succeeded.
-- `lib/src/family_crypto.dart`: HMAC sign/verify, AES-GCM seal/open, `PairingQr`, P-256 `DeviceKey`.
-- `lib/src/api.dart`: `GuardianParentApi` + `HttpGuardianParentApi` (debug base URL `http://10.0.2.2:8080`).
-- `lib/src/fake_api.dart`: in-memory `FakeGuardianParentApi` with helpers to add alerts/approvals/pair a child.
-- `lib/src/session.dart`: `ParentSession` (account + PIN via PBKDF2, family keys in the vault, add child,
-  update policy, open excerpts, sign decisions), `GuardianVault` (secure / memory), placeholder per-bracket thresholds.
+### Blocked on a decision (team / product owner)
+- [ ] **Age brackets and thresholds.** `age-brackets.yaml` and `defaultThresholds()` in
+      `flutter/lib/src/session.dart` are placeholders. Changing bracket ids is a contract change.
+- [ ] **Agreed delivery time for high-severity alerts.** Alerts are sent as soon as the phone is online;
+      the heartbeat (`GuardianConfig.heartbeatMinutes`, 15) and the tamper window (`TAMPER_AFTER`, 60 min,
+      mirrored as `silentAfter` in `children_screen.dart`) should be set from it.
 
-## Next steps, in order
+### Blocked on setup
+- [ ] **Push notifications (FCM).** Create the Firebase test project, put keys in `.env`, write a real
+      `PushSender` in `service/kuuma_guardian_service/app.py` (it uses `RecordingPush` now), and register the
+      parent app's FCM token with the service (needs a contract change: a token field or endpoint).
+- [ ] **Full local stack.** Run `make dev` (Docker) and repeat the emulator run with every service, so the
+      Casefile share upload also completes after approval (it currently fails with only Guardian running).
 
-1. Run `flutter analyze` + fix compile errors in the four files above (Flutter 3.27.4 at `~/.kuuma/toolchains/flutter`).
-2. Screens, registered in `lib/kuuma_guardian.dart` (replace `placeholder_screen.dart`):
-   - `ParentGate` wrapping every parent tab: create account (set PIN) → `LockScreen` (kuuma_ui) → content.
-   - Children tab: list with protection status (active / missing permissions / silent / waiting to pair),
-     "Add a child" (nickname, age bracket from `KuumaLang.entries('age-brackets')`, apps, alert level) → QR screen (`qr_flutter`), policy editor.
-   - Alerts tab: per-child filter, 7-day severity trend, detail with guidance (how to talk, what to avoid) per
-     category and "show the message" (decrypt on demand only).
-   - Approvals tab: approve / decline (signed).
-   - Child settings `guardian.pairing`: setup wizard via `ModuleChannel('guardian')` →
-     consent → scan QR (`mobile_scanner`, injectable for tests) → permissions (`permissions`/`openSettings`) → done;
-     when paired, a read-only "managed by your parent" status.
-3. Dart tests: crypto vectors, session flows against the fake API, widget tests for each screen.
-4. Fake (rule 6): `fakes/android/.../Fakes.kt` `FakeGuardian` and `fakes/python/kuuma_fakes/fakes.py` should also
-   emit `guardian.pairing.completed` + `guardian.policy.updated` for a sample child (brief, "Your fake").
-5. Push: real FCM sender behind `PushSender` (service uses `RecordingPush` until the Firebase test project exists).
-6. Core asks (not ours to edit): child app `KuumaRuntime` builds `GuardianModule()` with no config — it needs
-   `GuardianConfig(androidContext, HttpGuardianApi(...), devicePublicKey, permissions = registry.permissions)`;
-   parent app still shows Core's placeholder login (our `ParentGate` replaces it in practice).
-7. Open the PR into `main` (contract change needs owner approval).
+### Still to build
+- [ ] **Second guardian** (brief: "a second guardian can be added"): invite flow, sharing the family key
+      with a second parent phone, approvals from either.
+- [ ] **Remove a child / cancel a pairing** that never completed (unpaired children stay in the list).
+- [ ] **Deletion approvals:** Casefile has no deletion-request event yet; add it to contracts, then the
+      approval kind is already in place (`ApprovalKind`).
+- [ ] **Runtime permission prompt** for notifications on Android 13+ (the wizard opens app settings today).
+- [ ] **Translations:** lg / nyn / sw for `guardian.*` strings (only a few sw keys exist); Sentinel and
+      Companion have no translations for their permission reason keys (the wizard falls back to plain names).
+- [ ] **Advice depth and child screens by bracket** (brief: the bracket decides these): agree with Companion
+      how `guardian.policy.updated` should change what the child sees.
+- [ ] **Mark alerts as read** on the parent's phone (the `read` field exists but is never set).
 
-## Machine notes
+### Still to verify
+- [ ] Android 5.0 (API 21) emulator, for both apps (`flutter_secure_storage`, `mobile_scanner`, `local_auth`).
+- [ ] A low-end physical phone: real QR scan, battery use of the heartbeat, fingerprint unlock.
+- [ ] Done criteria in the brief: a parent sets up a phone in one sitting without help (user test).
+- [ ] CI on GitHub for this branch, then a PR into `main` (contract change → owner approval).
 
-Disk on this PC is nearly full (C: ~0.7 GB free); `flutter pub get` alone nearly filled it.
-Toolchains/commands: see the Companion env memory — JDK 17 at `~/.kuuma/toolchains/jdk`,
-`export JAVA_HOME=... ANDROID_HOME=$LOCALAPPDATA/Android/Sdk`.
+### Not Guardian's, but found here
+- [ ] `:core-android:lintDebug` fails: "more than one jar in lintPublish" (Core).
