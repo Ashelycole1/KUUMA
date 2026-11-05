@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shown in the phone's keyboard list. Kept neutral so it doesn't reveal what Kuuma is. -->
+    <string name="companion_keyboard_label">Simple Keyboard</string>
+    <string name="companion_subtype_en">English</string>
+    <string name="companion_subtype_lg">Luganda</string>
+    <!-- Short, neutral confirmations shown in the suggestion strip. -->
+    <string name="companion_capture_done">✓ Saved</string>
+    <string name="companion_capture_unavailable">Open the chat first</string>
+    <string name="companion_sos_done">✓ Sent</string>
+</resources>

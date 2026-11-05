@@ -1,2 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- The Kuuma Keyboard. Merged into the child app; runs in the app's process so it can
+             reach the registered CompanionModule. -->
+        <service
+            android:name="ug.kuuma.companion.keyboard.KuumaKeyboardService"
+            android:label="@string/companion_keyboard_label"
+            android:permission="android.permission.BIND_INPUT_METHOD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.view.InputMethod" />
+            </intent-filter>
+            <meta-data
+                android:name="android.view.im"
+                android:resource="@xml/companion_method" />
+        </service>
+    </application>
+</manifest>
