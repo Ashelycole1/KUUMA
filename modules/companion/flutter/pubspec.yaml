@@ -1,5 +1,5 @@
 name: kuuma_companion
-description: Companion screens for the Kuuma apps. Skeleton from Core; the Companion owner fills it.
+description: Companion screens for the Kuuma child app - Help tab, advice cards, crisis support, feedback.
 version: 0.1.0
 publish_to: none
 
@@ -15,6 +15,8 @@ dependencies:
     path: ../../../packages/ui
   kuuma_contracts:
     path: ../../../packages/contracts/generated/dart
+  kuuma_lang:
+    path: ../../../packages/lang/dart
 
 dev_dependencies:
   flutter_test:

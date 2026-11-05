@@ -119,6 +119,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0"
+  kuuma_lang:
+    dependency: "direct main"
+    description:
+      path: "../../../packages/lang/dart"
+      relative: true
+    source: path
+    version: "0.1.0"
   kuuma_ui:
     dependency: "direct main"
     description:

@@ -1,0 +1,188 @@
+# Companion content pack: SOURCE. Everything the child reads in Kuuma comes from here.
+#
+# Status: DRAFT. Nothing in this file has been signed off yet. Child-safety and counselling
+# reviewers must approve every age bracket before release (see `review` at the bottom).
+#
+# Languages: English (en) is the source text. Luganda (lg), Runyankole (nyn) and Swahili (sw)
+# are written by native speakers; a missing translation falls back to English on the phone.
+#
+# Text variants: each text is { <lang>: { default: ..., <ageBracket>: ... } }. The phone picks
+# the child's age bracket (from guardian.policy.updated), then `default`, then English.
+#
+# Build:  uv run python -m kuuma_companion_service.packs build
+# The build validates this file, writes the signed archive, and refreshes the copy bundled in
+# the keyboard (android/src/main/resources/kuuma/companion/content-pack.json).
+
+version: 0.1.0
+
+# Advice cards. `key` must exist in packages/lang/data/advice-keys.yaml (events carry only keys).
+# `minSeverity` hides a card below that severity. `steps` are optional numbered steps.
+advice:
+  - key: advice.general.you_are_not_alone
+    text:
+      en: { default: "This is not your fault, and you are not alone." }
+
+  - key: advice.general.do_not_reply
+    text:
+      en: { default: "You don't have to reply. Not replying is often the safest choice." }
+
+  - key: advice.general.save_evidence
+    text:
+      en: { default: "Kuuma keeps a safe copy of these messages in case you need them later." }
+    steps:
+      en:
+        default:
+          - "Don't delete the messages or the chat, even after you block the person."
+          - "If the app asks whether to delete the chat when you block or report, choose not to."
+          - "Tap the shield key on the Kuuma Keyboard to save another copy at any time."
+
+  - key: advice.general.block_sender
+    text:
+      en: { default: "You can block this person in the app. They won't be told that Kuuma helped you." }
+
+  - key: advice.threat.tell_adult
+    text:
+      en: { default: "Please tell an adult you trust about this today." }
+    steps:
+      en:
+        default:
+          - "Pick an adult you trust: a parent, an aunt or uncle, a teacher, or a counsellor."
+          - "Show them the messages, or tell them what happened. You won't get in trouble."
+          - "If you feel in danger right now, call Sauti on 116. It's free."
+
+  - key: advice.sextortion.do_not_pay
+    minSeverity: low
+    text:
+      en: { default: "Do not send money or more pictures. Tell an adult you trust." }
+    steps:
+      en:
+        default:
+          - "Stop replying. Paying or sending more almost never makes them stop."
+          - "Don't delete anything. The messages are proof."
+          - "Tell an adult you trust today, or call Sauti on 116 for free."
+
+  - key: advice.grooming.secrets_are_a_warning
+    text:
+      en: { default: "An adult who asks you to keep secrets from your family is a warning sign." }
+    steps:
+      en:
+        default:
+          - "You don't have to keep this secret, even if you promised."
+          - "Don't agree to meet this person, and don't send photos."
+          - "Tell an adult you trust about this conversation."
+
+  - key: advice.self_harm.talk_to_someone
+    text:
+      en: { default: "You matter. Talk to someone you trust, or call a helpline." }
+
+  - key: advice.doxxing.report_to_platform
+    text:
+      en: { default: "You can ask the app to remove posts that share your private details." }
+
+  - key: advice.reply.no_phone_number
+    text:
+      en: { default: "Think twice before sharing your phone number." }
+
+  - key: advice.reply.no_location
+    text:
+      en: { default: "Think twice before sharing where you are or where you live." }
+
+# Which cards to show for each harm category, in order. The first is also the keyboard banner tip.
+# Every category in packages/contracts/schemas/types/harm-category.json must be listed.
+byCategory:
+  insult: [advice.general.do_not_reply, advice.general.block_sender, advice.general.you_are_not_alone, advice.general.save_evidence]
+  harassment: [advice.general.do_not_reply, advice.general.block_sender, advice.general.save_evidence, advice.general.you_are_not_alone]
+  hate: [advice.general.do_not_reply, advice.general.block_sender, advice.general.save_evidence, advice.general.you_are_not_alone]
+  threat: [advice.threat.tell_adult, advice.general.do_not_reply, advice.general.save_evidence, advice.general.you_are_not_alone]
+  sexual_harassment: [advice.general.block_sender, advice.threat.tell_adult, advice.general.save_evidence, advice.general.you_are_not_alone]
+  sextortion: [advice.sextortion.do_not_pay, advice.threat.tell_adult, advice.general.save_evidence, advice.general.you_are_not_alone]
+  grooming: [advice.grooming.secrets_are_a_warning, advice.threat.tell_adult, advice.general.save_evidence, advice.general.you_are_not_alone]
+  doxxing: [advice.doxxing.report_to_platform, advice.general.block_sender, advice.general.save_evidence, advice.general.you_are_not_alone]
+  self_harm_encouragement: [advice.self_harm.talk_to_someone, advice.threat.tell_adult, advice.general.you_are_not_alone]
+
+# Categories that open the crisis screens at once, at any severity.
+crisisCategories: [self_harm_encouragement]
+
+# Categories where the keyboard offers no reply at all, only a nudge not to reply.
+noReplyCategories: [threat, sextortion, grooming, sexual_harassment, self_harm_encouragement]
+
+# One-tap calm replies offered by the keyboard for the other categories, per language.
+safeReplies:
+  en:
+    - "Please stop messaging me."
+    - "I don't want to talk about this."
+    - "I'm leaving this chat now."
+nudge:
+  en: { default: "You don't have to answer this. It's okay to leave it." }
+
+# Block-and-report steps per messaging app (keys from app-source.json). App menus change:
+# re-check these against the current app versions before each release.
+platforms:
+  whatsapp:
+    block:
+      en: { default: ["Open the chat and tap the person's name at the top.", "Scroll down and tap Block.", "Tap Block again to confirm. Don't tick 'delete chat'."] }
+    report:
+      en: { default: ["Open the chat and tap the person's name.", "Tap Report.", "Leave 'block' ticked if you also want to block them."] }
+  sms:
+    block:
+      en: { default: ["Open the conversation.", "Tap the ⋮ menu, then Details or Block.", "Choose Block. Don't delete the conversation."] }
+    report:
+      en: { default: ["In the block screen, tick Report spam if your phone offers it."] }
+  messenger:
+    block:
+      en: { default: ["Open the chat and tap the person's name.", "Tap Block, then choose Block on Messenger."] }
+    report:
+      en: { default: ["Open the chat and tap the person's name.", "Tap Report and follow the steps."] }
+  instagram:
+    block:
+      en: { default: ["Go to the person's profile.", "Tap ⋯ at the top, then Block."] }
+    report:
+      en: { default: ["Go to the person's profile.", "Tap ⋯ at the top, then Report."] }
+  tiktok:
+    block:
+      en: { default: ["Go to the person's profile.", "Tap the share arrow or ⋯ at the top, then Block."] }
+    report:
+      en: { default: ["Go to the person's profile.", "Tap the share arrow or ⋯ at the top, then Report."] }
+  x:
+    block:
+      en: { default: ["Go to the person's profile.", "Tap ⋯, then Block."] }
+    report:
+      en: { default: ["Go to the person's profile.", "Tap ⋯, then Report."] }
+
+# Helplines. Numbers live only here (content), never in source code.
+helplines:
+  - id: sauti
+    number: "116"
+    free: true
+    name:
+      en: { default: "Sauti child helpline" }
+    hours:
+      en: { default: "Free to call" }
+
+# Crisis screens (self-harm signals). Calm, short, no blame.
+crisis:
+  title:
+    en: { default: "You matter" }
+  body:
+    en: { default: "Something you saw might be hard to deal with. You don't have to face it alone." }
+  breathe:
+    en: { default: "Breathe in slowly for 4. Hold for 4. Breathe out for 4. Do it again until you feel a bit calmer." }
+  callPrompt:
+    en: { default: "Talk to someone now" }
+
+# Keyboard and screen strings that come from the pack (so reviewers see them with the advice).
+ui:
+  bannerTitle:
+    en: { default: "Kuuma is here" }
+  feedbackQuestion:
+    en: { default: "Did Kuuma get this right?" }
+  feedbackNotAbuse:
+    en: { default: "This isn't abuse" }
+  saferWording:
+    en: { default: "Safer way to say it" }
+
+# Sign-off per age bracket. The build refuses `--release` unless every bracket is approved.
+review:
+  age_placeholder_a: { status: draft }
+  age_placeholder_b: { status: draft }
+  age_placeholder_c: { status: draft }
