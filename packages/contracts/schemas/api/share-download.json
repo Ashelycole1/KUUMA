@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/share-download.json",
+  "title": "ShareDownload",
+  "description": "Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "bundleHash",
+    "downloadUrl",
+    "expiresAt"
+  ],
+  "properties": {
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "bundleHash": {
+      "$ref": "../types/sha256.json",
+      "description": "SHA-256 of the encrypted bundle, so the recipient can check the download."
+    },
+    "downloadUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Short-lived URL of the encrypted bundle."
+    },
+    "expiresAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

@@ -39,6 +39,7 @@ EXPECTED_ENDPOINTS = {
     ("post", "/v1/cases/{caseId}/bundles"),
     ("post", "/v1/cases/{caseId}/shares"),
     ("get", "/v1/verify/{hash}"),
+    ("get", "/v1/verify/shares/{requestId}"),
     ("post", "/v1/guardian/pairings"),
     ("put", "/v1/guardian/children/{childId}/policy"),
     ("post", "/v1/guardian/alerts"),

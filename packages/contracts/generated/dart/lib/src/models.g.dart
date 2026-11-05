@@ -1207,20 +1207,50 @@ class SentinelMessageFlaggedPayload extends CloudSendablePayload {
       };
 }
 
+/// Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.
+class ShareDownload {
+  const ShareDownload({required this.requestId, required this.bundleHash, required this.downloadUrl, required this.expiresAt});
+
+  final String requestId;
+  /// SHA-256 of the encrypted bundle, so the recipient can check the download.
+  final String bundleHash;
+  /// Short-lived URL of the encrypted bundle.
+  final String downloadUrl;
+  final String expiresAt;
+
+  factory ShareDownload.fromJson(Map<String, dynamic> json) => ShareDownload(
+        requestId: json['requestId'] as String,
+        bundleHash: json['bundleHash'] as String,
+        downloadUrl: json['downloadUrl'] as String,
+        expiresAt: json['expiresAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'bundleHash': bundleHash,
+        'downloadUrl': downloadUrl,
+        'expiresAt': expiresAt,
+      };
+}
+
 class ShareRequest {
-  const ShareRequest({required this.requestId, required this.recipientType});
+  const ShareRequest({required this.requestId, required this.recipientType, this.bundleId});
 
   final String requestId;
   final RecipientType recipientType;
+  /// The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle.
+  final String? bundleId;
 
   factory ShareRequest.fromJson(Map<String, dynamic> json) => ShareRequest(
         requestId: json['requestId'] as String,
         recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        bundleId: json['bundleId'] == null ? null : json['bundleId'] as String,
       );
 
   Map<String, dynamic> toJson() => {
         'requestId': requestId,
         'recipientType': recipientType.wire,
+        if (bundleId != null) 'bundleId': bundleId!,
       };
 }
 

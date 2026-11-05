@@ -510,9 +510,29 @@ export interface SentinelMessageFlaggedPayload {
   language: Language;
 }
 
+/**
+ * Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.
+ */
+export interface ShareDownload {
+  requestId: Uuid;
+  /**
+   * SHA-256 of the encrypted bundle, so the recipient can check the download.
+   */
+  bundleHash: Sha256;
+  /**
+   * Short-lived URL of the encrypted bundle.
+   */
+  downloadUrl: string;
+  expiresAt: Timestamp;
+}
+
 export interface ShareRequest {
   requestId: Uuid;
   recipientType: RecipientType;
+  /**
+   * The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle.
+   */
+  bundleId?: Uuid;
 }
 
 export interface ShareResponse {

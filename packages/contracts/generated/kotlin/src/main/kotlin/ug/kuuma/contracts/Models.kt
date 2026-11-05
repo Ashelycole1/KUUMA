@@ -253,10 +253,31 @@ data class RiskySpan(
     val reasonKey: AdviceKey,
 )
 
+/**
+ * Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.
+ */
+@Serializable
+data class ShareDownload(
+    val requestId: Uuid,
+    /**
+     * SHA-256 of the encrypted bundle, so the recipient can check the download.
+     */
+    val bundleHash: Sha256,
+    /**
+     * Short-lived URL of the encrypted bundle.
+     */
+    val downloadUrl: String,
+    val expiresAt: Timestamp,
+)
+
 @Serializable
 data class ShareRequest(
     val requestId: Uuid,
     val recipientType: RecipientType,
+    /**
+     * The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle.
+     */
+    val bundleId: Uuid? = null,
 )
 
 @Serializable
