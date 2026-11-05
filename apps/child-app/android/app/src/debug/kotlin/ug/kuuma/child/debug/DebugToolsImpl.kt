@@ -27,6 +27,9 @@ class DebugToolsImpl : DebugHooks {
         fakes.all.forEach(registry::register)
         // The real vault replaces Casefile's fake, so Sentinel's flags are not handled twice.
         fakes.casefile.enabled = false
+        // Likewise the real Guardian relays share requests to the parent. Turn the fake back on
+        // from the debug console to have shares auto-approved without a paired parent.
+        fakes.guardian.enabled = false
         // Debug only: `adb shell cmd notification post ...` notifications come from the shell
         // package; treat them as SMS so the real notification listener can be tested on an emulator.
         WatchedApps.addSmsPackage("com.android.shell")

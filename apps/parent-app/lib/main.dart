@@ -4,14 +4,18 @@ import 'package:kuuma_ui/kuuma_ui.dart';
 
 void main() {
   final slots = SlotRegistry();
-  GuardianFlutterModule().register(slots, KuumaL10n.instance);
-  runApp(KuumaParentApp(slots: slots));
+  final guardian = GuardianFlutterModule(biometrics: LocalBiometricAuth());
+  guardian.register(slots, KuumaL10n.instance);
+  runApp(KuumaParentApp(slots: slots, gate: guardian.gate));
 }
 
 class KuumaParentApp extends StatelessWidget {
-  const KuumaParentApp({super.key, required this.slots});
+  const KuumaParentApp({super.key, required this.slots, required this.gate});
 
   final SlotRegistry slots;
+
+  /// Guardian's account gate (create account, then PIN or fingerprint) around the shell.
+  final Widget Function(Widget child) gate;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
@@ -20,43 +24,9 @@ class KuumaParentApp extends StatelessWidget {
         darkTheme: KuumaTheme.dark(),
         supportedLocales: kuumaLocales,
         localizationsDelegates: kuumaLocalizationsDelegates,
-        home: _Root(slots: slots),
-      );
-}
-
-class _Root extends StatefulWidget {
-  const _Root({required this.slots});
-
-  final SlotRegistry slots;
-
-  @override
-  State<_Root> createState() => _RootState();
-}
-
-class _RootState extends State<_Root> {
-  bool _signedIn = false;
-
-  @override
-  Widget build(BuildContext context) =>
-      _signedIn ? ParentShell(slots: widget.slots) : LoginPlaceholder(onSignIn: () => setState(() => _signedIn = true));
-}
-
-/// PLACEHOLDER login until Guardian builds real sign-in. Signs in as the seed test parent.
-class LoginPlaceholder extends StatelessWidget {
-  const LoginPlaceholder({super.key, required this.onSignIn});
-
-  final VoidCallback onSignIn;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-        body: SafeArea(
-          child: EmptyState(
-            icon: Icons.family_restroom,
-            title: 'Kuuma for parents',
-            message: 'Sign-in is a placeholder. You will be signed in as the local test parent.',
-            action: KuumaButton(label: 'Continue as test parent', onPressed: onSignIn),
-          ),
-        ),
+        // Above the navigator, so locking hides every open screen, not just the tabs.
+        builder: (context, child) => gate(child!),
+        home: ParentShell(slots: slots),
       );
 }
 

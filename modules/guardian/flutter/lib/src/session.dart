@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -36,19 +35,18 @@ class MemoryGuardianVault implements GuardianVault {
   Future<String?> read(String key) async => values[key];
 
   @override
-  Future<void> write(String key, String? value) async =>
-      value == null ? values.remove(key) : values[key] = value;
+  Future<void> write(String key, String? value) async => value == null ? values.remove(key) : values[key] = value;
 }
 
 /// PLACEHOLDER defaults per age bracket until the team agrees brackets and thresholds
 /// (Guardian brief, "Decisions you need"). Younger children get more sensitive settings.
 Thresholds defaultThresholds(AgeBracket bracket) => switch (bracket) {
-      AgeBracket.agePlaceholderA => const Thresholds(
-          flagMinConfidence: 0.4, alertMinSeverity: Severity.low, captureMinSeverity: Severity.low),
+      AgeBracket.agePlaceholderA =>
+        const Thresholds(flagMinConfidence: 0.4, alertMinSeverity: Severity.low, captureMinSeverity: Severity.low),
       AgeBracket.agePlaceholderB => const Thresholds(
           flagMinConfidence: 0.5, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.medium),
-      AgeBracket.agePlaceholderC => const Thresholds(
-          flagMinConfidence: 0.6, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.high),
+      AgeBracket.agePlaceholderC =>
+        const Thresholds(flagMinConfidence: 0.6, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.high),
     };
 
 /// A child as the parent's phone sees it: the server's status plus what only this phone knows

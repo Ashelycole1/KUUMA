@@ -46,8 +46,11 @@ EXPECTED_ENDPOINTS = {
     ("get", "/v1/guardian/alerts"),
     ("post", "/v1/guardian/approvals/{approvalId}"),
     ("post", "/v1/guardian/heartbeat"),
-    ("post", "/v1/guardian/parents"), ("post", "/v1/guardian/pairing-codes"), ("get", "/v1/guardian/children"),
-    ("post", "/v1/guardian/approval-requests"), ("get", "/v1/guardian/approvals"),
+    ("post", "/v1/guardian/parents"),
+    ("post", "/v1/guardian/pairing-codes"),
+    ("get", "/v1/guardian/children"),
+    ("post", "/v1/guardian/approval-requests"),
+    ("get", "/v1/guardian/approvals"),
 }
 
 

@@ -87,3 +87,13 @@ def test_console_never_prints_message_text():
 def test_cli_local(capsys):
     assert main(["english-threat", "--local", "--speed", "0"]) == 0
     assert "guardian.alert.sent" in capsys.readouterr().out
+
+
+def test_guardian_fake_pairs_a_sample_child():
+    from kuuma_fakes.fakes import FakeGuardian
+
+    bus = LocalBus("7a9e2c41-5d3b-4f6a-8e1c-2b3d4e5f6a7b")
+    FakeGuardian(bus, scenarios.load("english-threat")).announce_sample_child()
+    assert [e["type"] for e in bus.log] == ["guardian.pairing.completed", "guardian.policy.updated"]
+    for ev in bus.log:
+        assert_publishes("guardian", ev)

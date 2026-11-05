@@ -1,5 +1,6 @@
 package ug.kuuma.parent
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+/** FragmentActivity so local_auth can show the fingerprint prompt on the lock screen. */
+class MainActivity : FlutterFragmentActivity()

@@ -1,2 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- /v1/guardian: pairing, alerts, approvals, heartbeat. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 13+: tells the child what Kuuma found. Declared in GuardianModule.permissions. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Scanning the pairing QR code (optional: debug builds can paste it instead). -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+</manifest>

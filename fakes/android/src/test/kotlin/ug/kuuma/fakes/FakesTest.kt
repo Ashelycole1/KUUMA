@@ -84,4 +84,19 @@ class FakesTest {
         val events = playAll("english-threat") { it.guardian.enabled = false }
         assertFalse(events.any { it.first.type.startsWith("guardian.") })
     }
+
+    @Test fun `the guardian fake pairs a sample child with valid events`() {
+        val bus = EventBus({ "7a9e2c41-5d3b-4f6a-8e1c-2b3d4e5f6a7b" })
+        val fakes = FakeSet(DummyHarmClassifier(), refs)
+        fakes.all.forEach(ModuleRegistry(bus)::register)
+        val out = mutableListOf<Pair<EventType<*>, String>>()
+        bus.subscribeAll { t, e ->
+            @Suppress("UNCHECKED_CAST")
+            out +=
+                t to ContractJson.encode(t as EventType<EventPayload>, e as Envelope<EventPayload>, ContractJson.strict)
+        }
+        fakes.guardian.announceSampleChild()
+        assertEquals(listOf("guardian.pairing.completed", "guardian.policy.updated"), out.map { it.first.type })
+        out.forEach { (_, json) -> ContractAssert.validateEventJson(json) }
+    }
 }
