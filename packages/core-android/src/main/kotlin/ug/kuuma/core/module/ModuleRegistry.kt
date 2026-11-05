@@ -45,6 +45,15 @@ interface KuumaModule {
 
     /** Subscribe handlers and keep [context] for publishing. Called once. */
     fun onRegister(context: ModuleContext)
+
+    /**
+     * A call from this module's own Flutter screens, over the channel
+     * `ug.kuuma/module/<namespace>` (kuuma_ui `ModuleChannel`). Runs on a background
+     * thread. Return only what Flutter's message codec carries: null, Boolean, Number,
+     * String, List and Map. Throw to report an error to the screen.
+     */
+    fun onCall(method: String, args: Map<String, Any?>): Any? =
+        throw UnsupportedOperationException("${namespace.wire} has no method $method")
 }
 
 /** Everything a module may touch, scoped to its namespace. */
