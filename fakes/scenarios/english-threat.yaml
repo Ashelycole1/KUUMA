@@ -1,0 +1,13 @@
+# INVENTED TEXT ONLY. Never put real messages in a scenario.
+# One threat of violence by SMS from an unknown number.
+name: english-threat
+description: One threat of violence.
+language: en
+appSource: sms
+conversation: unknown-sms-thread
+participants:
+  child: { displayName: "Child (test)" }
+  offender: { displayName: "Unknown sender (invented)" }
+messages:
+  - { day: 1, time: "20:02", from: offender, text: "I know which school you go to." }
+  - { day: 1, time: "20:03", from: offender, text: "Tomorrow after school I will hurt you.", expect: { category: threat, severity: high } }

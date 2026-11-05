@@ -1,0 +1,9 @@
+# Root of the Dart/Flutter workspace (melos). Not a package that ships.
+name: kuuma_workspace
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dev_dependencies:
+  melos: 6.3.2

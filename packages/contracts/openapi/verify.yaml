@@ -1,0 +1,41 @@
+openapi: 3.1.0
+info:
+  title: Kuuma Verify API
+  version: 1.0.0
+  description: |
+    Owned by the Casefile build. Public: a school, police officer or lawyer checks that
+    an evidence hash was timestamped and that its chain is intact. No auth.
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/verify/{hash}:
+    get:
+      operationId: verifyHash
+      summary: Check an evidence hash.
+      security: []
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/sha256.json" }
+          example: c5bf1e54aa40f41226e9d2f6ab25a1c41aa5cb53e65f1f338fd6cd2d738d35a6
+      responses:
+        "200":
+          description: Verification result.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/verify-response.json" }
+              example:
+                hash: c5bf1e54aa40f41226e9d2f6ab25a1c41aa5cb53e65f1f338fd6cd2d738d35a6
+                found: true
+                timestamp: "2026-11-05T09:30:00Z"
+                chainValid: true
+        default: { $ref: "#/components/responses/Error" }
+components:
+  responses:
+    Error:
+      description: Any error.
+      content:
+        application/json:
+          schema: { $ref: "../schemas/types/error-response.json" }
+          example: { error: { code: bad_request, message: Invalid hash, requestId: req-0000 } }

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/grooming-stage.json",
+  "title": "GroomingStage",
+  "description": "Stages of a grooming pattern, in the order they usually appear.",
+  "type": "string",
+  "enum": ["trust_building", "gifts_flattery", "isolation", "sexual_talk", "secrecy", "meet_or_images"]
+}

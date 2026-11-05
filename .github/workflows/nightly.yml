@@ -1,0 +1,39 @@
+# 9 Nightly: the luganda-insults scenario end to end on emulators at API 21 (oldest
+# supported) and the latest version. Fails if the event chain does not run on the phone.
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 04:00 in Kampala
+  workflow_dispatch:
+
+jobs:
+  scenario-on-emulator:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [21, 35]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Build child debug APK
+        run: cd apps/child-app && flutter build apk --debug
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r apps/child-app/build/app/outputs/flutter-apk/app-debug.apk
+            adb shell am start -W -n ug.kuuma.child/.MainActivity
+            uv run kuuma-fake luganda-insults --speed 0.2
+            for i in $(seq 1 60); do adb logcat -d -s Kuuma:I | grep -q "debug.scenario.done" && break; sleep 2; done
+            mkdir -p out/nightly && adb logcat -d -v raw -s Kuuma:I | tee out/nightly/logcat.txt
+            grep -E "debug.scenario.done .*events=[1-9]" out/nightly/logcat.txt
+            uv run python tools/privacy_scan.py --no-source --artifacts out/nightly

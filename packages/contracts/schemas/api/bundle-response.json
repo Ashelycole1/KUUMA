@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/bundle-response.json",
+  "title": "BundleResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundleId",
+    "uploadUrl",
+    "expiresAt"
+  ],
+  "properties": {
+    "bundleId": {
+      "$ref": "../types/uuid.json"
+    },
+    "uploadUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "expiresAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

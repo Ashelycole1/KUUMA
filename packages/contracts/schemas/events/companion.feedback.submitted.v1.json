@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/companion.feedback.submitted.v1.json",
+  "title": "CompanionFeedbackSubmitted",
+  "description": "The child said whether a flag was right.",
+  "x-kuuma": {
+    "event": "companion.feedback.submitted",
+    "version": 1,
+    "publisher": "companion",
+    "where": "phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "companion.feedback.submitted"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CompanionFeedbackSubmittedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flagId",
+        "verdict",
+        "consentToTrain"
+      ],
+      "properties": {
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "verdict": {
+          "$ref": "../types/feedback-verdict.json"
+        },
+        "consentToTrain": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

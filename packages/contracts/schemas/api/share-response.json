@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/share-response.json",
+  "title": "ShareResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "caseId",
+    "status"
+  ],
+  "properties": {
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "status": {
+      "$ref": "../types/share-status.json"
+    },
+    "expiresAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+[project]
+name = "kuuma-casefile-service"
+version = "0.1.0"
+description = "Kuuma Casefile service. Skeleton from Core; the Casefile owner fills it."
+requires-python = ">=3.12"
+dependencies = ["kuuma-server-common", "kuuma-contracts"]
+
+[tool.uv.sources]
+kuuma-server-common = { workspace = true }
+kuuma-contracts = { workspace = true }
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kuuma_casefile_service"]

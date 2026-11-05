@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/sentinel.conversation.active.v1.json",
+  "title": "SentinelConversationActive",
+  "description": "PHONE ONLY. The child is in a watched conversation now (drives the keyboard companion).",
+  "x-kuuma": {
+    "event": "sentinel.conversation.active",
+    "version": 1,
+    "publisher": "sentinel",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "sentinel.conversation.active"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "SentinelConversationActivePayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conversationRef",
+        "appSource",
+        "hasFlags"
+      ],
+      "properties": {
+        "conversationRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "appSource": {
+          "$ref": "../types/app-source.json"
+        },
+        "hasFlags": {
+          "type": "boolean"
+        },
+        "topSeverity": {
+          "$ref": "../types/severity.json"
+        }
+      }
+    }
+  }
+}

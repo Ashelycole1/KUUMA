@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/pairing-response.json",
+  "title": "PairingResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "deviceId",
+    "policy"
+  ],
+  "properties": {
+    "childId": {
+      "$ref": "../types/uuid.json"
+    },
+    "deviceId": {
+      "$ref": "../types/uuid.json"
+    },
+    "policy": {
+      "$ref": "../types/policy.json"
+    }
+  }
+}

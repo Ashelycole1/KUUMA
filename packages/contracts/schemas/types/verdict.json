@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/verdict.json",
+  "title": "Verdict",
+  "description": "What a harm classifier decided about one message. category and severity are absent when harmful is false.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "harmful",
+    "confidence"
+  ],
+  "properties": {
+    "harmful": {
+      "type": "boolean"
+    },
+    "category": {
+      "$ref": "harm-category.json"
+    },
+    "severity": {
+      "$ref": "severity.json"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

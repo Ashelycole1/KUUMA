@@ -1,0 +1,74 @@
+# Root of the uv workspace (Python 3.12). Not a package itself.
+[project]
+name = "kuuma-workspace"
+version = "0.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "pytest==8.3.5",
+  "ruff==0.11.10",
+  "pre-commit==4.2.0",
+  "pyyaml==6.0.2",
+  "httpx==0.28.1",
+  "kuuma-contracts",
+  "kuuma-lang",
+  "kuuma-server-common",
+  "kuuma-llm",
+  "kuuma-fakes",
+  "kuuma-ai-service",
+  "kuuma-companion-service",
+  "kuuma-casefile-service",
+  "kuuma-guardian-service",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+  "packages/contracts/generated/python",
+  "packages/lang/python",
+  "packages/server-common",
+  "packages/kuuma-llm",
+  "fakes/python",
+  "ai/service",
+  "modules/companion/service",
+  "modules/casefile/service",
+  "modules/guardian/service",
+]
+
+[tool.uv.sources]
+kuuma-contracts = { workspace = true }
+kuuma-lang = { workspace = true }
+kuuma-server-common = { workspace = true }
+kuuma-llm = { workspace = true }
+kuuma-fakes = { workspace = true }
+kuuma-ai-service = { workspace = true }
+kuuma-companion-service = { workspace = true }
+kuuma-casefile-service = { workspace = true }
+kuuma-guardian-service = { workspace = true }
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["packages/contracts/generated", "**/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "N"]
+# E501: `ruff format` owns line length. N818: exception names like ContractViolation read better.
+ignore = ["S101", "S104", "B008", "E501", "N818"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["kuuma_contracts", "kuuma_lang", "kuuma_server_common", "kuuma_llm", "kuuma_fakes"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "N802", "N806"]
+"tools/**" = ["S603", "S607"]
+"tools/bootstrap.py" = ["S310", "S202", "S603", "S607"]
+"packages/contracts/codegen/**" = ["N806"]
+"fakes/python/kuuma_fakes/cli.py" = ["S603"]
+
+[tool.pytest.ini_options]
+addopts = "-q --import-mode=importlib"

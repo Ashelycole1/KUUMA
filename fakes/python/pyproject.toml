@@ -1,0 +1,20 @@
+[project]
+name = "kuuma-fakes"
+version = "0.1.0"
+description = "Kuuma fake framework: base fakes per module and the scenario runner (laptop side)."
+requires-python = ">=3.12"
+dependencies = ["kuuma-contracts", "kuuma-server-common", "pyyaml==6.0.2"]
+
+[project.scripts]
+kuuma-fake = "kuuma_fakes.cli:main"
+
+[tool.uv.sources]
+kuuma-contracts = { workspace = true }
+kuuma-server-common = { workspace = true }
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kuuma_fakes"]

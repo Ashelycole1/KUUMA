@@ -1,0 +1,22 @@
+# Must match packages/contracts/schemas/types/harm-category.json (checked by tests).
+# Labels: English is the source; lg / nyn / sw labels are added by native speakers.
+contract: HarmCategory
+values:
+  - id: insult
+    label: { en: Insult, sw: Tusi }
+  - id: harassment
+    label: { en: Harassment, sw: Unyanyasaji }
+  - id: threat
+    label: { en: Threat, sw: Tishio }
+  - id: sexual_harassment
+    label: { en: Sexual harassment }
+  - id: sextortion
+    label: { en: Sextortion }
+  - id: grooming
+    label: { en: Grooming }
+  - id: doxxing
+    label: { en: Sharing private information }
+  - id: hate
+    label: { en: Hate speech }
+  - id: self_harm_encouragement
+    label: { en: Encouraging self-harm }

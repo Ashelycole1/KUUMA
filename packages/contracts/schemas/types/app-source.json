@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/app-source.json",
+  "title": "AppSource",
+  "description": "The messaging app a message arrived through.",
+  "type": "string",
+  "enum": ["whatsapp", "sms", "messenger", "instagram", "tiktok", "x"]
+}

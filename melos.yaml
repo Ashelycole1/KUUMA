@@ -1,0 +1,24 @@
+name: kuuma
+
+packages:
+  - packages/contracts/generated/dart
+  - packages/lang/dart
+  - packages/ui
+  - modules/*/flutter
+  - apps/*
+
+command:
+  bootstrap:
+    # Every package pins exact versions; keep resolution identical across the workspace.
+    enforceVersionsForDependencyResolution: true
+
+scripts:
+  analyze:
+    run: melos exec -- flutter analyze
+    description: Analyze every Dart/Flutter package.
+  test:
+    run: melos exec --dir-exists=test -- flutter test
+    description: Run every package's tests.
+  format:
+    run: dart format --line-length 120 packages/lang/dart packages/ui modules apps
+    description: Format Dart code (generated code excluded).

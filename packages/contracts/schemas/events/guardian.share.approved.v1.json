@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.share.approved.v1.json",
+  "title": "GuardianShareApproved",
+  "description": "A parent approved a share request.",
+  "x-kuuma": {
+    "event": "guardian.share.approved",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "cloud_to_phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.share.approved"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianShareApprovedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "decidedAt"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "decidedAt": {
+          "$ref": "../types/timestamp.json"
+        }
+      }
+    }
+  }
+}

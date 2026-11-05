@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/advice-key.json",
+  "title": "AdviceKey",
+  "description": "A key into kuuma-lang advice-keys.yaml, e.g. advice.threat.tell_adult. Advice text never travels in an event.",
+  "type": "string",
+  "pattern": "^advice\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$"
+}

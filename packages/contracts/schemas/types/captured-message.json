@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/captured-message.json",
+  "title": "CapturedMessage",
+  "description": "PHONE ONLY. One message of a captured conversation, with real text. Only allowed inside phone-only events.",
+  "x-kuuma": {
+    "phoneOnly": true
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "messageRef",
+    "senderRef",
+    "text",
+    "sentAt",
+    "fromChild"
+  ],
+  "properties": {
+    "messageRef": {
+      "$ref": "opaque-ref.json"
+    },
+    "senderRef": {
+      "$ref": "opaque-ref.json"
+    },
+    "senderDisplayName": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "As shown in the source app. Phone only."
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 10000
+    },
+    "sentAt": {
+      "$ref": "timestamp.json"
+    },
+    "fromChild": {
+      "type": "boolean"
+    }
+  }
+}

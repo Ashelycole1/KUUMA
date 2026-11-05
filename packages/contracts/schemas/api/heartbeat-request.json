@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/heartbeat-request.json",
+  "title": "HeartbeatRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deviceId",
+    "appVersion",
+    "policyVersion"
+  ],
+  "properties": {
+    "deviceId": {
+      "$ref": "../types/uuid.json"
+    },
+    "appVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+"
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "protectionActive": {
+      "type": "boolean",
+      "description": "False when the accessibility/notification service is off."
+    }
+  }
+}

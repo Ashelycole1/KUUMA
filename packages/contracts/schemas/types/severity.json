@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/severity.json",
+  "title": "Severity",
+  "description": "How serious a harmful message is.",
+  "type": "string",
+  "enum": ["low", "medium", "high"]
+}

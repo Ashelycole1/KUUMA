@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/bundle-request.json",
+  "title": "BundleRequest",
+  "description": "Asks for an upload slot for an encrypted evidence bundle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundleHash",
+    "itemCount",
+    "sizeBytes"
+  ],
+  "properties": {
+    "bundleHash": {
+      "$ref": "../types/sha256.json"
+    },
+    "itemCount": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sizeBytes": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

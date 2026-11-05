@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.share.requested.v1.json",
+  "title": "CasefileShareRequested",
+  "description": "The child asked to share a case; needs parent approval.",
+  "x-kuuma": {
+    "event": "casefile.share.requested",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone_to_cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.share.requested"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileShareRequestedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "recipientType"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "recipientType": {
+          "$ref": "../types/recipient-type.json"
+        }
+      }
+    }
+  }
+}

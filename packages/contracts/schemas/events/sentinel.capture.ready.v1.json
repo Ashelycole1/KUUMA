@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/sentinel.capture.ready.v1.json",
+  "title": "SentinelCaptureReady",
+  "description": "PHONE ONLY. Sentinel captured the conversation around a flag, with real text.",
+  "x-kuuma": {
+    "event": "sentinel.capture.ready",
+    "version": 1,
+    "publisher": "sentinel",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "sentinel.capture.ready"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "SentinelCaptureReadyPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flagId",
+        "conversationRef",
+        "messages",
+        "capturedAt"
+      ],
+      "properties": {
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "conversationRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "../types/captured-message.json"
+          },
+          "minItems": 1
+        },
+        "screenshotRef": {
+          "type": "string",
+          "description": "Local file reference inside sentinel storage."
+        },
+        "capturedAt": {
+          "$ref": "../types/timestamp.json"
+        }
+      }
+    }
+  }
+}

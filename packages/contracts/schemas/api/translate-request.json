@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/translate-request.json",
+  "title": "TranslateRequest",
+  "description": "POST /v1/ai/translate. Text is transient: the AI service must not store or log it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "from",
+    "to"
+  ],
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "Already redacted on the phone."
+    },
+    "from": {
+      "$ref": "../types/language.json"
+    },
+    "to": {
+      "$ref": "../types/language.json"
+    }
+  }
+}

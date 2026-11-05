@@ -1,0 +1,26 @@
+# Prettier formats TS/JS/JSON/YAML-in-web only; other languages have their own formatters.
+**/node_modules
+**/dist
+**/build
+**/.dart_tool
+packages/contracts/generated
+packages/contracts/schemas
+packages/contracts/openapi
+apps
+modules/*/android
+modules/*/flutter
+modules/*/service
+ai
+packages/*/android
+packages/core-android
+packages/ai-runtime-android
+packages/ui
+packages/lang
+fakes
+infra
+.github
+*.md
+*.yaml
+*.yml
+*.toml
+pnpm-lock.yaml

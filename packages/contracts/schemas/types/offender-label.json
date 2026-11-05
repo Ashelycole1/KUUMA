@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/offender-label.json",
+  "title": "OffenderLabel",
+  "description": "A pseudonymous label for an offender inside one case, e.g. 'Person A'. Never a real name or handle.",
+  "type": "string",
+  "pattern": "^Person [A-Z]{1,2}$"
+}

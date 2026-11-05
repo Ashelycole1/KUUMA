@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.pairing.completed.v1.json",
+  "title": "GuardianPairingCompleted",
+  "description": "A child device was paired with a parent.",
+  "x-kuuma": {
+    "event": "guardian.pairing.completed",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "cloud_to_phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.pairing.completed"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianPairingCompletedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "deviceId",
+        "ageBracket"
+      ],
+      "properties": {
+        "childId": {
+          "$ref": "../types/uuid.json"
+        },
+        "deviceId": {
+          "$ref": "../types/uuid.json"
+        },
+        "ageBracket": {
+          "$ref": "../types/age-bracket.json"
+        }
+      }
+    }
+  }
+}

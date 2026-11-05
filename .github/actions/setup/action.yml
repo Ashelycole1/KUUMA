@@ -1,0 +1,29 @@
+name: Kuuma toolchains
+description: Pinned toolchains for CI (same versions as versions.toml), then dependencies.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with: { distribution: temurin, java-version: "17" }
+    - uses: astral-sh/setup-uv@v6
+      with: { version: "0.13.7" }
+    - uses: actions/setup-node@v4
+      with: { node-version: "22" }
+    - uses: pnpm/action-setup@v4
+      with: { version: "9.15.0" }
+    - uses: subosito/flutter-action@v2
+      with: { flutter-version: "3.27.4", channel: stable, cache: true }
+    - uses: android-actions/setup-android@v3
+    - uses: gradle/actions/setup-gradle@v4
+    - name: Dependencies
+      shell: bash
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        for app in child-app parent-app; do
+          printf 'sdk.dir=%s\nflutter.sdk=%s\n' "$ANDROID_HOME" "$FLUTTER_ROOT" > apps/$app/android/local.properties
+        done
+        uv sync --python 3.12
+        pnpm install --frozen-lockfile
+        for d in packages/contracts/generated/dart packages/lang/dart packages/ui modules/*/flutter apps/*; do
+          (cd "$d" && flutter pub get)
+        done

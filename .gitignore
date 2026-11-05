@@ -1,0 +1,46 @@
+# Secrets — never commit. Copy .env.example to .env.
+.env
+*.env.local
+*.keystore
+!infra/keys/kuuma-debug.keystore
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Gradle / Android / Kotlin
+.gradle/
+build/
+local.properties
+.kotlin/
+*.iml
+.idea/
+captures/
+.cxx/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec_overrides.yaml
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/ios/Flutter/
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+
+# Local stack and test output
+.kuuma/
+out/
+*.log

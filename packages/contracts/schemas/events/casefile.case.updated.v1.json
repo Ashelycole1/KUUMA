@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.case.updated.v1.json",
+  "title": "CasefileCaseUpdated",
+  "description": "A case gained an incident or changed severity.",
+  "x-kuuma": {
+    "event": "casefile.case.updated",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone_to_cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.case.updated"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileCaseUpdatedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "offenderLabel",
+        "incidentCount",
+        "topSeverity"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "offenderLabel": {
+          "$ref": "../types/offender-label.json"
+        },
+        "incidentCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topSeverity": {
+          "$ref": "../types/severity.json"
+        }
+      }
+    }
+  }
+}

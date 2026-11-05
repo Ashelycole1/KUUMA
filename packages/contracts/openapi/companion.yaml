@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info:
+  title: Kuuma Companion API
+  version: 1.0.0
+  description: Owned by the Companion build.
+servers:
+  - url: http://localhost:8080
+security:
+  - deviceSignature: []
+paths:
+  /v1/companion/content-packs/latest:
+    get:
+      operationId: latestContentPack
+      summary: The newest advice and help content pack.
+      responses:
+        "200":
+          description: Content-pack manifest.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/types/artifact-manifest.json" }
+              example:
+                artifactId: content-pack
+                version: 0.0.0
+                url: http://localhost:9000/kuuma-artifacts/content-packs/content-pack-0.0.0.zip
+                sha256: 589abdb770017770dd6063548128b787c0c365a65d5786d89c2a76ec6479df60
+                sizeBytes: 0
+                languages: [en, lg, nyn, sw]
+        default: { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    deviceSignature: { type: apiKey, in: header, name: X-Kuuma-Signature }
+  responses:
+    Error:
+      description: Any error.
+      content:
+        application/json:
+          schema: { $ref: "../schemas/types/error-response.json" }
+          example: { error: { code: bad_request, message: Invalid body, requestId: req-0000 } }

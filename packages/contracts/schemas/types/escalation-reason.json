@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/escalation-reason.json",
+  "title": "EscalationReason",
+  "description": "Why a case was escalated.",
+  "type": "string",
+  "enum": ["severity_threshold", "repeated_incidents", "grooming_detected", "sos_triggered", "manual"]
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/link-suggestions-request.json",
+  "title": "LinkSuggestionsRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "senderRefs"
+  ],
+  "properties": {
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "senderRefs": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/opaque-ref.json"
+      },
+      "minItems": 2,
+      "maxItems": 50
+    }
+  }
+}

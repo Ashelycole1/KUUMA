@@ -1,0 +1,22 @@
+name: kuuma_ui
+description: Kuuma shared Flutter UI - theme, components, translations, lock screen, discreet mode, navigation slots.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  local_auth: 2.3.0
+  kuuma_contracts:
+    path: ../contracts/generated/dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 5.0.0

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/heartbeat-response.json",
+  "title": "HeartbeatResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "latestPolicyVersion",
+    "serverTime"
+  ],
+  "properties": {
+    "latestPolicyVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "serverTime": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

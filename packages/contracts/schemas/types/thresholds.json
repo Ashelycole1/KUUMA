@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/thresholds.json",
+  "title": "Thresholds",
+  "description": "PLACEHOLDER detection and alert thresholds until the team agrees values.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "flagMinConfidence",
+    "alertMinSeverity",
+    "captureMinSeverity"
+  ],
+  "properties": {
+    "flagMinConfidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Minimum classifier confidence for Sentinel to raise a flag."
+    },
+    "alertMinSeverity": {
+      "$ref": "severity.json",
+      "description": "Minimum case severity before Guardian alerts the parent."
+    },
+    "captureMinSeverity": {
+      "$ref": "severity.json",
+      "description": "Minimum flag severity before evidence is captured automatically."
+    }
+  }
+}

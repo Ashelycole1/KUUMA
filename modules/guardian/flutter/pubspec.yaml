@@ -1,0 +1,22 @@
+name: kuuma_guardian
+description: Guardian screens for the Kuuma apps. Skeleton from Core; the Guardian owner fills it.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+# Rule 1: shared packages only (kuuma_ui, kuuma_contracts, kuuma_lang), never another module.
+dependencies:
+  flutter:
+    sdk: flutter
+  kuuma_ui:
+    path: ../../../packages/ui
+  kuuma_contracts:
+    path: ../../../packages/contracts/generated/dart
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 5.0.0

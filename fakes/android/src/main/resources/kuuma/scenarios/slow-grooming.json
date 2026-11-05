@@ -1,0 +1,92 @@
+{
+ "appSource": "instagram",
+ "conversation": "dm-new-follower",
+ "description": "A grooming pattern over two weeks of messages.",
+ "language": "en",
+ "messages": [
+  {
+   "day": 1,
+   "from": "offender",
+   "stage": "trust_building",
+   "text": "Hi! I love your drawings, you are really talented.",
+   "time": "19:00"
+  },
+  {
+   "day": 1,
+   "from": "child",
+   "text": "Thank you!",
+   "time": "19:05"
+  },
+  {
+   "day": 3,
+   "from": "offender",
+   "stage": "trust_building",
+   "text": "You seem much more mature than other people your age.",
+   "time": "18:40"
+  },
+  {
+   "day": 5,
+   "expect": {
+    "category": "grooming",
+    "severity": "high"
+   },
+   "from": "offender",
+   "stage": "gifts_flattery",
+   "text": "I can send you airtime as a gift, you deserve it.",
+   "time": "21:15"
+  },
+  {
+   "day": 7,
+   "expect": {
+    "category": "grooming",
+    "severity": "high"
+   },
+   "from": "offender",
+   "stage": "isolation",
+   "text": "Your parents don't understand you like I do.",
+   "time": "22:30"
+  },
+  {
+   "day": 9,
+   "expect": {
+    "category": "grooming",
+    "severity": "high"
+   },
+   "from": "offender",
+   "stage": "sexual_talk",
+   "text": "[PLACEHOLDER: sexualised remark - stage sexual_talk]",
+   "time": "22:45"
+  },
+  {
+   "day": 11,
+   "expect": {
+    "category": "grooming",
+    "severity": "high"
+   },
+   "from": "offender",
+   "stage": "secrecy",
+   "text": "This is our secret, don't tell anyone about our chats.",
+   "time": "23:00"
+  },
+  {
+   "day": 14,
+   "expect": {
+    "category": "grooming",
+    "severity": "high"
+   },
+   "from": "offender",
+   "stage": "meet_or_images",
+   "text": "[PLACEHOLDER: request to meet in person or for images - stage meet_or_images]",
+   "time": "23:10"
+  }
+ ],
+ "name": "slow-grooming",
+ "participants": {
+  "child": {
+   "displayName": "Child (test)"
+  },
+  "offender": {
+   "displayName": "New follower (invented)"
+  }
+ }
+}

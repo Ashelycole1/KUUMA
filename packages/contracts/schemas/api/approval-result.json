@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/approval-result.json",
+  "title": "ApprovalResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approvalId",
+    "requestId",
+    "caseId",
+    "decision",
+    "decidedAt"
+  ],
+  "properties": {
+    "approvalId": {
+      "$ref": "../types/uuid.json"
+    },
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "decision": {
+      "$ref": "../types/approval-decision.json"
+    },
+    "decidedAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

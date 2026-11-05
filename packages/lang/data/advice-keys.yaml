@@ -1,0 +1,38 @@
+# Advice shown to the child. Keys travel in events (AdviceKey); text never does.
+# Keys must match the AdviceKey pattern: advice.<area>.<name>. English is the source text;
+# lg / nyn / sw are filled by native speakers with the Companion owner.
+contract: AdviceKey
+values:
+  - id: advice.general.do_not_reply
+    categories: [insult, harassment, threat, hate]
+    text: { en: "You don't have to reply. Not replying is often the safest choice." }
+  - id: advice.general.you_are_not_alone
+    categories: []
+    text: { en: "This is not your fault, and you are not alone." }
+  - id: advice.general.save_evidence
+    categories: []
+    text: { en: "Kuuma can keep a safe copy of these messages in case you need them later." }
+  - id: advice.general.block_sender
+    categories: [insult, harassment, hate, sexual_harassment]
+    text: { en: "You can block this person in the app." }
+  - id: advice.threat.tell_adult
+    categories: [threat, sextortion, grooming, self_harm_encouragement]
+    text: { en: "Please tell an adult you trust about this today." }
+  - id: advice.sextortion.do_not_pay
+    categories: [sextortion]
+    text: { en: "Do not send money or more pictures. Tell an adult you trust." }
+  - id: advice.grooming.secrets_are_a_warning
+    categories: [grooming]
+    text: { en: "An adult who asks you to keep secrets from your family is a warning sign." }
+  - id: advice.self_harm.talk_to_someone
+    categories: [self_harm_encouragement]
+    text: { en: "You matter. Talk to someone you trust, or call a helpline." }
+  - id: advice.doxxing.report_to_platform
+    categories: [doxxing]
+    text: { en: "You can ask the app to remove posts that share your private details." }
+  - id: advice.reply.no_phone_number
+    categories: []
+    text: { en: "Think twice before sharing your phone number." }
+  - id: advice.reply.no_location
+    categories: []
+    text: { en: "Think twice before sharing where you are or where you live." }

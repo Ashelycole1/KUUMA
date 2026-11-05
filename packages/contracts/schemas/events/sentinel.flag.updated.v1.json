@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/sentinel.flag.updated.v1.json",
+  "title": "SentinelFlagUpdated",
+  "description": "Sentinel revised a flag, e.g. after more context or a cloud analysis.",
+  "x-kuuma": {
+    "event": "sentinel.flag.updated",
+    "version": 1,
+    "publisher": "sentinel",
+    "where": "phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "sentinel.flag.updated"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "SentinelFlagUpdatedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flagId",
+        "severity",
+        "category",
+        "groomingSignals"
+      ],
+      "properties": {
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "severity": {
+          "$ref": "../types/severity.json"
+        },
+        "category": {
+          "$ref": "../types/harm-category.json"
+        },
+        "groomingSignals": {
+          "type": "array",
+          "items": {
+            "$ref": "../types/grooming-stage.json"
+          }
+        },
+        "translationRef": {
+          "$ref": "../types/opaque-ref.json"
+        }
+      }
+    }
+  }
+}

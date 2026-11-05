@@ -1,0 +1,52 @@
+# Who must approve changes to each folder. Later rules win over earlier ones.
+#
+# PLACEHOLDERS: build owners are not named yet ("Decisions needed" in the Core brief).
+# Until they are, every folder falls back to the main builder (@Ashelycole1).
+# Replace each `@Ashelycole1  # <role>` with that owner's GitHub handle (or a team such
+# as @kuuma/guardian once the repo moves to an organisation).
+
+# ---------------------------------------------------------------- Core (main builder)
+*                                   @Ashelycole1
+/README.md                          @Ashelycole1
+/CONTRIBUTING.md                    @Ashelycole1
+/CODEOWNERS                         @Ashelycole1
+/Makefile                           @Ashelycole1
+/versions.toml                      @Ashelycole1
+/tools/                             @Ashelycole1
+/.github/                           @Ashelycole1
+/infra/                             @Ashelycole1
+/packages/core-android/             @Ashelycole1
+/packages/core-android-lint/        @Ashelycole1
+/packages/ui/                       @Ashelycole1
+/packages/lang/                     @Ashelycole1
+/packages/server-common/            @Ashelycole1
+/apps/                              @Ashelycole1
+/fakes/                             @Ashelycole1
+
+# ---------------------------------------------------------------- AI owner
+/ai/                                @Ashelycole1  # AI owner
+/packages/kuuma-llm/                @Ashelycole1  # AI owner
+/packages/ai-runtime-android/       @Ashelycole1  # AI owner
+/packages/lang/lexicon/             @Ashelycole1  # AI owner
+
+# ---------------------------------------------------------------- Module owners
+/modules/sentinel/                  @Ashelycole1  # Sentinel owner
+/modules/companion/                 @Ashelycole1  # Companion owner
+/modules/casefile/                  @Ashelycole1  # Casefile owner
+/modules/guardian/                  @Ashelycole1  # Guardian owner
+# Each module also keeps its own fake working (rule 6).
+/fakes/android/src/main/kotlin/ug/kuuma/fakes/ @Ashelycole1  # main builder + every module owner
+
+# ---------------------------------------------------------------- Contracts (rule 5)
+# Main builder plus every build that publishes or consumes the changed event.
+/packages/contracts/                                          @Ashelycole1
+/packages/contracts/schemas/events/sentinel.*                 @Ashelycole1  # main builder + Sentinel, Companion, Casefile
+/packages/contracts/schemas/events/companion.*                @Ashelycole1  # main builder + Companion, Casefile, Guardian
+/packages/contracts/schemas/events/casefile.*                 @Ashelycole1  # main builder + Casefile, Guardian
+/packages/contracts/schemas/events/guardian.*                 @Ashelycole1  # main builder + Guardian, Sentinel, Casefile
+/packages/contracts/schemas/types/                            @Ashelycole1  # main builder + all owners
+/packages/contracts/openapi/ai.yaml                          @Ashelycole1  # main builder + AI owner
+/packages/contracts/openapi/companion.yaml                    @Ashelycole1  # main builder + Companion
+/packages/contracts/openapi/cases.yaml                        @Ashelycole1  # main builder + Casefile
+/packages/contracts/openapi/verify.yaml                       @Ashelycole1  # main builder + Casefile
+/packages/contracts/openapi/guardian.yaml                     @Ashelycole1  # main builder + Guardian

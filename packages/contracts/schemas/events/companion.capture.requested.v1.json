@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/companion.capture.requested.v1.json",
+  "title": "CompanionCaptureRequested",
+  "description": "The child asked to capture the current conversation.",
+  "x-kuuma": {
+    "event": "companion.capture.requested",
+    "version": 1,
+    "publisher": "companion",
+    "where": "phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "companion.capture.requested"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CompanionCaptureRequestedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conversationRef",
+        "requestedAt"
+      ],
+      "properties": {
+        "conversationRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "requestedAt": {
+          "$ref": "../types/timestamp.json"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/sha256.json",
+  "title": "Sha256",
+  "description": "A SHA-256 digest as 64 lowercase hex characters.",
+  "type": "string",
+  "pattern": "^[0-9a-f]{64}$"
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.share.completed.v1.json",
+  "title": "CasefileShareCompleted",
+  "description": "A share link was issued to the recipient.",
+  "x-kuuma": {
+    "event": "casefile.share.completed",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.share.completed"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileShareCompletedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "recipientType",
+        "expiresAt"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "recipientType": {
+          "$ref": "../types/recipient-type.json"
+        },
+        "expiresAt": {
+          "$ref": "../types/timestamp.json"
+        }
+      }
+    }
+  }
+}

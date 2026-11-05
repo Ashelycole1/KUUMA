@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/artifact-manifest.json",
+  "title": "ArtifactManifest",
+  "description": "A downloadable, hash-checked artifact: a model, a lexicon or a content pack.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifactId",
+    "version",
+    "url",
+    "sha256",
+    "sizeBytes"
+  ],
+  "properties": {
+    "artifactId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sha256": {
+      "$ref": "sha256.json"
+    },
+    "sizeBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "$ref": "language.json"
+      }
+    }
+  }
+}

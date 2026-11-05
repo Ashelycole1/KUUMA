@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/verify-response.json",
+  "title": "VerifyResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hash",
+    "found"
+  ],
+  "properties": {
+    "hash": {
+      "$ref": "../types/sha256.json"
+    },
+    "found": {
+      "type": "boolean"
+    },
+    "timestamp": {
+      "$ref": "../types/timestamp.json"
+    },
+    "chainValid": {
+      "type": "boolean"
+    }
+  }
+}

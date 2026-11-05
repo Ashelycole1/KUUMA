@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/alert.json",
+  "title": "Alert",
+  "description": "An alert shown to a parent. Holds no message content.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alertId",
+    "caseId",
+    "severity",
+    "createdAt",
+    "read"
+  ],
+  "properties": {
+    "alertId": {
+      "$ref": "uuid.json"
+    },
+    "caseId": {
+      "$ref": "uuid.json"
+    },
+    "severity": {
+      "$ref": "severity.json"
+    },
+    "category": {
+      "$ref": "harm-category.json"
+    },
+    "createdAt": {
+      "$ref": "timestamp.json"
+    },
+    "read": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/opaque-ref.json",
+  "title": "OpaqueRef",
+  "description": "A salted hash standing in for a message, conversation or sender: 'or1_' + base64url(HMAC-SHA256(deviceSalt, value)), unpadded. Not reversible off the phone.",
+  "type": "string",
+  "pattern": "^or1_[A-Za-z0-9_-]{43}$"
+}

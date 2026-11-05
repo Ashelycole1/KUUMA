@@ -1,0 +1,19 @@
+# INVENTED TEXT ONLY. Never put real messages in a scenario (rule: scenarios contain only invented text).
+# Repeated insults in Luganda from one classmate over three days, through WhatsApp.
+name: luganda-insults
+description: Repeated insults in Luganda over three days.
+language: lg
+appSource: whatsapp
+conversation: class-group-chat
+participants:
+  child: { displayName: "Child (test)" }
+  offender: { displayName: "Classmate (invented)" }
+  friend: { displayName: "Friend (invented)" }
+messages:
+  - { day: 1, time: "16:05", from: friend, text: "Wasuze otya? Homework y'olwaleero ebadde ki?" }
+  - { day: 1, time: "16:20", from: offender, text: "Oli musiru nnyo, toyinza kumanya.", expect: { category: insult, severity: high } }
+  - { day: 1, time: "16:21", from: child, text: "Leka kunvuma." }
+  - { day: 2, time: "07:45", from: offender, text: "Ggwe kasiru, buli muntu akusekerera.", expect: { category: insult, severity: high } }
+  - { day: 2, time: "12:10", from: friend, text: "Tomuwuliriza, ojje tuzannye." }
+  - { day: 3, time: "18:30", from: offender, text: "Tolina mugaso, teweetaaga kujja ku ssomero.", expect: { category: insult, severity: high } }
+  - { day: 3, time: "18:31", from: offender, text: "Oli musiru era tolina mukwano.", expect: { category: insult, severity: high } }

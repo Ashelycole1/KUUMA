@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.alert.sent.v1.json",
+  "title": "GuardianAlertSent",
+  "description": "Guardian alerted a parent.",
+  "x-kuuma": {
+    "event": "guardian.alert.sent",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.alert.sent"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianAlertSentPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alertId",
+        "caseId",
+        "severity"
+      ],
+      "properties": {
+        "alertId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "severity": {
+          "$ref": "../types/severity.json"
+        }
+      }
+    }
+  }
+}

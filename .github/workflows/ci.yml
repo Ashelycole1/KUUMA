@@ -1,0 +1,77 @@
+# Every pull request. Steps follow the Core brief's CI pipeline (1-8).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KUUMA_ENV: ci
+
+jobs:
+  # 1 lint/format · 2 boundary check · 3 codegen drift · 7 privacy scan (source) · version pins
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: make check
+        run: make check
+
+  # 4 unit tests for changed folders · 5 contract tests for publishers/consumers of changed events
+  # 7 privacy scan of the logs the tests produced
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: ./.github/actions/setup
+      - name: Plan what to test
+        id: plan
+        run: |
+          base="${{ github.event.pull_request.base.sha || 'HEAD~1' }}"
+          python3 tools/ci_plan.py "$base" | tee plan.txt
+          echo "paths=$(tr '\n' ' ' < plan.txt)" >> "$GITHUB_OUTPUT"
+      - name: Tests
+        env:
+          KUUMA_LOG_FILE: ${{ github.workspace }}/out/privacy/python-tests.jsonl
+        run: |
+          for p in ${{ steps.plan.outputs.paths }}; do
+            make test TEST_PATH="$PWD/$p"
+          done
+      - name: Guard self-tests (a deliberate boundary violation and a logged phone number must fail)
+        run: uv run pytest tools/tests
+      - name: Privacy scan of test logs
+        run: uv run python tools/privacy_scan.py --no-source --artifacts out/privacy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: test-logs, path: out/privacy, if-no-files-found: ignore }
+
+  # 6 build debug APKs and service Docker images
+  build:
+    runs-on: ubuntu-24.04
+    needs: [check]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Debug APKs
+        run: make apk
+      - uses: actions/upload-artifact@v4
+        with: { name: debug-apks, path: out/apk }
+      - name: Service image
+        run: docker build -f infra/docker/service.Dockerfile -t kuuma-service:ci .
+      - name: Compose config is valid
+        run: cp .env.example .env && docker compose -f infra/docker-compose.yml --env-file .env config -q
+
+  # 8 Later, once a cloud host is chosen: deploy to staging on merge to main.
+  deploy-staging:
+    if: false
+    runs-on: ubuntu-24.04
+    needs: [check, test, build]
+    steps:
+      - run: echo "No staging yet. See infra/deploy/README.md."

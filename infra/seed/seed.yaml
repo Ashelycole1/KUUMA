@@ -1,0 +1,25 @@
+# Local seed data shared by every service, fake and scenario. TEST DATA ONLY.
+# The device key below is a throwaway key for the local stack; never use it anywhere else.
+test_parent:
+  parent_id: 9b8c7d6e-5f4a-4b3c-8d2e-1f0a9b8c7d6e
+  login: test-parent          # placeholder login until Guardian builds real sign-in
+  session_token: test-parent-session-token
+  pairing_code: "482913"
+
+child_device:
+  child_id: 3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c
+  device_id: 7a9e2c41-5d3b-4f6a-8e1c-2b3d4e5f6a7b
+  age_bracket: age_placeholder_b
+  public_key_der_b64: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhMrS4jAvhSm7zrXHcDtElpoVvKgF7gJaFTvcZLWNiFI0wUCQuXwt856tERlu45ZnoElSBW4R1SgC5FCYCsoQlA==
+  test_private_key_pem: |
+    -----BEGIN PRIVATE KEY-----
+    MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgGP09tND+2WnUPGDj
+    b6A+HCF4LN3iPfu2EiNy9EpeeDChRANCAASEytLiMC+FKbvOtcdwO0SWmhW8qAXu
+    AloVO9xktY2IUjTBQJC5fC3znq0RGW7jlmegSVIFbhHVKALkUJgKyhCU
+    -----END PRIVATE KEY-----
+
+sample_case:
+  case_id: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+  offender_label: Person A
+  incident_count: 3
+  top_severity: medium

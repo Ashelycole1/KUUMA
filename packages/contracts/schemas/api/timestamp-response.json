@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/timestamp-response.json",
+  "title": "TimestampResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hash",
+    "timestamp",
+    "signature",
+    "authority"
+  ],
+  "properties": {
+    "hash": {
+      "$ref": "../types/sha256.json"
+    },
+    "timestamp": {
+      "$ref": "../types/timestamp.json"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64 signature by the timestamp authority over hash|timestamp."
+    },
+    "authority": {
+      "type": "string"
+    }
+  }
+}

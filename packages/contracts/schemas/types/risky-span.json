@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/risky-span.json",
+  "title": "RiskySpan",
+  "description": "A risky part of a draft reply, as character offsets [start, end).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "start",
+    "end",
+    "reasonKey"
+  ],
+  "properties": {
+    "start": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reasonKey": {
+      "$ref": "advice-key.json"
+    }
+  }
+}

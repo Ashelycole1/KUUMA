@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/advice-request.json",
+  "title": "AdviceRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "severity",
+    "language"
+  ],
+  "properties": {
+    "category": {
+      "$ref": "../types/harm-category.json"
+    },
+    "severity": {
+      "$ref": "../types/severity.json"
+    },
+    "language": {
+      "$ref": "../types/language.json"
+    },
+    "ageBracket": {
+      "$ref": "../types/age-bracket.json"
+    }
+  }
+}

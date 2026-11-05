@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/companion.sos.triggered.v1.json",
+  "title": "CompanionSosTriggered",
+  "description": "The child pressed SOS.",
+  "x-kuuma": {
+    "event": "companion.sos.triggered",
+    "version": 1,
+    "publisher": "companion",
+    "where": "phone_to_cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "companion.sos.triggered"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CompanionSosTriggeredPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "triggeredAt"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "triggeredAt": {
+          "$ref": "../types/timestamp.json"
+        }
+      }
+    }
+  }
+}

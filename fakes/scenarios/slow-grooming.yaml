@@ -1,0 +1,20 @@
+# INVENTED TEXT ONLY. Never put real messages in a scenario.
+# A grooming pattern over two weeks on Instagram. Stages that would involve sexual content
+# are represented by bracketed PLACEHOLDERS only; scenarios never contain such content.
+name: slow-grooming
+description: A grooming pattern over two weeks of messages.
+language: en
+appSource: instagram
+conversation: dm-new-follower
+participants:
+  child: { displayName: "Child (test)" }
+  offender: { displayName: "New follower (invented)" }
+messages:
+  - { day: 1, time: "19:00", from: offender, text: "Hi! I love your drawings, you are really talented.", stage: trust_building }
+  - { day: 1, time: "19:05", from: child, text: "Thank you!" }
+  - { day: 3, time: "18:40", from: offender, text: "You seem much more mature than other people your age.", stage: trust_building }
+  - { day: 5, time: "21:15", from: offender, text: "I can send you airtime as a gift, you deserve it.", stage: gifts_flattery, expect: { category: grooming, severity: high } }
+  - { day: 7, time: "22:30", from: offender, text: "Your parents don't understand you like I do.", stage: isolation, expect: { category: grooming, severity: high } }
+  - { day: 9, time: "22:45", from: offender, text: "[PLACEHOLDER: sexualised remark - stage sexual_talk]", stage: sexual_talk, expect: { category: grooming, severity: high } }
+  - { day: 11, time: "23:00", from: offender, text: "This is our secret, don't tell anyone about our chats.", stage: secrecy, expect: { category: grooming, severity: high } }
+  - { day: 14, time: "23:10", from: offender, text: "[PLACEHOLDER: request to meet in person or for images - stage meet_or_images]", stage: meet_or_images, expect: { category: grooming, severity: high } }

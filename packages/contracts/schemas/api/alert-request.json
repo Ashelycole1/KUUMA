@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/alert-request.json",
+  "title": "AlertRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "severity"
+  ],
+  "properties": {
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "severity": {
+      "$ref": "../types/severity.json"
+    },
+    "category": {
+      "$ref": "../types/harm-category.json"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+# Must match packages/contracts/schemas/types/language.json.
+# `endonym` is the language's name for itself; `flutterLocale` is the Flutter locale code.
+# `materialSupported`: whether Flutter ships Material translations (if not, kuuma_ui falls back to English).
+contract: Language
+values:
+  - id: en
+    endonym: English
+    flutterLocale: en
+    materialSupported: true
+    label: { en: English }
+  - id: lg
+    endonym: Luganda
+    flutterLocale: lg
+    materialSupported: false
+    label: { en: Luganda }
+  - id: nyn
+    endonym: Runyankore
+    flutterLocale: nyn
+    materialSupported: false
+    label: { en: Runyankole }
+  - id: sw
+    endonym: Kiswahili
+    flutterLocale: sw
+    materialSupported: true
+    label: { en: Swahili, sw: Kiswahili }

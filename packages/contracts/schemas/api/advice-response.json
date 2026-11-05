@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/advice-response.json",
+  "title": "AdviceResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "adviceKeys",
+    "language"
+  ],
+  "properties": {
+    "adviceKeys": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/advice-key.json"
+      }
+    },
+    "language": {
+      "$ref": "../types/language.json"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/pairing-request.json",
+  "title": "PairingRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pairingCode",
+    "devicePublicKey",
+    "ageBracket"
+  ],
+  "properties": {
+    "pairingCode": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "devicePublicKey": {
+      "type": "string",
+      "description": "Base64 X.509 SubjectPublicKeyInfo of the device's ECDSA P-256 key."
+    },
+    "ageBracket": {
+      "$ref": "../types/age-bracket.json"
+    }
+  }
+}

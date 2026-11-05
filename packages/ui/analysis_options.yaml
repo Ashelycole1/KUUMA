@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Rule 7: never log message content. Use structured, content-free logging only.
+    avoid_print: true

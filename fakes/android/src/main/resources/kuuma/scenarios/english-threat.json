@@ -1,0 +1,33 @@
+{
+ "appSource": "sms",
+ "conversation": "unknown-sms-thread",
+ "description": "One threat of violence.",
+ "language": "en",
+ "messages": [
+  {
+   "day": 1,
+   "from": "offender",
+   "text": "I know which school you go to.",
+   "time": "20:02"
+  },
+  {
+   "day": 1,
+   "expect": {
+    "category": "threat",
+    "severity": "high"
+   },
+   "from": "offender",
+   "text": "Tomorrow after school I will hurt you.",
+   "time": "20:03"
+  }
+ ],
+ "name": "english-threat",
+ "participants": {
+  "child": {
+   "displayName": "Child (test)"
+  },
+  "offender": {
+   "displayName": "Unknown sender (invented)"
+  }
+ }
+}

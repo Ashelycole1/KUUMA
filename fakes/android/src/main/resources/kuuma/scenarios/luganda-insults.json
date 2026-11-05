@@ -1,0 +1,78 @@
+{
+ "appSource": "whatsapp",
+ "conversation": "class-group-chat",
+ "description": "Repeated insults in Luganda over three days.",
+ "language": "lg",
+ "messages": [
+  {
+   "day": 1,
+   "from": "friend",
+   "text": "Wasuze otya? Homework y'olwaleero ebadde ki?",
+   "time": "16:05"
+  },
+  {
+   "day": 1,
+   "expect": {
+    "category": "insult",
+    "severity": "high"
+   },
+   "from": "offender",
+   "text": "Oli musiru nnyo, toyinza kumanya.",
+   "time": "16:20"
+  },
+  {
+   "day": 1,
+   "from": "child",
+   "text": "Leka kunvuma.",
+   "time": "16:21"
+  },
+  {
+   "day": 2,
+   "expect": {
+    "category": "insult",
+    "severity": "high"
+   },
+   "from": "offender",
+   "text": "Ggwe kasiru, buli muntu akusekerera.",
+   "time": "07:45"
+  },
+  {
+   "day": 2,
+   "from": "friend",
+   "text": "Tomuwuliriza, ojje tuzannye.",
+   "time": "12:10"
+  },
+  {
+   "day": 3,
+   "expect": {
+    "category": "insult",
+    "severity": "high"
+   },
+   "from": "offender",
+   "text": "Tolina mugaso, teweetaaga kujja ku ssomero.",
+   "time": "18:30"
+  },
+  {
+   "day": 3,
+   "expect": {
+    "category": "insult",
+    "severity": "high"
+   },
+   "from": "offender",
+   "text": "Oli musiru era tolina mukwano.",
+   "time": "18:31"
+  }
+ ],
+ "name": "luganda-insults",
+ "participants": {
+  "child": {
+   "displayName": "Child (test)"
+  },
+  "friend": {
+   "displayName": "Friend (invented)"
+  },
+  "offender": {
+   "displayName": "Classmate (invented)"
+  }
+ }
+}

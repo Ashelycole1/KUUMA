@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/policy.json",
+  "title": "Policy",
+  "description": "The monitoring policy a parent sets for one child.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ageBracket",
+    "watchedApps",
+    "thresholds",
+    "policyVersion"
+  ],
+  "properties": {
+    "ageBracket": {
+      "$ref": "age-bracket.json"
+    },
+    "watchedApps": {
+      "type": "array",
+      "items": {
+        "$ref": "app-source.json"
+      }
+    },
+    "thresholds": {
+      "$ref": "thresholds.json"
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

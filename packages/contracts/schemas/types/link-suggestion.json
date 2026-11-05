@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/link-suggestion.json",
+  "title": "LinkSuggestion",
+  "description": "A suggestion that two sender refs are probably the same offender.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "senderRefA",
+    "senderRefB",
+    "confidence"
+  ],
+  "properties": {
+    "senderRefA": {
+      "$ref": "opaque-ref.json"
+    },
+    "senderRefB": {
+      "$ref": "opaque-ref.json"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

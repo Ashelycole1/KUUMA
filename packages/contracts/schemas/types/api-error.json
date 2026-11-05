@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/api-error.json",
+  "title": "ApiError",
+  "description": "Details of a failed API call.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "message",
+    "requestId"
+  ],
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable machine-readable code, e.g. not_found."
+    },
+    "message": {
+      "type": "string",
+      "description": "Developer-facing message. Never contains user content."
+    },
+    "requestId": {
+      "type": "string"
+    }
+  }
+}

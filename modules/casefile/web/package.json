@@ -1,0 +1,19 @@
+{
+  "name": "@kuuma/casefile-web",
+  "version": "0.0.0",
+  "description": "Casefile verification viewer: a recipient checks an evidence hash. Skeleton — Casefile owner fills.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@kuuma/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.8.3",
+    "vitest": "3.1.4"
+  }
+}

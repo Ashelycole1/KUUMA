@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/error-response.json",
+  "title": "ErrorResponse",
+  "description": "The body of every non-2xx API response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "error"
+  ],
+  "properties": {
+    "error": {
+      "$ref": "api-error.json"
+    }
+  }
+}

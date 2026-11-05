@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/envelope.json",
+  "title": "Envelope",
+  "description": "Wraps every event. No envelope field ever holds a real name, phone number or message text.",
+  "type": "object",
+  "required": [
+    "eventId",
+    "type",
+    "version",
+    "occurredAt",
+    "deviceId",
+    "payload"
+  ],
+  "properties": {
+    "eventId": {
+      "$ref": "../types/uuid.json"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^(sentinel|companion|casefile|guardian)\\.[a-z]+\\.[a-z]+$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "deviceId": {
+      "$ref": "../types/uuid.json",
+      "description": "Random per-install ID. Not a hardware ID."
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json",
+      "description": "Pseudonymous, random. Absent before a case exists."
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

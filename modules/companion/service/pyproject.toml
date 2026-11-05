@@ -1,0 +1,17 @@
+[project]
+name = "kuuma-companion-service"
+version = "0.1.0"
+description = "Kuuma Companion service. Skeleton from Core; the Companion owner fills it."
+requires-python = ">=3.12"
+dependencies = ["kuuma-server-common", "kuuma-contracts"]
+
+[tool.uv.sources]
+kuuma-server-common = { workspace = true }
+kuuma-contracts = { workspace = true }
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["kuuma_companion_service"]

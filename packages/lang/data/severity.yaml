@@ -1,0 +1,12 @@
+# Must match packages/contracts/schemas/types/severity.json. `rank` orders them.
+contract: Severity
+values:
+  - id: low
+    rank: 1
+    label: { en: Low }
+  - id: medium
+    rank: 2
+    label: { en: Medium }
+  - id: high
+    rank: 3
+    label: { en: High }

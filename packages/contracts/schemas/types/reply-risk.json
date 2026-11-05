@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/reply-risk.json",
+  "title": "ReplyRisk",
+  "description": "What the reply-risk checker found in a draft the child is typing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "risky",
+    "spans",
+    "suggestionKeys"
+  ],
+  "properties": {
+    "risky": {
+      "type": "boolean"
+    },
+    "spans": {
+      "type": "array",
+      "items": {
+        "$ref": "risky-span.json"
+      }
+    },
+    "suggestionKeys": {
+      "type": "array",
+      "items": {
+        "$ref": "advice-key.json"
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/analyse-request.json",
+  "title": "AnalyseRequest",
+  "description": "POST /v1/ai/analyse. Text is transient: the AI service must not store or log it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text"
+  ],
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n]."
+    },
+    "language": {
+      "$ref": "../types/language.json"
+    },
+    "appSource": {
+      "$ref": "../types/app-source.json"
+    },
+    "context": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 4000
+      },
+      "maxItems": 10,
+      "description": "Up to 10 earlier redacted messages, oldest first."
+    }
+  }
+}

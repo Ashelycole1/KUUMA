@@ -1,0 +1,161 @@
+openapi: 3.1.0
+info:
+  title: Kuuma AI API
+  version: 1.0.0
+  description: |
+    Owned by the AI build. Text sent here is already redacted on the phone and is
+    transient: the AI service must never store or log it.
+servers:
+  - url: http://localhost:8080
+security:
+  - deviceSignature: []
+paths:
+  /v1/ai/analyse:
+    post:
+      operationId: analyse
+      summary: Classify one redacted message, with optional earlier context.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/analyse-request.json" }
+            example: { text: "wewe ni mjinga [CONTACT_1]", language: sw, appSource: whatsapp }
+      responses:
+        "200":
+          description: The verdict.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/analyse-response.json" }
+              example:
+                verdict: { harmful: true, category: insult, severity: medium, confidence: 0.82 }
+                groomingSignals: []
+                modelVersion: stub-0.0.0
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/advice:
+    post:
+      operationId: advice
+      summary: Pick advice keys for a flag.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/advice-request.json" }
+            example: { category: threat, severity: high, language: en }
+      responses:
+        "200":
+          description: Advice keys to show, most important first.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/advice-response.json" }
+              example: { adviceKeys: [advice.threat.tell_adult, advice.general.do_not_reply], language: en }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/translate:
+    post:
+      operationId: translate
+      summary: Translate one redacted message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/translate-request.json" }
+            example: { text: "oli musiru", from: lg, to: en }
+      responses:
+        "200":
+          description: The translation.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/translate-response.json" }
+              example: { text: "you are stupid", from: lg, to: en }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/link-suggestions:
+    post:
+      operationId: linkSuggestions
+      summary: Suggest which sender refs in a case are probably the same offender.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/link-suggestions-request.json" }
+            example:
+              caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+              senderRefs: [or1_HhwaRlcXFE1YvnCt9cIHo4H_UYRbftKcQHvHFWmqNh4, or1_aMEmyf57V--X-5YoMrAOgiT-iVO5if_A-Li8Mb2IG3k]
+      responses:
+        "200":
+          description: Suggested links.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/link-suggestions-response.json" }
+              example:
+                suggestions:
+                  - senderRefA: or1_HhwaRlcXFE1YvnCt9cIHo4H_UYRbftKcQHvHFWmqNh4
+                    senderRefB: or1_aMEmyf57V--X-5YoMrAOgiT-iVO5if_A-Li8Mb2IG3k
+                    confidence: 0.71
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/feedback:
+    post:
+      operationId: feedback
+      summary: Record a child's verdict on a flag (only with consent to train).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/feedback-request.json" }
+            example: { flagId: f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c, verdict: correct, modelVersion: stub-0.0.0 }
+      responses:
+        "202":
+          description: Accepted.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/accepted-response.json" }
+              example: { accepted: true }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/models/latest:
+    get:
+      operationId: latestModel
+      summary: The newest on-device model the phone should download.
+      responses:
+        "200":
+          description: Model manifest.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/types/artifact-manifest.json" }
+              example:
+                artifactId: harm-classifier
+                version: 0.0.0
+                url: http://localhost:9000/kuuma-artifacts/models/harm-classifier-0.0.0.tflite
+                sha256: c1c924077240318622c4f5cacf2b36e6d8652e6fa5736092c8e2edfb66dd9dff
+                sizeBytes: 0
+                languages: [en, lg, nyn, sw]
+        default: { $ref: "#/components/responses/Error" }
+  /v1/ai/lexicon/latest:
+    get:
+      operationId: latestLexicon
+      summary: The newest lexicon bundle.
+      responses:
+        "200":
+          description: Lexicon manifest.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/types/artifact-manifest.json" }
+              example:
+                artifactId: lexicon
+                version: 0.0.0
+                url: http://localhost:9000/kuuma-artifacts/lexicon/lexicon-0.0.0.zip
+                sha256: 9be4f9559fc943f1ad32a4bfc1dfe686467ac0a5f0f98522fc8e69d7aeae3b03
+                sizeBytes: 0
+                languages: [en, lg, nyn, sw]
+        default: { $ref: "#/components/responses/Error" }
+components:
+  securitySchemes:
+    deviceSignature:
+      type: apiKey
+      in: header
+      name: X-Kuuma-Signature
+      description: See packages/server-common/README.md — ECDSA P-256 signature over the canonical request.
+  responses:
+    Error:
+      description: Any error.
+      content:
+        application/json:
+          schema: { $ref: "../schemas/types/error-response.json" }
+          example: { error: { code: bad_request, message: Invalid body, requestId: req-0000 } }

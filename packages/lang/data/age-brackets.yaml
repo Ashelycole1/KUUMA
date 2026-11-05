@@ -1,0 +1,16 @@
+# PLACEHOLDER until the team agrees the brackets (see "Decisions needed" in the Core brief).
+# Must match packages/contracts/schemas/types/age-bracket.json. Changing ids is a contract change.
+contract: AgeBracket
+values:
+  - id: age_placeholder_a
+    minAge: null
+    maxAge: null
+    label: { en: "Age group A (placeholder)" }
+  - id: age_placeholder_b
+    minAge: null
+    maxAge: null
+    label: { en: "Age group B (placeholder)" }
+  - id: age_placeholder_c
+    minAge: null
+    maxAge: null
+    label: { en: "Age group C (placeholder)" }

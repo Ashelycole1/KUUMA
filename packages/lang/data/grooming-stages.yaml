@@ -1,0 +1,21 @@
+# Must match packages/contracts/schemas/types/grooming-stage.json. `order` is the usual sequence.
+contract: GroomingStage
+values:
+  - id: trust_building
+    order: 1
+    label: { en: Building trust }
+  - id: gifts_flattery
+    order: 2
+    label: { en: Gifts and flattery }
+  - id: isolation
+    order: 3
+    label: { en: Isolating the child }
+  - id: sexual_talk
+    order: 4
+    label: { en: Sexual talk }
+  - id: secrecy
+    order: 5
+    label: { en: Asking for secrecy }
+  - id: meet_or_images
+    order: 6
+    label: { en: Asking to meet or for images }

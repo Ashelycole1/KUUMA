@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/recipient-type.json",
+  "title": "RecipientType",
+  "description": "Who a case can be shared with.",
+  "type": "string",
+  "enum": ["school", "police", "platform", "lawyer"]
+}

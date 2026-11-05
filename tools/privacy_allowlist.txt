@@ -1,0 +1,11 @@
+# Files allowed to contain phone-number test data, because they test the things that
+# catch phone numbers. Keep this list short; every entry needs a reason.
+# Even here, a phone number inside a log/print call still fails.
+
+# Personal-data guard self-tests
+packages/server-common/tests/test_server_common.py
+# Redactor and reply-checker self-tests
+packages/core-android/src/test/kotlin/ug/kuuma/core/CoreTest.kt
+packages/ai-runtime-android/src/test/kotlin/ug/kuuma/ai/runtime/DummiesTest.kt
+# The scanner's own tests
+tools/tests/test_tools.py

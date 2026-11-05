@@ -1,0 +1,102 @@
+openapi: 3.1.0
+info:
+  title: Kuuma Cases API
+  version: 1.0.0
+  description: Owned by the Casefile build. Evidence leaves the phone only as encrypted bundles.
+servers:
+  - url: http://localhost:8080
+security:
+  - deviceSignature: []
+paths:
+  /v1/cases/timestamps:
+    post:
+      operationId: createTimestamp
+      summary: Get a trusted timestamp for an evidence hash.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/timestamp-request.json" }
+            example: { hash: c5bf1e54aa40f41226e9d2f6ab25a1c41aa5cb53e65f1f338fd6cd2d738d35a6 }
+      responses:
+        "201":
+          description: Timestamp token.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/timestamp-response.json" }
+              example:
+                hash: c5bf1e54aa40f41226e9d2f6ab25a1c41aa5cb53e65f1f338fd6cd2d738d35a6
+                timestamp: "2026-11-05T09:30:00Z"
+                signature: c3R1Yi1zaWduYXR1cmU=
+                authority: kuuma-local-stub
+        default: { $ref: "#/components/responses/Error" }
+  /v1/cases/{caseId}/bundles:
+    post:
+      operationId: createBundle
+      summary: Get an upload slot for an encrypted evidence bundle.
+      security:
+        - deviceSignature: []
+          caseToken: []
+      parameters:
+        - { $ref: "#/components/parameters/caseId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/bundle-request.json" }
+            example: { bundleHash: e5704e345ba042f43d7b567d99c7a335469806e7f1e711526ccb3587d8b22d61, itemCount: 3, sizeBytes: 48213 }
+      responses:
+        "201":
+          description: Upload slot.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/bundle-response.json" }
+              example:
+                bundleId: d4e5f6a7-b8c9-4d0e-8f1a-2b3c4d5e6f7a
+                uploadUrl: http://localhost:9000/kuuma-bundles/d4e5f6a7-b8c9-4d0e-8f1a-2b3c4d5e6f7a
+                expiresAt: "2026-11-05T10:30:00Z"
+        default: { $ref: "#/components/responses/Error" }
+  /v1/cases/{caseId}/shares:
+    post:
+      operationId: createShare
+      summary: Ask to share a case with a recipient. Needs parent approval.
+      security:
+        - deviceSignature: []
+          caseToken: []
+      parameters:
+        - { $ref: "#/components/parameters/caseId" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/share-request.json" }
+            example: { requestId: e1d2c3b4-a5f6-4e7d-9c8b-7a6f5e4d3c2b, recipientType: school }
+      responses:
+        "202":
+          description: Share is waiting for approval.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/share-response.json" }
+              example:
+                requestId: e1d2c3b4-a5f6-4e7d-9c8b-7a6f5e4d3c2b
+                caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+                status: pending_approval
+        default: { $ref: "#/components/responses/Error" }
+components:
+  parameters:
+    caseId:
+      name: caseId
+      in: path
+      required: true
+      schema: { $ref: "../schemas/types/uuid.json" }
+      example: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+  securitySchemes:
+    deviceSignature: { type: apiKey, in: header, name: X-Kuuma-Signature }
+    caseToken: { type: http, scheme: bearer, description: Case-ID token issued by Casefile. }
+  responses:
+    Error:
+      description: Any error.
+      content:
+        application/json:
+          schema: { $ref: "../schemas/types/error-response.json" }
+          example: { error: { code: bad_request, message: Invalid body, requestId: req-0000 } }

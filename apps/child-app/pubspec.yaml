@@ -1,0 +1,33 @@
+name: kuuma_child_app
+description: Kuuma child app shell. Core-owned; modules plug in through the module registry.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  kuuma_ui:
+    path: ../../packages/ui
+  kuuma_contracts:
+    path: ../../packages/contracts/generated/dart
+  # Module screens. The shell is the only place that imports module packages.
+  kuuma_companion:
+    path: ../../modules/companion/flutter
+  kuuma_casefile:
+    path: ../../modules/casefile/flutter
+  kuuma_guardian:
+    path: ../../modules/guardian/flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 5.0.0
+
+flutter:
+  uses-material-design: true

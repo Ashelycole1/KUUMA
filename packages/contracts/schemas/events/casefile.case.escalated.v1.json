@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.case.escalated.v1.json",
+  "title": "CasefileCaseEscalated",
+  "description": "A case crossed an escalation rule.",
+  "x-kuuma": {
+    "event": "casefile.case.escalated",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone_to_cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.case.escalated"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileCaseEscalatedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "caseId",
+        "offenderLabel",
+        "reason"
+      ],
+      "properties": {
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "offenderLabel": {
+          "$ref": "../types/offender-label.json"
+        },
+        "reason": {
+          "$ref": "../types/escalation-reason.json"
+        },
+        "groomingStage": {
+          "$ref": "../types/grooming-stage.json"
+        }
+      }
+    }
+  }
+}

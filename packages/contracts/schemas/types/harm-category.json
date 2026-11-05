@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/harm-category.json",
+  "title": "HarmCategory",
+  "description": "The kind of harm a message carries.",
+  "type": "string",
+  "enum": ["insult", "harassment", "threat", "sexual_harassment", "sextortion", "grooming", "doxxing", "hate", "self_harm_encouragement"]
+}

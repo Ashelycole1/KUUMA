@@ -1,0 +1,13 @@
+name: kuuma_contracts
+description: Kuuma contract types and contract-test harness (generated).
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  json_schema: 5.2.0
+
+dev_dependencies:
+  test: 1.25.8

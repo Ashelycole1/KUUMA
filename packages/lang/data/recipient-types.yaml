@@ -1,0 +1,11 @@
+# Must match packages/contracts/schemas/types/recipient-type.json.
+contract: RecipientType
+values:
+  - id: school
+    label: { en: School, sw: Shule }
+  - id: police
+    label: { en: Police, sw: Polisi }
+  - id: platform
+    label: { en: The app or website }
+  - id: lawyer
+    label: { en: Lawyer, sw: Wakili }

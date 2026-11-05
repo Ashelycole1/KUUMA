@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/analyse-response.json",
+  "title": "AnalyseResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verdict",
+    "groomingSignals",
+    "modelVersion"
+  ],
+  "properties": {
+    "verdict": {
+      "$ref": "../types/verdict.json"
+    },
+    "groomingSignals": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/grooming-stage.json"
+      }
+    },
+    "modelVersion": {
+      "type": "string"
+    }
+  }
+}

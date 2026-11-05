@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.policy.updated.v1.json",
+  "title": "GuardianPolicyUpdated",
+  "description": "A parent changed the child's policy.",
+  "x-kuuma": {
+    "event": "guardian.policy.updated",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "cloud_to_phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.policy.updated"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianPolicyUpdatedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId",
+        "ageBracket",
+        "watchedApps",
+        "thresholds",
+        "policyVersion"
+      ],
+      "properties": {
+        "childId": {
+          "$ref": "../types/uuid.json"
+        },
+        "ageBracket": {
+          "$ref": "../types/age-bracket.json"
+        },
+        "watchedApps": {
+          "type": "array",
+          "items": {
+            "$ref": "../types/app-source.json"
+          }
+        },
+        "thresholds": {
+          "$ref": "../types/thresholds.json"
+        },
+        "policyVersion": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.evidence.sealed.v1.json",
+  "title": "CasefileEvidenceSealed",
+  "description": "An evidence item was hashed into the vault's chain.",
+  "x-kuuma": {
+    "event": "casefile.evidence.sealed",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.evidence.sealed"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileEvidenceSealedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "itemId",
+        "flagId",
+        "hash",
+        "chainIndex"
+      ],
+      "properties": {
+        "itemId": {
+          "$ref": "../types/uuid.json"
+        },
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "hash": {
+          "$ref": "../types/sha256.json"
+        },
+        "chainIndex": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

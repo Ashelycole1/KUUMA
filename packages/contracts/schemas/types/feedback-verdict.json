@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/feedback-verdict.json",
+  "title": "FeedbackVerdict",
+  "description": "The child's verdict on a flag.",
+  "type": "string",
+  "enum": ["correct", "not_harmful", "wrong_category", "unsure"]
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/sentinel.message.flagged.v1.json",
+  "title": "SentinelMessageFlagged",
+  "description": "Sentinel flagged an incoming message as harmful.",
+  "x-kuuma": {
+    "event": "sentinel.message.flagged",
+    "version": 1,
+    "publisher": "sentinel",
+    "where": "phone",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "sentinel.message.flagged"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "SentinelMessageFlaggedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flagId",
+        "messageRef",
+        "appSource",
+        "conversationRef",
+        "senderRef",
+        "category",
+        "severity",
+        "confidence",
+        "language"
+      ],
+      "properties": {
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "messageRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "appSource": {
+          "$ref": "../types/app-source.json"
+        },
+        "conversationRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "senderRef": {
+          "$ref": "../types/opaque-ref.json"
+        },
+        "category": {
+          "$ref": "../types/harm-category.json"
+        },
+        "severity": {
+          "$ref": "../types/severity.json"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "language": {
+          "$ref": "../types/language.json"
+        }
+      }
+    }
+  }
+}

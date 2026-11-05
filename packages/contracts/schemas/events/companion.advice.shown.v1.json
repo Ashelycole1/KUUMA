@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/companion.advice.shown.v1.json",
+  "title": "CompanionAdviceShown",
+  "description": "Companion showed a piece of advice.",
+  "x-kuuma": {
+    "event": "companion.advice.shown",
+    "version": 1,
+    "publisher": "companion",
+    "where": "phone_to_cloud",
+    "phoneOnly": false
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "companion.advice.shown"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CompanionAdviceShownPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flagId",
+        "adviceKey"
+      ],
+      "properties": {
+        "flagId": {
+          "$ref": "../types/uuid.json"
+        },
+        "adviceKey": {
+          "$ref": "../types/advice-key.json"
+        }
+      }
+    }
+  }
+}

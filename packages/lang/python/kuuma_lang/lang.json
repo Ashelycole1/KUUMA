@@ -1,0 +1,345 @@
+{
+ "advice-keys": {
+  "contract": "AdviceKey",
+  "values": [
+   {
+    "categories": [
+     "insult",
+     "harassment",
+     "threat",
+     "hate"
+    ],
+    "id": "advice.general.do_not_reply",
+    "text": {
+     "en": "You don't have to reply. Not replying is often the safest choice."
+    }
+   },
+   {
+    "categories": [],
+    "id": "advice.general.you_are_not_alone",
+    "text": {
+     "en": "This is not your fault, and you are not alone."
+    }
+   },
+   {
+    "categories": [],
+    "id": "advice.general.save_evidence",
+    "text": {
+     "en": "Kuuma can keep a safe copy of these messages in case you need them later."
+    }
+   },
+   {
+    "categories": [
+     "insult",
+     "harassment",
+     "hate",
+     "sexual_harassment"
+    ],
+    "id": "advice.general.block_sender",
+    "text": {
+     "en": "You can block this person in the app."
+    }
+   },
+   {
+    "categories": [
+     "threat",
+     "sextortion",
+     "grooming",
+     "self_harm_encouragement"
+    ],
+    "id": "advice.threat.tell_adult",
+    "text": {
+     "en": "Please tell an adult you trust about this today."
+    }
+   },
+   {
+    "categories": [
+     "sextortion"
+    ],
+    "id": "advice.sextortion.do_not_pay",
+    "text": {
+     "en": "Do not send money or more pictures. Tell an adult you trust."
+    }
+   },
+   {
+    "categories": [
+     "grooming"
+    ],
+    "id": "advice.grooming.secrets_are_a_warning",
+    "text": {
+     "en": "An adult who asks you to keep secrets from your family is a warning sign."
+    }
+   },
+   {
+    "categories": [
+     "self_harm_encouragement"
+    ],
+    "id": "advice.self_harm.talk_to_someone",
+    "text": {
+     "en": "You matter. Talk to someone you trust, or call a helpline."
+    }
+   },
+   {
+    "categories": [
+     "doxxing"
+    ],
+    "id": "advice.doxxing.report_to_platform",
+    "text": {
+     "en": "You can ask the app to remove posts that share your private details."
+    }
+   },
+   {
+    "categories": [],
+    "id": "advice.reply.no_phone_number",
+    "text": {
+     "en": "Think twice before sharing your phone number."
+    }
+   },
+   {
+    "categories": [],
+    "id": "advice.reply.no_location",
+    "text": {
+     "en": "Think twice before sharing where you are or where you live."
+    }
+   }
+  ]
+ },
+ "age-brackets": {
+  "contract": "AgeBracket",
+  "values": [
+   {
+    "id": "age_placeholder_a",
+    "label": {
+     "en": "Age group A (placeholder)"
+    },
+    "maxAge": null,
+    "minAge": null
+   },
+   {
+    "id": "age_placeholder_b",
+    "label": {
+     "en": "Age group B (placeholder)"
+    },
+    "maxAge": null,
+    "minAge": null
+   },
+   {
+    "id": "age_placeholder_c",
+    "label": {
+     "en": "Age group C (placeholder)"
+    },
+    "maxAge": null,
+    "minAge": null
+   }
+  ]
+ },
+ "grooming-stages": {
+  "contract": "GroomingStage",
+  "values": [
+   {
+    "id": "trust_building",
+    "label": {
+     "en": "Building trust"
+    },
+    "order": 1
+   },
+   {
+    "id": "gifts_flattery",
+    "label": {
+     "en": "Gifts and flattery"
+    },
+    "order": 2
+   },
+   {
+    "id": "isolation",
+    "label": {
+     "en": "Isolating the child"
+    },
+    "order": 3
+   },
+   {
+    "id": "sexual_talk",
+    "label": {
+     "en": "Sexual talk"
+    },
+    "order": 4
+   },
+   {
+    "id": "secrecy",
+    "label": {
+     "en": "Asking for secrecy"
+    },
+    "order": 5
+   },
+   {
+    "id": "meet_or_images",
+    "label": {
+     "en": "Asking to meet or for images"
+    },
+    "order": 6
+   }
+  ]
+ },
+ "harm-categories": {
+  "contract": "HarmCategory",
+  "values": [
+   {
+    "id": "insult",
+    "label": {
+     "en": "Insult",
+     "sw": "Tusi"
+    }
+   },
+   {
+    "id": "harassment",
+    "label": {
+     "en": "Harassment",
+     "sw": "Unyanyasaji"
+    }
+   },
+   {
+    "id": "threat",
+    "label": {
+     "en": "Threat",
+     "sw": "Tishio"
+    }
+   },
+   {
+    "id": "sexual_harassment",
+    "label": {
+     "en": "Sexual harassment"
+    }
+   },
+   {
+    "id": "sextortion",
+    "label": {
+     "en": "Sextortion"
+    }
+   },
+   {
+    "id": "grooming",
+    "label": {
+     "en": "Grooming"
+    }
+   },
+   {
+    "id": "doxxing",
+    "label": {
+     "en": "Sharing private information"
+    }
+   },
+   {
+    "id": "hate",
+    "label": {
+     "en": "Hate speech"
+    }
+   },
+   {
+    "id": "self_harm_encouragement",
+    "label": {
+     "en": "Encouraging self-harm"
+    }
+   }
+  ]
+ },
+ "languages": {
+  "contract": "Language",
+  "values": [
+   {
+    "endonym": "English",
+    "flutterLocale": "en",
+    "id": "en",
+    "label": {
+     "en": "English"
+    },
+    "materialSupported": true
+   },
+   {
+    "endonym": "Luganda",
+    "flutterLocale": "lg",
+    "id": "lg",
+    "label": {
+     "en": "Luganda"
+    },
+    "materialSupported": false
+   },
+   {
+    "endonym": "Runyankore",
+    "flutterLocale": "nyn",
+    "id": "nyn",
+    "label": {
+     "en": "Runyankole"
+    },
+    "materialSupported": false
+   },
+   {
+    "endonym": "Kiswahili",
+    "flutterLocale": "sw",
+    "id": "sw",
+    "label": {
+     "en": "Swahili",
+     "sw": "Kiswahili"
+    },
+    "materialSupported": true
+   }
+  ]
+ },
+ "recipient-types": {
+  "contract": "RecipientType",
+  "values": [
+   {
+    "id": "school",
+    "label": {
+     "en": "School",
+     "sw": "Shule"
+    }
+   },
+   {
+    "id": "police",
+    "label": {
+     "en": "Police",
+     "sw": "Polisi"
+    }
+   },
+   {
+    "id": "platform",
+    "label": {
+     "en": "The app or website"
+    }
+   },
+   {
+    "id": "lawyer",
+    "label": {
+     "en": "Lawyer",
+     "sw": "Wakili"
+    }
+   }
+  ]
+ },
+ "severity": {
+  "contract": "Severity",
+  "values": [
+   {
+    "id": "low",
+    "label": {
+     "en": "Low"
+    },
+    "rank": 1
+   },
+   {
+    "id": "medium",
+    "label": {
+     "en": "Medium"
+    },
+    "rank": 2
+   },
+   {
+    "id": "high",
+    "label": {
+     "en": "High"
+    },
+    "rank": 3
+   }
+  ]
+ }
+}

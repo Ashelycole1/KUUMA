@@ -1,0 +1,58 @@
+# Installed by `make bootstrap` (pre-commit install). Same checks as `make check`, on staged files only.
+exclude: ^packages/contracts/generated/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: ^packages/contracts/openapi/
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: dart-format
+        name: dart format
+        entry: dart format --line-length 120
+        language: system
+        types: [dart]
+      - id: ktlint
+        name: ktlint
+        entry: python tools/hooks/gradle_ktlint.py
+        language: system
+        types_or: [kotlin]
+        pass_filenames: false
+      - id: eslint-prettier
+        name: eslint + prettier
+        entry: pnpm exec prettier --check
+        language: system
+        types_or: [ts, javascript]
+      - id: boundary-check
+        name: boundary check (rules 1 and 4)
+        entry: uv run python tools/boundary_check.py
+        language: system
+        pass_filenames: false
+      - id: privacy-scan
+        name: privacy scan (rule 7)
+        entry: uv run python tools/privacy_scan.py
+        language: system
+        pass_filenames: false
+      - id: codegen-drift
+        name: contract codegen is current
+        entry: python packages/contracts/codegen/gen.py --check
+        language: system
+        files: ^packages/contracts/(schemas|codegen)/
+        pass_filenames: false
