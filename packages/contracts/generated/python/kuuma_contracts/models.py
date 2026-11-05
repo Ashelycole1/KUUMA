@@ -22,11 +22,20 @@ class ContractModel(BaseModel):
 AdviceKey = Annotated[str, StringConstraints(pattern='^advice\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$')]
 # A key into kuuma-lang advice-keys.yaml, e.g. advice.threat.tell_adult. Advice text never travels in an event.
 
+FamilySignature = Annotated[str, StringConstraints(pattern='^[A-Za-z0-9_-]{43}$')]
+# base64url HMAC-SHA256 by the parent's phone with the family key. The family key travels only in the pairing QR code, so the server can neither read nor forge what it signs.
+
 OffenderLabel = Annotated[str, StringConstraints(pattern='^Person [A-Z]{1,2}$')]
 # A pseudonymous label for an offender inside one case, e.g. 'Person A'. Never a real name or handle.
 
 OpaqueRef = Annotated[str, StringConstraints(pattern='^or1_[A-Za-z0-9_-]{43}$')]
 # A salted hash standing in for a message, conversation or sender: 'or1_' + base64url(HMAC-SHA256(deviceSalt, value)), unpadded. Not reversible off the phone.
+
+PermissionName = Annotated[str, StringConstraints(pattern='^[A-Za-z][A-Za-z0-9_.]{2,120}$')]
+# An Android permission or special access name.
+
+SealedExcerpt = Annotated[str, StringConstraints(pattern='^[A-Za-z0-9_-]{24,10000}$')]
+# base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.
 
 Sha256 = Annotated[str, StringConstraints(pattern='^[0-9a-f]{64}$')]
 # A SHA-256 digest as 64 lowercase hex characters.
@@ -46,6 +55,15 @@ class AgeBracket(StrEnum):
     AGE_PLACEHOLDER_C = 'age_placeholder_c'
 
 
+class AlertKind(StrEnum):
+    """What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in."""
+
+    FLAG = 'flag'
+    ESCALATION = 'escalation'
+    SOS = 'sos'
+    TAMPER = 'tamper'
+
+
 class AppSource(StrEnum):
     """The messaging app a message arrived through."""
 
@@ -62,6 +80,20 @@ class ApprovalDecision(StrEnum):
 
     APPROVE = 'approve'
     DECLINE = 'decline'
+
+
+class ApprovalKind(StrEnum):
+    """What a parent is asked to approve."""
+
+    SHARE = 'share'
+    DELETION = 'deletion'
+
+
+class ApprovalStatus(StrEnum):
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    DECLINED = 'declined'
+    EXPIRED = 'expired'
 
 
 class EscalationReason(StrEnum):
@@ -169,6 +201,11 @@ class Alert(ContractModel):
     category: HarmCategory | None = Field(default=None)
     created_at: Timestamp = Field(alias="createdAt")
     read: bool
+    child_id: Uuid | None = Field(default=None, alias="childId")
+    kind: AlertKind | None = Field(default=None)
+    app_source: AppSource | None = Field(default=None, alias="appSource")
+    occurred_at: Timestamp | None = Field(default=None, alias="occurredAt")
+    sealed_excerpt: SealedExcerpt | None = Field(default=None, alias="sealedExcerpt")
 
 
 class AlertList(ContractModel):
@@ -179,6 +216,10 @@ class AlertRequest(ContractModel):
     case_id: Uuid = Field(alias="caseId")
     severity: Severity
     category: HarmCategory | None = Field(default=None)
+    kind: AlertKind | None = Field(default=None)
+    app_source: AppSource | None = Field(default=None, alias="appSource")
+    occurred_at: Timestamp | None = Field(default=None, alias="occurredAt")
+    sealed_excerpt: SealedExcerpt | None = Field(default=None, alias="sealedExcerpt")
 
 
 class AnalyseRequest(ContractModel):
@@ -204,8 +245,33 @@ class ApiError(ContractModel):
     request_id: str = Field(alias="requestId")
 
 
+class Approval(ContractModel):
+    approval_id: Uuid = Field(alias="approvalId")
+    request_id: Uuid = Field(alias="requestId")
+    case_id: Uuid = Field(alias="caseId")
+    kind: ApprovalKind
+    recipient_type: RecipientType | None = Field(default=None, alias="recipientType")
+    status: ApprovalStatus
+    created_at: Timestamp = Field(alias="createdAt")
+    decided_at: Timestamp | None = Field(default=None, alias="decidedAt")
+
+
 class ApprovalDecisionRequest(ContractModel):
     decision: ApprovalDecision
+    signature: FamilySignature | None = Field(default=None)
+
+
+class ApprovalList(ContractModel):
+    approvals: list[Approval]
+
+
+class ApprovalRequest(ContractModel):
+    """The child's phone asks the parent to approve a share or deletion (from casefile.share.requested)."""
+
+    request_id: Uuid = Field(alias="requestId")
+    case_id: Uuid = Field(alias="caseId")
+    kind: ApprovalKind
+    recipient_type: RecipientType | None = Field(default=None, alias="recipientType")
 
 
 class ApprovalResult(ContractModel):
@@ -214,6 +280,8 @@ class ApprovalResult(ContractModel):
     case_id: Uuid = Field(alias="caseId")
     decision: ApprovalDecision
     decided_at: Timestamp = Field(alias="decidedAt")
+    kind: ApprovalKind | None = Field(default=None)
+    signature: FamilySignature | None = Field(default=None)
 
 
 class ArtifactManifest(ContractModel):
@@ -294,6 +362,20 @@ class CasefileShareRequestedPayload(ContractModel):
     request_id: Uuid = Field(alias="requestId")
     case_id: Uuid = Field(alias="caseId")
     recipient_type: RecipientType = Field(alias="recipientType")
+
+
+class ChildList(ContractModel):
+    children: list[ChildStatus]
+
+
+class ChildStatus(ContractModel):
+    child_id: Uuid = Field(alias="childId")
+    paired: bool
+    age_bracket: AgeBracket = Field(alias="ageBracket")
+    policy_version: int = Field(alias="policyVersion")
+    last_heartbeat_at: Timestamp | None = Field(default=None, alias="lastHeartbeatAt")
+    protection_active: bool | None = Field(default=None, alias="protectionActive")
+    missing_permissions: list[PermissionName] | None = Field(default=None, alias="missingPermissions")
 
 
 class CompanionAdviceShownPayload(ContractModel):
@@ -387,11 +469,14 @@ class HeartbeatRequest(ContractModel):
     app_version: str = Field(alias="appVersion")
     policy_version: int = Field(alias="policyVersion")
     protection_active: bool | None = Field(default=None, alias="protectionActive")
+    missing_permissions: list[PermissionName] | None = Field(default=None, alias="missingPermissions")
 
 
 class HeartbeatResponse(ContractModel):
     latest_policy_version: int = Field(alias="latestPolicyVersion")
     server_time: Timestamp = Field(alias="serverTime")
+    policy: Policy | None = Field(default=None)
+    decisions: list[ApprovalResult] | None = Field(default=None)
 
 
 class LinkSuggestion(ContractModel):
@@ -411,6 +496,18 @@ class LinkSuggestionsResponse(ContractModel):
     suggestions: list[LinkSuggestion]
 
 
+class PairingCodeRequest(ContractModel):
+    """The parent starts adding a child with the first, signed policy."""
+
+    policy: Policy
+
+
+class PairingCodeResponse(ContractModel):
+    child_id: Uuid = Field(alias="childId")
+    pairing_code: str = Field(alias="pairingCode")
+    expires_at: Timestamp = Field(alias="expiresAt")
+
+
 class PairingRequest(ContractModel):
     pairing_code: str = Field(alias="pairingCode")
     device_public_key: str = Field(alias="devicePublicKey")
@@ -423,6 +520,17 @@ class PairingResponse(ContractModel):
     policy: Policy
 
 
+class ParentRegistrationRequest(ContractModel):
+    """Creates a parent account tied to a random ID. No name, phone number or email."""
+
+    device_public_key: str = Field(alias="devicePublicKey")
+
+
+class ParentRegistrationResponse(ContractModel):
+    parent_id: Uuid = Field(alias="parentId")
+    session_token: str = Field(alias="sessionToken")
+
+
 class Policy(ContractModel):
     """The monitoring policy a parent sets for one child."""
 
@@ -430,6 +538,7 @@ class Policy(ContractModel):
     watched_apps: list[AppSource] = Field(alias="watchedApps")
     thresholds: Thresholds
     policy_version: int = Field(alias="policyVersion")
+    signature: FamilySignature | None = Field(default=None)
 
 
 class ReplyRisk(ContractModel):

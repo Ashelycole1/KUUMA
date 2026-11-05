@@ -15,6 +15,17 @@
     },
     "serverTime": {
       "$ref": "../types/timestamp.json"
+    },
+    "policy": {
+      "$ref": "../types/policy.json",
+      "description": "Present when a newer policy than the phone's exists."
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "$ref": "approval-result.json"
+      },
+      "description": "Parent decisions on this child's approval requests not yet delivered."
     }
   }
 }

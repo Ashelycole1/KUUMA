@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/pairing-code-response.json",
+  "title": "PairingCodeResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "pairingCode",
+    "expiresAt"
+  ],
+  "properties": {
+    "childId": {
+      "$ref": "../types/uuid.json"
+    },
+    "pairingCode": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "expiresAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

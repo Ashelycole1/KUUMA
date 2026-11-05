@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/parent-registration-response.json",
+  "title": "ParentRegistrationResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parentId",
+    "sessionToken"
+  ],
+  "properties": {
+    "parentId": {
+      "$ref": "../types/uuid.json"
+    },
+    "sessionToken": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 200
+    }
+  }
+}

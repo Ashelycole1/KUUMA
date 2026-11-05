@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/sealed-excerpt.json",
+  "title": "SealedExcerpt",
+  "description": "base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.",
+  "type": "string",
+  "pattern": "^[A-Za-z0-9_-]{24,10000}$"
+}

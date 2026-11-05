@@ -6,6 +6,11 @@
 export type AdviceKey = string;
 
 /**
+ * base64url HMAC-SHA256 by the parent's phone with the family key. The family key travels only in the pairing QR code, so the server can neither read nor forge what it signs.
+ */
+export type FamilySignature = string;
+
+/**
  * A pseudonymous label for an offender inside one case, e.g. 'Person A'. Never a real name or handle.
  */
 export type OffenderLabel = string;
@@ -14,6 +19,16 @@ export type OffenderLabel = string;
  * A salted hash standing in for a message, conversation or sender: 'or1_' + base64url(HMAC-SHA256(deviceSalt, value)), unpadded. Not reversible off the phone.
  */
 export type OpaqueRef = string;
+
+/**
+ * An Android permission or special access name.
+ */
+export type PermissionName = string;
+
+/**
+ * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.
+ */
+export type SealedExcerpt = string;
 
 /**
  * A SHA-256 digest as 64 lowercase hex characters.
@@ -32,8 +47,11 @@ export type Uuid = string;
 
 export const PATTERNS = {
   AdviceKey: "^advice\\.[a-z0-9_]+(\\.[a-z0-9_]+)*$",
+  FamilySignature: "^[A-Za-z0-9_-]{43}$",
   OffenderLabel: "^Person [A-Z]{1,2}$",
   OpaqueRef: "^or1_[A-Za-z0-9_-]{43}$",
+  PermissionName: "^[A-Za-z][A-Za-z0-9_.]{2,120}$",
+  SealedExcerpt: "^[A-Za-z0-9_-]{24,10000}$",
   Sha256: "^[0-9a-f]{64}$",
   Timestamp: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z$",
   Uuid: "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
@@ -46,6 +64,12 @@ export const ageBracketValues = ["age_placeholder_a", "age_placeholder_b", "age_
 export type AgeBracket = (typeof ageBracketValues)[number];
 
 /**
+ * What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+ */
+export const alertKindValues = ["flag", "escalation", "sos", "tamper"] as const;
+export type AlertKind = (typeof alertKindValues)[number];
+
+/**
  * The messaging app a message arrived through.
  */
 export const appSourceValues = ["whatsapp", "sms", "messenger", "instagram", "tiktok", "x"] as const;
@@ -56,6 +80,15 @@ export type AppSource = (typeof appSourceValues)[number];
  */
 export const approvalDecisionValues = ["approve", "decline"] as const;
 export type ApprovalDecision = (typeof approvalDecisionValues)[number];
+
+/**
+ * What a parent is asked to approve.
+ */
+export const approvalKindValues = ["share", "deletion"] as const;
+export type ApprovalKind = (typeof approvalKindValues)[number];
+
+export const approvalStatusValues = ["pending", "approved", "declined", "expired"] as const;
+export type ApprovalStatus = (typeof approvalStatusValues)[number];
 
 /**
  * Why a case was escalated.
@@ -131,6 +164,11 @@ export interface Alert {
   category?: HarmCategory;
   createdAt: Timestamp;
   read: boolean;
+  childId?: Uuid;
+  kind?: AlertKind;
+  appSource?: AppSource;
+  occurredAt?: Timestamp;
+  sealedExcerpt?: SealedExcerpt;
 }
 
 export interface AlertList {
@@ -141,6 +179,10 @@ export interface AlertRequest {
   caseId: Uuid;
   severity: Severity;
   category?: HarmCategory;
+  kind?: AlertKind;
+  appSource?: AppSource;
+  occurredAt?: Timestamp;
+  sealedExcerpt?: SealedExcerpt;
 }
 
 /**
@@ -180,8 +222,34 @@ export interface ApiError {
   requestId: string;
 }
 
+export interface Approval {
+  approvalId: Uuid;
+  requestId: Uuid;
+  caseId: Uuid;
+  kind: ApprovalKind;
+  recipientType?: RecipientType;
+  status: ApprovalStatus;
+  createdAt: Timestamp;
+  decidedAt?: Timestamp;
+}
+
 export interface ApprovalDecisionRequest {
   decision: ApprovalDecision;
+  signature?: FamilySignature;
+}
+
+export interface ApprovalList {
+  approvals: Approval[];
+}
+
+/**
+ * The child's phone asks the parent to approve a share or deletion (from casefile.share.requested).
+ */
+export interface ApprovalRequest {
+  requestId: Uuid;
+  caseId: Uuid;
+  kind: ApprovalKind;
+  recipientType?: RecipientType;
 }
 
 export interface ApprovalResult {
@@ -190,6 +258,8 @@ export interface ApprovalResult {
   caseId: Uuid;
   decision: ApprovalDecision;
   decidedAt: Timestamp;
+  kind?: ApprovalKind;
+  signature?: FamilySignature;
 }
 
 /**
@@ -281,6 +351,20 @@ export interface CasefileShareRequestedPayload {
   requestId: Uuid;
   caseId: Uuid;
   recipientType: RecipientType;
+}
+
+export interface ChildList {
+  children: ChildStatus[];
+}
+
+export interface ChildStatus {
+  childId: Uuid;
+  paired: boolean;
+  ageBracket: AgeBracket;
+  policyVersion: number;
+  lastHeartbeatAt?: Timestamp;
+  protectionActive?: boolean;
+  missingPermissions?: PermissionName[];
 }
 
 /**
@@ -388,11 +472,23 @@ export interface HeartbeatRequest {
    * False when the accessibility/notification service is off.
    */
   protectionActive?: boolean;
+  /**
+   * Permissions Kuuma needs that are currently off.
+   */
+  missingPermissions?: PermissionName[];
 }
 
 export interface HeartbeatResponse {
   latestPolicyVersion: number;
   serverTime: Timestamp;
+  /**
+   * Present when a newer policy than the phone's exists.
+   */
+  policy?: Policy;
+  /**
+   * Parent decisions on this child's approval requests not yet delivered.
+   */
+  decisions?: ApprovalResult[];
 }
 
 /**
@@ -413,6 +509,19 @@ export interface LinkSuggestionsResponse {
   suggestions: LinkSuggestion[];
 }
 
+/**
+ * The parent starts adding a child with the first, signed policy.
+ */
+export interface PairingCodeRequest {
+  policy: Policy;
+}
+
+export interface PairingCodeResponse {
+  childId: Uuid;
+  pairingCode: string;
+  expiresAt: Timestamp;
+}
+
 export interface PairingRequest {
   pairingCode: string;
   /**
@@ -429,6 +538,21 @@ export interface PairingResponse {
 }
 
 /**
+ * Creates a parent account tied to a random ID. No name, phone number or email.
+ */
+export interface ParentRegistrationRequest {
+  /**
+   * Base64 X.509 SubjectPublicKeyInfo of the parent phone's key (device binding).
+   */
+  devicePublicKey: string;
+}
+
+export interface ParentRegistrationResponse {
+  parentId: Uuid;
+  sessionToken: string;
+}
+
+/**
  * The monitoring policy a parent sets for one child.
  */
 export interface Policy {
@@ -436,6 +560,10 @@ export interface Policy {
   watchedApps: AppSource[];
   thresholds: Thresholds;
   policyVersion: number;
+  /**
+   * Parent's signature over ageBracket|watchedApps(sorted, comma)|flagMinConfidence(3 dp)|alertMinSeverity|captureMinSeverity|policyVersion. The child's phone rejects a policy without a valid one.
+   */
+  signature?: FamilySignature;
 }
 
 /**

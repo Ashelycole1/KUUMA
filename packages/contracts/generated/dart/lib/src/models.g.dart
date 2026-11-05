@@ -6,8 +6,11 @@ part of '../kuuma_contracts.dart';
 /// Patterns for string aliases (Uuid, OpaqueRef, ...), which Dart models as String.
 abstract final class ContractPatterns {
   static final RegExp adviceKey = RegExp(r'^advice\.[a-z0-9_]+(\.[a-z0-9_]+)*$');
+  static final RegExp familySignature = RegExp(r'^[A-Za-z0-9_-]{43}$');
   static final RegExp offenderLabel = RegExp(r'^Person [A-Z]{1,2}$');
   static final RegExp opaqueRef = RegExp(r'^or1_[A-Za-z0-9_-]{43}$');
+  static final RegExp permissionName = RegExp(r'^[A-Za-z][A-Za-z0-9_.]{2,120}$');
+  static final RegExp sealedExcerpt = RegExp(r'^[A-Za-z0-9_-]{24,10000}$');
   static final RegExp sha256 = RegExp(r'^[0-9a-f]{64}$');
   static final RegExp timestamp = RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$');
   static final RegExp uuid = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
@@ -26,6 +29,22 @@ enum AgeBracket {
   static AgeBracket fromWire(String wire) =>
       values.firstWhere((v) => v.wire == wire,
           orElse: () => throw ArgumentError('Unknown AgeBracket: $wire'));
+}
+
+/// What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+enum AlertKind {
+  flag('flag'),
+  escalation('escalation'),
+  sos('sos'),
+  tamper('tamper');
+
+  const AlertKind(this.wire);
+
+  final String wire;
+
+  static AlertKind fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown AlertKind: $wire'));
 }
 
 /// The messaging app a message arrived through.
@@ -58,6 +77,35 @@ enum ApprovalDecision {
   static ApprovalDecision fromWire(String wire) =>
       values.firstWhere((v) => v.wire == wire,
           orElse: () => throw ArgumentError('Unknown ApprovalDecision: $wire'));
+}
+
+/// What a parent is asked to approve.
+enum ApprovalKind {
+  share('share'),
+  deletion('deletion');
+
+  const ApprovalKind(this.wire);
+
+  final String wire;
+
+  static ApprovalKind fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown ApprovalKind: $wire'));
+}
+
+enum ApprovalStatus {
+  pending('pending'),
+  approved('approved'),
+  declined('declined'),
+  expired('expired');
+
+  const ApprovalStatus(this.wire);
+
+  final String wire;
+
+  static ApprovalStatus fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown ApprovalStatus: $wire'));
 }
 
 /// Why a case was escalated.
@@ -252,7 +300,7 @@ class AdviceResponse {
 
 /// An alert shown to a parent. Holds no message content.
 class Alert {
-  const Alert({required this.alertId, required this.caseId, required this.severity, this.category, required this.createdAt, required this.read});
+  const Alert({required this.alertId, required this.caseId, required this.severity, this.category, required this.createdAt, required this.read, this.childId, this.kind, this.appSource, this.occurredAt, this.sealedExcerpt});
 
   final String alertId;
   final String caseId;
@@ -260,6 +308,11 @@ class Alert {
   final HarmCategory? category;
   final String createdAt;
   final bool read;
+  final String? childId;
+  final AlertKind? kind;
+  final AppSource? appSource;
+  final String? occurredAt;
+  final String? sealedExcerpt;
 
   factory Alert.fromJson(Map<String, dynamic> json) => Alert(
         alertId: json['alertId'] as String,
@@ -268,6 +321,11 @@ class Alert {
         category: json['category'] == null ? null : HarmCategory.fromWire(json['category'] as String),
         createdAt: json['createdAt'] as String,
         read: json['read'] as bool,
+        childId: json['childId'] == null ? null : json['childId'] as String,
+        kind: json['kind'] == null ? null : AlertKind.fromWire(json['kind'] as String),
+        appSource: json['appSource'] == null ? null : AppSource.fromWire(json['appSource'] as String),
+        occurredAt: json['occurredAt'] == null ? null : json['occurredAt'] as String,
+        sealedExcerpt: json['sealedExcerpt'] == null ? null : json['sealedExcerpt'] as String,
       );
 
   Map<String, dynamic> toJson() => {
@@ -277,6 +335,11 @@ class Alert {
         if (category != null) 'category': category!.wire,
         'createdAt': createdAt,
         'read': read,
+        if (childId != null) 'childId': childId!,
+        if (kind != null) 'kind': kind!.wire,
+        if (appSource != null) 'appSource': appSource!.wire,
+        if (occurredAt != null) 'occurredAt': occurredAt!,
+        if (sealedExcerpt != null) 'sealedExcerpt': sealedExcerpt!,
       };
 }
 
@@ -295,22 +358,34 @@ class AlertList {
 }
 
 class AlertRequest {
-  const AlertRequest({required this.caseId, required this.severity, this.category});
+  const AlertRequest({required this.caseId, required this.severity, this.category, this.kind, this.appSource, this.occurredAt, this.sealedExcerpt});
 
   final String caseId;
   final Severity severity;
   final HarmCategory? category;
+  final AlertKind? kind;
+  final AppSource? appSource;
+  final String? occurredAt;
+  final String? sealedExcerpt;
 
   factory AlertRequest.fromJson(Map<String, dynamic> json) => AlertRequest(
         caseId: json['caseId'] as String,
         severity: Severity.fromWire(json['severity'] as String),
         category: json['category'] == null ? null : HarmCategory.fromWire(json['category'] as String),
+        kind: json['kind'] == null ? null : AlertKind.fromWire(json['kind'] as String),
+        appSource: json['appSource'] == null ? null : AppSource.fromWire(json['appSource'] as String),
+        occurredAt: json['occurredAt'] == null ? null : json['occurredAt'] as String,
+        sealedExcerpt: json['sealedExcerpt'] == null ? null : json['sealedExcerpt'] as String,
       );
 
   Map<String, dynamic> toJson() => {
         'caseId': caseId,
         'severity': severity.wire,
         if (category != null) 'category': category!.wire,
+        if (kind != null) 'kind': kind!.wire,
+        if (appSource != null) 'appSource': appSource!.wire,
+        if (occurredAt != null) 'occurredAt': occurredAt!,
+        if (sealedExcerpt != null) 'sealedExcerpt': sealedExcerpt!,
       };
 }
 
@@ -383,28 +458,106 @@ class ApiError {
       };
 }
 
+class Approval {
+  const Approval({required this.approvalId, required this.requestId, required this.caseId, required this.kind, this.recipientType, required this.status, required this.createdAt, this.decidedAt});
+
+  final String approvalId;
+  final String requestId;
+  final String caseId;
+  final ApprovalKind kind;
+  final RecipientType? recipientType;
+  final ApprovalStatus status;
+  final String createdAt;
+  final String? decidedAt;
+
+  factory Approval.fromJson(Map<String, dynamic> json) => Approval(
+        approvalId: json['approvalId'] as String,
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        kind: ApprovalKind.fromWire(json['kind'] as String),
+        recipientType: json['recipientType'] == null ? null : RecipientType.fromWire(json['recipientType'] as String),
+        status: ApprovalStatus.fromWire(json['status'] as String),
+        createdAt: json['createdAt'] as String,
+        decidedAt: json['decidedAt'] == null ? null : json['decidedAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'approvalId': approvalId,
+        'requestId': requestId,
+        'caseId': caseId,
+        'kind': kind.wire,
+        if (recipientType != null) 'recipientType': recipientType!.wire,
+        'status': status.wire,
+        'createdAt': createdAt,
+        if (decidedAt != null) 'decidedAt': decidedAt!,
+      };
+}
+
 class ApprovalDecisionRequest {
-  const ApprovalDecisionRequest({required this.decision});
+  const ApprovalDecisionRequest({required this.decision, this.signature});
 
   final ApprovalDecision decision;
+  final String? signature;
 
   factory ApprovalDecisionRequest.fromJson(Map<String, dynamic> json) => ApprovalDecisionRequest(
         decision: ApprovalDecision.fromWire(json['decision'] as String),
+        signature: json['signature'] == null ? null : json['signature'] as String,
       );
 
   Map<String, dynamic> toJson() => {
         'decision': decision.wire,
+        if (signature != null) 'signature': signature!,
+      };
+}
+
+class ApprovalList {
+  const ApprovalList({required this.approvals});
+
+  final List<Approval> approvals;
+
+  factory ApprovalList.fromJson(Map<String, dynamic> json) => ApprovalList(
+        approvals: (json['approvals'] as List<dynamic>).map((e) => Approval.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'approvals': approvals.map((e) => e.toJson()).toList(),
+      };
+}
+
+/// The child's phone asks the parent to approve a share or deletion (from casefile.share.requested).
+class ApprovalRequest {
+  const ApprovalRequest({required this.requestId, required this.caseId, required this.kind, this.recipientType});
+
+  final String requestId;
+  final String caseId;
+  final ApprovalKind kind;
+  final RecipientType? recipientType;
+
+  factory ApprovalRequest.fromJson(Map<String, dynamic> json) => ApprovalRequest(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        kind: ApprovalKind.fromWire(json['kind'] as String),
+        recipientType: json['recipientType'] == null ? null : RecipientType.fromWire(json['recipientType'] as String),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'kind': kind.wire,
+        if (recipientType != null) 'recipientType': recipientType!.wire,
       };
 }
 
 class ApprovalResult {
-  const ApprovalResult({required this.approvalId, required this.requestId, required this.caseId, required this.decision, required this.decidedAt});
+  const ApprovalResult({required this.approvalId, required this.requestId, required this.caseId, required this.decision, required this.decidedAt, this.kind, this.signature});
 
   final String approvalId;
   final String requestId;
   final String caseId;
   final ApprovalDecision decision;
   final String decidedAt;
+  final ApprovalKind? kind;
+  final String? signature;
 
   factory ApprovalResult.fromJson(Map<String, dynamic> json) => ApprovalResult(
         approvalId: json['approvalId'] as String,
@@ -412,6 +565,8 @@ class ApprovalResult {
         caseId: json['caseId'] as String,
         decision: ApprovalDecision.fromWire(json['decision'] as String),
         decidedAt: json['decidedAt'] as String,
+        kind: json['kind'] == null ? null : ApprovalKind.fromWire(json['kind'] as String),
+        signature: json['signature'] == null ? null : json['signature'] as String,
       );
 
   Map<String, dynamic> toJson() => {
@@ -420,6 +575,8 @@ class ApprovalResult {
         'caseId': caseId,
         'decision': decision.wire,
         'decidedAt': decidedAt,
+        if (kind != null) 'kind': kind!.wire,
+        if (signature != null) 'signature': signature!,
       };
 }
 
@@ -644,6 +801,52 @@ class CasefileShareRequestedPayload extends CloudSendablePayload {
         'requestId': requestId,
         'caseId': caseId,
         'recipientType': recipientType.wire,
+      };
+}
+
+class ChildList {
+  const ChildList({required this.children});
+
+  final List<ChildStatus> children;
+
+  factory ChildList.fromJson(Map<String, dynamic> json) => ChildList(
+        children: (json['children'] as List<dynamic>).map((e) => ChildStatus.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'children': children.map((e) => e.toJson()).toList(),
+      };
+}
+
+class ChildStatus {
+  const ChildStatus({required this.childId, required this.paired, required this.ageBracket, required this.policyVersion, this.lastHeartbeatAt, this.protectionActive, this.missingPermissions});
+
+  final String childId;
+  final bool paired;
+  final AgeBracket ageBracket;
+  final int policyVersion;
+  final String? lastHeartbeatAt;
+  final bool? protectionActive;
+  final List<String>? missingPermissions;
+
+  factory ChildStatus.fromJson(Map<String, dynamic> json) => ChildStatus(
+        childId: json['childId'] as String,
+        paired: json['paired'] as bool,
+        ageBracket: AgeBracket.fromWire(json['ageBracket'] as String),
+        policyVersion: json['policyVersion'] as int,
+        lastHeartbeatAt: json['lastHeartbeatAt'] == null ? null : json['lastHeartbeatAt'] as String,
+        protectionActive: json['protectionActive'] == null ? null : json['protectionActive'] as bool,
+        missingPermissions: json['missingPermissions'] == null ? null : (json['missingPermissions'] as List<dynamic>).map((e) => e as String).toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'childId': childId,
+        'paired': paired,
+        'ageBracket': ageBracket.wire,
+        'policyVersion': policyVersion,
+        if (lastHeartbeatAt != null) 'lastHeartbeatAt': lastHeartbeatAt!,
+        if (protectionActive != null) 'protectionActive': protectionActive!,
+        if (missingPermissions != null) 'missingPermissions': missingPermissions!,
       };
 }
 
@@ -882,19 +1085,22 @@ class GuardianShareDeclinedPayload extends CloudSendablePayload {
 }
 
 class HeartbeatRequest {
-  const HeartbeatRequest({required this.deviceId, required this.appVersion, required this.policyVersion, this.protectionActive});
+  const HeartbeatRequest({required this.deviceId, required this.appVersion, required this.policyVersion, this.protectionActive, this.missingPermissions});
 
   final String deviceId;
   final String appVersion;
   final int policyVersion;
   /// False when the accessibility/notification service is off.
   final bool? protectionActive;
+  /// Permissions Kuuma needs that are currently off.
+  final List<String>? missingPermissions;
 
   factory HeartbeatRequest.fromJson(Map<String, dynamic> json) => HeartbeatRequest(
         deviceId: json['deviceId'] as String,
         appVersion: json['appVersion'] as String,
         policyVersion: json['policyVersion'] as int,
         protectionActive: json['protectionActive'] == null ? null : json['protectionActive'] as bool,
+        missingPermissions: json['missingPermissions'] == null ? null : (json['missingPermissions'] as List<dynamic>).map((e) => e as String).toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -902,23 +1108,32 @@ class HeartbeatRequest {
         'appVersion': appVersion,
         'policyVersion': policyVersion,
         if (protectionActive != null) 'protectionActive': protectionActive!,
+        if (missingPermissions != null) 'missingPermissions': missingPermissions!,
       };
 }
 
 class HeartbeatResponse {
-  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime});
+  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime, this.policy, this.decisions});
 
   final int latestPolicyVersion;
   final String serverTime;
+  /// Present when a newer policy than the phone's exists.
+  final Policy? policy;
+  /// Parent decisions on this child's approval requests not yet delivered.
+  final List<ApprovalResult>? decisions;
 
   factory HeartbeatResponse.fromJson(Map<String, dynamic> json) => HeartbeatResponse(
         latestPolicyVersion: json['latestPolicyVersion'] as int,
         serverTime: json['serverTime'] as String,
+        policy: json['policy'] == null ? null : Policy.fromJson(json['policy'] as Map<String, dynamic>),
+        decisions: json['decisions'] == null ? null : (json['decisions'] as List<dynamic>).map((e) => ApprovalResult.fromJson(e as Map<String, dynamic>)).toList(),
       );
 
   Map<String, dynamic> toJson() => {
         'latestPolicyVersion': latestPolicyVersion,
         'serverTime': serverTime,
+        if (policy != null) 'policy': policy!.toJson(),
+        if (decisions != null) 'decisions': decisions!.map((e) => e.toJson()).toList(),
       };
 }
 
@@ -974,6 +1189,41 @@ class LinkSuggestionsResponse {
       };
 }
 
+/// The parent starts adding a child with the first, signed policy.
+class PairingCodeRequest {
+  const PairingCodeRequest({required this.policy});
+
+  final Policy policy;
+
+  factory PairingCodeRequest.fromJson(Map<String, dynamic> json) => PairingCodeRequest(
+        policy: Policy.fromJson(json['policy'] as Map<String, dynamic>),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'policy': policy.toJson(),
+      };
+}
+
+class PairingCodeResponse {
+  const PairingCodeResponse({required this.childId, required this.pairingCode, required this.expiresAt});
+
+  final String childId;
+  final String pairingCode;
+  final String expiresAt;
+
+  factory PairingCodeResponse.fromJson(Map<String, dynamic> json) => PairingCodeResponse(
+        childId: json['childId'] as String,
+        pairingCode: json['pairingCode'] as String,
+        expiresAt: json['expiresAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'childId': childId,
+        'pairingCode': pairingCode,
+        'expiresAt': expiresAt,
+      };
+}
+
 class PairingRequest {
   const PairingRequest({required this.pairingCode, required this.devicePublicKey, required this.ageBracket});
 
@@ -1015,20 +1265,56 @@ class PairingResponse {
       };
 }
 
+/// Creates a parent account tied to a random ID. No name, phone number or email.
+class ParentRegistrationRequest {
+  const ParentRegistrationRequest({required this.devicePublicKey});
+
+  /// Base64 X.509 SubjectPublicKeyInfo of the parent phone's key (device binding).
+  final String devicePublicKey;
+
+  factory ParentRegistrationRequest.fromJson(Map<String, dynamic> json) => ParentRegistrationRequest(
+        devicePublicKey: json['devicePublicKey'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'devicePublicKey': devicePublicKey,
+      };
+}
+
+class ParentRegistrationResponse {
+  const ParentRegistrationResponse({required this.parentId, required this.sessionToken});
+
+  final String parentId;
+  final String sessionToken;
+
+  factory ParentRegistrationResponse.fromJson(Map<String, dynamic> json) => ParentRegistrationResponse(
+        parentId: json['parentId'] as String,
+        sessionToken: json['sessionToken'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'parentId': parentId,
+        'sessionToken': sessionToken,
+      };
+}
+
 /// The monitoring policy a parent sets for one child.
 class Policy {
-  const Policy({required this.ageBracket, required this.watchedApps, required this.thresholds, required this.policyVersion});
+  const Policy({required this.ageBracket, required this.watchedApps, required this.thresholds, required this.policyVersion, this.signature});
 
   final AgeBracket ageBracket;
   final List<AppSource> watchedApps;
   final Thresholds thresholds;
   final int policyVersion;
+  /// Parent's signature over ageBracket|watchedApps(sorted, comma)|flagMinConfidence(3 dp)|alertMinSeverity|captureMinSeverity|policyVersion. The child's phone rejects a policy without a valid one.
+  final String? signature;
 
   factory Policy.fromJson(Map<String, dynamic> json) => Policy(
         ageBracket: AgeBracket.fromWire(json['ageBracket'] as String),
         watchedApps: (json['watchedApps'] as List<dynamic>).map((e) => AppSource.fromWire(e as String)).toList(),
         thresholds: Thresholds.fromJson(json['thresholds'] as Map<String, dynamic>),
         policyVersion: json['policyVersion'] as int,
+        signature: json['signature'] == null ? null : json['signature'] as String,
       );
 
   Map<String, dynamic> toJson() => {
@@ -1036,6 +1322,7 @@ class Policy {
         'watchedApps': watchedApps.map((e) => e.wire).toList(),
         'thresholds': thresholds.toJson(),
         'policyVersion': policyVersion,
+        if (signature != null) 'signature': signature!,
       };
 }
 

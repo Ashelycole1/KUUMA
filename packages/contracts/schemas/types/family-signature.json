@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/family-signature.json",
+  "title": "FamilySignature",
+  "description": "base64url HMAC-SHA256 by the parent's phone with the family key. The family key travels only in the pairing QR code, so the server can neither read nor forge what it signs.",
+  "type": "string",
+  "pattern": "^[A-Za-z0-9_-]{43}$"
+}

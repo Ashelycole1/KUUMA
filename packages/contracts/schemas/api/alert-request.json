@@ -17,6 +17,18 @@
     },
     "category": {
       "$ref": "../types/harm-category.json"
+    },
+    "kind": {
+      "$ref": "../types/alert-kind.json"
+    },
+    "appSource": {
+      "$ref": "../types/app-source.json"
+    },
+    "occurredAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "sealedExcerpt": {
+      "$ref": "../types/sealed-excerpt.json"
     }
   }
 }

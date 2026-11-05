@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/child-status.json",
+  "title": "ChildStatus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "paired",
+    "ageBracket",
+    "policyVersion"
+  ],
+  "properties": {
+    "childId": {
+      "$ref": "../types/uuid.json"
+    },
+    "paired": {
+      "type": "boolean"
+    },
+    "ageBracket": {
+      "$ref": "../types/age-bracket.json"
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "lastHeartbeatAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "protectionActive": {
+      "type": "boolean"
+    },
+    "missingPermissions": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/permission-name.json"
+      }
+    }
+  }
+}

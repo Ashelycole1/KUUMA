@@ -91,11 +91,23 @@ const String kuumaSchemaBundle = r'''
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+   "appSource": {
+    "$ref": "../types/app-source.json"
+   },
    "caseId": {
     "$ref": "../types/uuid.json"
    },
    "category": {
     "$ref": "../types/harm-category.json"
+   },
+   "kind": {
+    "$ref": "../types/alert-kind.json"
+   },
+   "occurredAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "sealedExcerpt": {
+    "$ref": "../types/sealed-excerpt.json"
    },
    "severity": {
     "$ref": "../types/severity.json"
@@ -175,12 +187,60 @@ const String kuumaSchemaBundle = r'''
   "properties": {
    "decision": {
     "$ref": "../types/approval-decision.json"
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
    }
   },
   "required": [
    "decision"
   ],
   "title": "ApprovalDecisionRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/approval-list.json": {
+  "$id": "https://schemas.kuuma.ug/api/approval-list.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "approvals": {
+    "items": {
+     "$ref": "approval.json"
+    },
+    "type": "array"
+   }
+  },
+  "required": [
+   "approvals"
+  ],
+  "title": "ApprovalList",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/approval-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/approval-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The child's phone asks the parent to approve a share or deletion (from casefile.share.requested).",
+  "properties": {
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "kind": {
+    "$ref": "../types/approval-kind.json"
+   },
+   "recipientType": {
+    "$ref": "../types/recipient-type.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   }
+  },
+  "required": [
+   "requestId",
+   "caseId",
+   "kind"
+  ],
+  "title": "ApprovalRequest",
   "type": "object"
  },
  "https://schemas.kuuma.ug/api/approval-result.json": {
@@ -200,8 +260,14 @@ const String kuumaSchemaBundle = r'''
    "decision": {
     "$ref": "../types/approval-decision.json"
    },
+   "kind": {
+    "$ref": "../types/approval-kind.json"
+   },
    "requestId": {
     "$ref": "../types/uuid.json"
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
    }
   },
   "required": [
@@ -212,6 +278,47 @@ const String kuumaSchemaBundle = r'''
    "decidedAt"
   ],
   "title": "ApprovalResult",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/approval.json": {
+  "$id": "https://schemas.kuuma.ug/api/approval.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "approvalId": {
+    "$ref": "../types/uuid.json"
+   },
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "createdAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "decidedAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "kind": {
+    "$ref": "../types/approval-kind.json"
+   },
+   "recipientType": {
+    "$ref": "../types/recipient-type.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   },
+   "status": {
+    "$ref": "../types/approval-status.json"
+   }
+  },
+  "required": [
+   "approvalId",
+   "requestId",
+   "caseId",
+   "kind",
+   "status",
+   "createdAt"
+  ],
+  "title": "Approval",
   "type": "object"
  },
  "https://schemas.kuuma.ug/api/bundle-request.json": {
@@ -264,6 +371,64 @@ const String kuumaSchemaBundle = r'''
   "title": "BundleResponse",
   "type": "object"
  },
+ "https://schemas.kuuma.ug/api/child-list.json": {
+  "$id": "https://schemas.kuuma.ug/api/child-list.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "children": {
+    "items": {
+     "$ref": "child-status.json"
+    },
+    "type": "array"
+   }
+  },
+  "required": [
+   "children"
+  ],
+  "title": "ChildList",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/child-status.json": {
+  "$id": "https://schemas.kuuma.ug/api/child-status.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "ageBracket": {
+    "$ref": "../types/age-bracket.json"
+   },
+   "childId": {
+    "$ref": "../types/uuid.json"
+   },
+   "lastHeartbeatAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "missingPermissions": {
+    "items": {
+     "$ref": "../types/permission-name.json"
+    },
+    "type": "array"
+   },
+   "paired": {
+    "type": "boolean"
+   },
+   "policyVersion": {
+    "minimum": 1,
+    "type": "integer"
+   },
+   "protectionActive": {
+    "type": "boolean"
+   }
+  },
+  "required": [
+   "childId",
+   "paired",
+   "ageBracket",
+   "policyVersion"
+  ],
+  "title": "ChildStatus",
+  "type": "object"
+ },
  "https://schemas.kuuma.ug/api/feedback-request.json": {
   "$id": "https://schemas.kuuma.ug/api/feedback-request.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -303,6 +468,14 @@ const String kuumaSchemaBundle = r'''
    "deviceId": {
     "$ref": "../types/uuid.json"
    },
+   "missingPermissions": {
+    "description": "Permissions Kuuma needs that are currently off.",
+    "items": {
+     "$ref": "../types/permission-name.json"
+    },
+    "maxItems": 20,
+    "type": "array"
+   },
    "policyVersion": {
     "minimum": 0,
     "type": "integer"
@@ -325,9 +498,20 @@ const String kuumaSchemaBundle = r'''
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+   "decisions": {
+    "description": "Parent decisions on this child's approval requests not yet delivered.",
+    "items": {
+     "$ref": "approval-result.json"
+    },
+    "type": "array"
+   },
    "latestPolicyVersion": {
     "minimum": 0,
     "type": "integer"
+   },
+   "policy": {
+    "$ref": "../types/policy.json",
+    "description": "Present when a newer policy than the phone's exists."
    },
    "serverTime": {
     "$ref": "../types/timestamp.json"
@@ -382,6 +566,46 @@ const String kuumaSchemaBundle = r'''
   "title": "LinkSuggestionsResponse",
   "type": "object"
  },
+ "https://schemas.kuuma.ug/api/pairing-code-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/pairing-code-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The parent starts adding a child with the first, signed policy.",
+  "properties": {
+   "policy": {
+    "$ref": "../types/policy.json"
+   }
+  },
+  "required": [
+   "policy"
+  ],
+  "title": "PairingCodeRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/pairing-code-response.json": {
+  "$id": "https://schemas.kuuma.ug/api/pairing-code-response.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "childId": {
+    "$ref": "../types/uuid.json"
+   },
+   "expiresAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "pairingCode": {
+    "pattern": "^[0-9]{6}$",
+    "type": "string"
+   }
+  },
+  "required": [
+   "childId",
+   "pairingCode",
+   "expiresAt"
+  ],
+  "title": "PairingCodeResponse",
+  "type": "object"
+ },
  "https://schemas.kuuma.ug/api/pairing-request.json": {
   "$id": "https://schemas.kuuma.ug/api/pairing-request.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -428,6 +652,44 @@ const String kuumaSchemaBundle = r'''
    "policy"
   ],
   "title": "PairingResponse",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/parent-registration-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/parent-registration-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Creates a parent account tied to a random ID. No name, phone number or email.",
+  "properties": {
+   "devicePublicKey": {
+    "description": "Base64 X.509 SubjectPublicKeyInfo of the parent phone's key (device binding).",
+    "type": "string"
+   }
+  },
+  "required": [
+   "devicePublicKey"
+  ],
+  "title": "ParentRegistrationRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/parent-registration-response.json": {
+  "$id": "https://schemas.kuuma.ug/api/parent-registration-response.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "parentId": {
+    "$ref": "../types/uuid.json"
+   },
+   "sessionToken": {
+    "maxLength": 200,
+    "minLength": 32,
+    "type": "string"
+   }
+  },
+  "required": [
+   "parentId",
+   "sessionToken"
+  ],
+  "title": "ParentRegistrationResponse",
   "type": "object"
  },
  "https://schemas.kuuma.ug/api/share-download.json": {
@@ -1609,6 +1871,19 @@ const String kuumaSchemaBundle = r'''
   "title": "AgeBracket",
   "type": "string"
  },
+ "https://schemas.kuuma.ug/types/alert-kind.json": {
+  "$id": "https://schemas.kuuma.ug/types/alert-kind.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.",
+  "enum": [
+   "flag",
+   "escalation",
+   "sos",
+   "tamper"
+  ],
+  "title": "AlertKind",
+  "type": "string"
+ },
  "https://schemas.kuuma.ug/types/alert.json": {
   "$id": "https://schemas.kuuma.ug/types/alert.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1618,17 +1893,32 @@ const String kuumaSchemaBundle = r'''
    "alertId": {
     "$ref": "uuid.json"
    },
+   "appSource": {
+    "$ref": "app-source.json"
+   },
    "caseId": {
     "$ref": "uuid.json"
    },
    "category": {
     "$ref": "harm-category.json"
    },
+   "childId": {
+    "$ref": "uuid.json"
+   },
    "createdAt": {
+    "$ref": "timestamp.json"
+   },
+   "kind": {
+    "$ref": "alert-kind.json"
+   },
+   "occurredAt": {
     "$ref": "timestamp.json"
    },
    "read": {
     "type": "boolean"
+   },
+   "sealedExcerpt": {
+    "$ref": "sealed-excerpt.json"
    },
    "severity": {
     "$ref": "severity.json"
@@ -1695,6 +1985,29 @@ const String kuumaSchemaBundle = r'''
    "decline"
   ],
   "title": "ApprovalDecision",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/approval-kind.json": {
+  "$id": "https://schemas.kuuma.ug/types/approval-kind.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What a parent is asked to approve.",
+  "enum": [
+   "share",
+   "deletion"
+  ],
+  "title": "ApprovalKind",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/approval-status.json": {
+  "$id": "https://schemas.kuuma.ug/types/approval-status.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "enum": [
+   "pending",
+   "approved",
+   "declined",
+   "expired"
+  ],
+  "title": "ApprovalStatus",
   "type": "string"
  },
  "https://schemas.kuuma.ug/types/artifact-manifest.json": {
@@ -1810,6 +2123,14 @@ const String kuumaSchemaBundle = r'''
   "title": "EscalationReason",
   "type": "string"
  },
+ "https://schemas.kuuma.ug/types/family-signature.json": {
+  "$id": "https://schemas.kuuma.ug/types/family-signature.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "base64url HMAC-SHA256 by the parent's phone with the family key. The family key travels only in the pairing QR code, so the server can neither read nor forge what it signs.",
+  "pattern": "^[A-Za-z0-9_-]{43}$",
+  "title": "FamilySignature",
+  "type": "string"
+ },
  "https://schemas.kuuma.ug/types/feedback-verdict.json": {
   "$id": "https://schemas.kuuma.ug/types/feedback-verdict.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1911,6 +2232,14 @@ const String kuumaSchemaBundle = r'''
   "title": "OpaqueRef",
   "type": "string"
  },
+ "https://schemas.kuuma.ug/types/permission-name.json": {
+  "$id": "https://schemas.kuuma.ug/types/permission-name.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "An Android permission or special access name.",
+  "pattern": "^[A-Za-z][A-Za-z0-9_.]{2,120}$",
+  "title": "PermissionName",
+  "type": "string"
+ },
  "https://schemas.kuuma.ug/types/policy.json": {
   "$id": "https://schemas.kuuma.ug/types/policy.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1923,6 +2252,10 @@ const String kuumaSchemaBundle = r'''
    "policyVersion": {
     "minimum": 1,
     "type": "integer"
+   },
+   "signature": {
+    "$ref": "family-signature.json",
+    "description": "Parent's signature over ageBracket|watchedApps(sorted, comma)|flagMinConfidence(3 dp)|alertMinSeverity|captureMinSeverity|policyVersion. The child's phone rejects a policy without a valid one."
    },
    "thresholds": {
     "$ref": "thresholds.json"
@@ -2011,6 +2344,14 @@ const String kuumaSchemaBundle = r'''
   ],
   "title": "RiskySpan",
   "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/sealed-excerpt.json": {
+  "$id": "https://schemas.kuuma.ug/types/sealed-excerpt.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.",
+  "pattern": "^[A-Za-z0-9_-]{24,10000}$",
+  "title": "SealedExcerpt",
+  "type": "string"
  },
  "https://schemas.kuuma.ug/types/severity.json": {
   "$id": "https://schemas.kuuma.ug/types/severity.json",

@@ -10,6 +10,9 @@
   "properties": {
     "decision": {
       "$ref": "../types/approval-decision.json"
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
     }
   }
 }

@@ -26,6 +26,12 @@
     },
     "decidedAt": {
       "$ref": "../types/timestamp.json"
+    },
+    "kind": {
+      "$ref": "../types/approval-kind.json"
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
     }
   }
 }
