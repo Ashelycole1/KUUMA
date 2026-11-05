@@ -1,5 +1,5 @@
 name: kuuma_guardian
-description: Guardian screens for the Kuuma apps. Skeleton from Core; the Guardian owner fills it.
+description: Guardian screens for the Kuuma apps - the parent app and the child's setup wizard.
 version: 0.1.0
 publish_to: none
 
@@ -15,6 +15,15 @@ dependencies:
     path: ../../../packages/ui
   kuuma_contracts:
     path: ../../../packages/contracts/generated/dart
+  kuuma_lang:
+    path: ../../../packages/lang/dart
+  # Exact pins: family-key crypto (HMAC-SHA256, AES-256-GCM, P-256), parent API, pairing QR, key storage.
+  crypto: 3.0.6
+  pointycastle: 3.9.1
+  http: 1.2.2
+  qr_flutter: 4.1.0
+  mobile_scanner: 5.2.3
+  flutter_secure_storage: 9.2.2
 
 dev_dependencies:
   flutter_test:

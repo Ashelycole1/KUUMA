@@ -226,6 +226,10 @@ export interface Approval {
   approvalId: Uuid;
   requestId: Uuid;
   caseId: Uuid;
+  /**
+   * The child the request came from, so the parent's phone signs with that child's family key.
+   */
+  childId?: Uuid;
   kind: ApprovalKind;
   recipientType?: RecipientType;
   status: ApprovalStatus;

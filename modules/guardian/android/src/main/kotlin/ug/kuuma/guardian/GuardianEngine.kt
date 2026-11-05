@@ -54,7 +54,10 @@ class InMemoryGuardianStore : GuardianStore {
 enum class PairResult { PAIRED, BAD_CODE, BAD_POLICY_SIGNATURE, ALREADY_PAIRED, OFFLINE }
 
 @Serializable
-private data class Outbox(val alerts: List<AlertRequest> = emptyList(), val approvals: List<ApprovalRequest> = emptyList())
+private data class Outbox(
+    val alerts: List<AlertRequest> = emptyList(),
+    val approvals: List<ApprovalRequest> = emptyList()
+)
 
 /**
  * Guardian's agent on the child's phone, free of Android so it is unit-tested end to end.
@@ -67,7 +70,7 @@ class GuardianEngine(
     private val devicePublicKey: () -> String,
     private val missingPermissions: () -> List<String> = { emptyList() },
     private val appVersion: String = "0.1.0",
-    private val clock: () -> Long = System::currentTimeMillis,
+    private val clock: () -> Long = System::currentTimeMillis
 ) {
     private class PendingFlag(
         val severity: Severity,
@@ -76,7 +79,7 @@ class GuardianEngine(
         val at: Long,
         var excerpt: String? = null,
         var caseId: String? = null,
-        var sent: Boolean = false,
+        var sent: Boolean = false
     )
 
     private val flags = LinkedHashMap<String, PendingFlag>()
@@ -90,7 +93,9 @@ class GuardianEngine(
 
     val policy: Policy? get() = store.get("policy")?.let { ContractJson.json.decodeFromString(Policy.serializer(), it) }
 
-    private val crypto: FamilyCrypto? get() = store.get("familyKey")?.let { FamilyCrypto(ug.kuuma.core.crypto.Base64Url.decode(it)) }
+    private val crypto: FamilyCrypto? get() = store.get("familyKey")?.let {
+        FamilyCrypto(ug.kuuma.core.crypto.Base64Url.decode(it))
+    }
 
     /** At startup: tell every module the current policy (they do not keep it). */
     fun announce() {
@@ -122,7 +127,7 @@ class GuardianEngine(
         savePolicy(response.policy)
         publisher.publish(
             Events.GUARDIAN_PAIRING_COMPLETED,
-            GuardianPairingCompletedPayload(response.childId, response.deviceId, response.policy.ageBracket),
+            GuardianPairingCompletedPayload(response.childId, response.deviceId, response.policy.ageBracket)
         )
         publishPolicy(response.policy)
         SafeLog.i("guardian.paired", LogField.id("child_id", response.childId))
@@ -131,9 +136,17 @@ class GuardianEngine(
 
     // ------------------------------------------------------------------ alert decisions
 
-    fun onFlagged(flagId: String, severity: Severity, category: HarmCategory, appSource: AppSource) {
-        flags[flagId] = PendingFlag(severity, category, appSource, clock())
+    /** A flag alerts once it has a case to point to: from its own envelope, or when Casefile seals it. */
+    fun onFlagged(
+        flagId: String,
+        severity: Severity,
+        category: HarmCategory,
+        appSource: AppSource,
+        caseId: String? = null
+    ) {
+        flags[flagId] = PendingFlag(severity, category, appSource, clock(), caseId = caseId)
         while (flags.size > 200) flags.remove(flags.keys.first())
+        maybeAlert(flagId)
     }
 
     fun onFlagUpdated(flagId: String, severity: Severity, category: HarmCategory, dismissed: Boolean) {
@@ -197,8 +210,8 @@ class GuardianEngine(
                 kind = AlertKind.FLAG,
                 appSource = f.appSource,
                 occurredAt = EventBus.iso(f.at),
-                sealedExcerpt = f.excerpt?.let { text -> crypto?.seal(text) },
-            ),
+                sealedExcerpt = f.excerpt?.let { text -> crypto?.seal(text) }
+            )
         )
     }
 
@@ -213,13 +226,18 @@ class GuardianEngine(
     fun onShareRequested(requestId: String, caseId: String, recipient: RecipientType) {
         if (!isPaired) return
         val out = outbox()
-        saveOutbox(out.copy(approvals = out.approvals + ApprovalRequest(requestId, caseId, ApprovalKind.SHARE, recipient)))
+        saveOutbox(
+            out.copy(
+                approvals =
+                out.approvals + ApprovalRequest(requestId, caseId, ApprovalKind.SHARE, recipient)
+            )
+        )
         flush()
     }
 
     private fun onDecision(d: ApprovalResult) {
         val c = crypto ?: return
-        if (!c.verifyDecision(d.approvalId, d.requestId, d.decision.wire, d.decidedAt, d.signature)) {
+        if (!c.verifyDecision(d.approvalId, d.requestId, d.decision.wire, d.signature)) {
             SafeLog.w("guardian.decision.bad_signature", LogField.id("approval_id", d.approvalId))
             return
         }
@@ -227,9 +245,17 @@ class GuardianEngine(
         store.put("decision.${d.requestId}", d.decision.wire)
         if (d.kind != null && d.kind != ApprovalKind.SHARE) return
         if (d.decision == ApprovalDecision.APPROVE) {
-            publisher.publish(Events.GUARDIAN_SHARE_APPROVED, GuardianShareApprovedPayload(d.requestId, d.caseId, d.decidedAt), d.caseId)
+            publisher.publish(
+                Events.GUARDIAN_SHARE_APPROVED,
+                GuardianShareApprovedPayload(d.requestId, d.caseId, d.decidedAt),
+                d.caseId
+            )
         } else {
-            publisher.publish(Events.GUARDIAN_SHARE_DECLINED, GuardianShareDeclinedPayload(d.requestId, d.caseId, d.decidedAt), d.caseId)
+            publisher.publish(
+                Events.GUARDIAN_SHARE_DECLINED,
+                GuardianShareDeclinedPayload(d.requestId, d.caseId, d.decidedAt),
+                d.caseId
+            )
         }
     }
 
@@ -241,7 +267,9 @@ class GuardianEngine(
         val device = serverDeviceId ?: return
         flush()
         val missing = missingPermissions()
-        val r = a.heartbeat(HeartbeatRequest(device, appVersion, policy?.policyVersion ?: 0, missing.isEmpty(), missing))
+        val r = a.heartbeat(
+            HeartbeatRequest(device, appVersion, policy?.policyVersion ?: 0, missing.isEmpty(), missing)
+        )
         r.policy?.let { p ->
             val current = policy
             if (current == null || p.policyVersion > current.policyVersion) {
@@ -286,7 +314,8 @@ class GuardianEngine(
 
     // ------------------------------------------------------------------ internals
 
-    private fun outbox(): Outbox = store.get("outbox")?.let { ContractJson.json.decodeFromString(Outbox.serializer(), it) } ?: Outbox()
+    private fun outbox(): Outbox =
+        store.get("outbox")?.let { ContractJson.json.decodeFromString(Outbox.serializer(), it) } ?: Outbox()
 
     private fun saveOutbox(o: Outbox) = store.put("outbox", ContractJson.json.encodeToString(Outbox.serializer(), o))
 
@@ -296,7 +325,7 @@ class GuardianEngine(
         val child = childId ?: return
         publisher.publish(
             Events.GUARDIAN_POLICY_UPDATED,
-            GuardianPolicyUpdatedPayload(child, p.ageBracket, p.watchedApps, p.thresholds, p.policyVersion),
+            GuardianPolicyUpdatedPayload(child, p.ageBracket, p.watchedApps, p.thresholds, p.policyVersion)
         )
     }
 }
