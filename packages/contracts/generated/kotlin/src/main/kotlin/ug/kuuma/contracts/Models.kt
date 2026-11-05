@@ -102,6 +102,10 @@ data class Approval(
     val approvalId: Uuid,
     val requestId: Uuid,
     val caseId: Uuid,
+    /**
+     * The child the request came from, so the parent's phone signs with that child's family key.
+     */
+    val childId: Uuid? = null,
     val kind: ApprovalKind,
     val recipientType: RecipientType? = null,
     val status: ApprovalStatus,

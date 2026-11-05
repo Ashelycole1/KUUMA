@@ -249,6 +249,7 @@ class Approval(ContractModel):
     approval_id: Uuid = Field(alias="approvalId")
     request_id: Uuid = Field(alias="requestId")
     case_id: Uuid = Field(alias="caseId")
+    child_id: Uuid | None = Field(default=None, alias="childId")
     kind: ApprovalKind
     recipient_type: RecipientType | None = Field(default=None, alias="recipientType")
     status: ApprovalStatus

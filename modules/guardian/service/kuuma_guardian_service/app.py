@@ -28,12 +28,12 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import Depends, FastAPI, Header, Request
 from fastapi.responses import JSONResponse
-from kuuma_contracts.testing import ContractViolation, validate_body
 from sqlalchemy import create_engine, event, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from kuuma_contracts.testing import ContractViolation, validate_body
 from kuuma_guardian_service.db import Alert, Approval, Base, Child, PairingCode, Parent
 from kuuma_server_common import KuumaError, StreamPublisher, audit, create_app, device_auth, get_logger
 from kuuma_server_common.service import envelope, redis_client
@@ -139,7 +139,9 @@ def build_app(
         scheme, _, token = authorization.partition(" ")
         if scheme.lower() != "bearer" or not token:
             raise KuumaError(401, "unauthorized", "Parent session required")
-        row = s.scalars(select(Parent).where(Parent.token_hash == hashlib.sha256(token.encode()).hexdigest())).first()
+        row = s.scalars(
+            select(Parent).where(Parent.token_hash == hashlib.sha256(token.encode()).hexdigest())
+        ).first()
         if row is None:
             raise KuumaError(401, "unauthorized", "Unknown session")
         return row
@@ -151,41 +153,91 @@ def build_app(
         return child
 
     def publish(event_type: str, payload: dict, device_id: str | None, case_id: str | None = None) -> None:
-        app.state.bus.publish(envelope(event_type, payload, device_id=device_id or str(uuid.uuid4()), case_id=case_id))
+        app.state.bus.publish(
+            envelope(event_type, payload, device_id=device_id or str(uuid.uuid4()), case_id=case_id)
+        )
 
     def alert_body(a: Alert) -> dict:
-        out = {"alertId": a.alert_id, "caseId": a.case_id, "childId": a.child_id, "kind": a.kind, "severity": a.severity,
-               "createdAt": iso(aware(a.created_at)), "read": a.read}
-        for k, v in (("category", a.category), ("appSource", a.app_source), ("occurredAt", a.occurred_at),
-                     ("sealedExcerpt", a.sealed_excerpt)):
+        out = {
+            "alertId": a.alert_id,
+            "caseId": a.case_id,
+            "childId": a.child_id,
+            "kind": a.kind,
+            "severity": a.severity,
+            "createdAt": iso(aware(a.created_at)),
+            "read": a.read,
+        }
+        for k, v in (
+            ("category", a.category),
+            ("appSource", a.app_source),
+            ("occurredAt", a.occurred_at),
+            ("sealedExcerpt", a.sealed_excerpt),
+        ):
             if v:
                 out[k] = v
         return out
 
-    def raise_alert(s: Session, child: Child, *, kind: str, severity: str, case_id: str, category=None,
-                    app_source=None, occurred_at=None, sealed_excerpt=None) -> Alert:
-        a = Alert(alert_id=str(uuid.uuid4()), child_id=child.child_id, case_id=case_id, kind=kind, severity=severity,
-                  category=category, app_source=app_source, occurred_at=occurred_at, sealed_excerpt=sealed_excerpt,
-                  created_at=clock(), read=False)
+    def raise_alert(
+        s: Session,
+        child: Child,
+        *,
+        kind: str,
+        severity: str,
+        case_id: str,
+        category=None,
+        app_source=None,
+        occurred_at=None,
+        sealed_excerpt=None,
+    ) -> Alert:
+        a = Alert(
+            alert_id=str(uuid.uuid4()),
+            child_id=child.child_id,
+            case_id=case_id,
+            kind=kind,
+            severity=severity,
+            category=category,
+            app_source=app_source,
+            occurred_at=occurred_at,
+            sealed_excerpt=sealed_excerpt,
+            created_at=clock(),
+            read=False,
+        )
         s.add(a)
         s.commit()
-        publish("guardian.alert.sent", {"alertId": a.alert_id, "caseId": case_id, "severity": severity},
-                child.device_id, case_id)
+        publish(
+            "guardian.alert.sent",
+            {"alertId": a.alert_id, "caseId": case_id, "severity": severity},
+            child.device_id,
+            case_id,
+        )
         # Neutral push: nothing that reveals the content on a lock screen.
         push.send(child.parent_id, {"alertId": a.alert_id, "kind": kind, "severity": severity})
         log.info("alert.raised", alert_id=a.alert_id, kind=kind, severity=severity)
         return a
 
     def approval_result(a: Approval) -> dict:
-        out = {"approvalId": a.approval_id, "requestId": a.request_id, "caseId": a.case_id, "kind": a.kind,
-               "decision": "approve" if a.status == "approved" else "decline", "decidedAt": iso(aware(a.decided_at))}
+        out = {
+            "approvalId": a.approval_id,
+            "requestId": a.request_id,
+            "caseId": a.case_id,
+            "kind": a.kind,
+            "decision": "approve" if a.status == "approved" else "decline",
+            "decidedAt": iso(aware(a.decided_at)),
+        }
         if a.signature:
             out["signature"] = a.signature
         return out
 
     def approval_body(a: Approval) -> dict:
-        out = {"approvalId": a.approval_id, "requestId": a.request_id, "caseId": a.case_id, "kind": a.kind,
-               "status": a.status, "createdAt": iso(aware(a.created_at))}
+        out = {
+            "approvalId": a.approval_id,
+            "requestId": a.request_id,
+            "caseId": a.case_id,
+            "childId": a.child_id,
+            "kind": a.kind,
+            "status": a.status,
+            "createdAt": iso(aware(a.created_at)),
+        }
         if a.recipient_type:
             out["recipientType"] = a.recipient_type
         if a.decided_at:
@@ -193,8 +245,13 @@ def build_app(
         return out
 
     def child_status(c: Child) -> dict:
-        out = {"childId": c.child_id, "paired": c.paired, "ageBracket": c.age_bracket, "policyVersion": c.policy_version,
-               "missingPermissions": json.loads(c.missing_permissions or "[]")}
+        out = {
+            "childId": c.child_id,
+            "paired": c.paired,
+            "ageBracket": c.age_bracket,
+            "policyVersion": c.policy_version,
+            "missingPermissions": json.loads(c.missing_permissions or "[]"),
+        }
         if c.last_heartbeat_at:
             out["lastHeartbeatAt"] = iso(aware(c.last_heartbeat_at))
         if c.protection_active is not None:
@@ -204,7 +261,9 @@ def build_app(
     # ------------------------------------------------------------------ parents
 
     @app.post("/v1/guardian/parents", status_code=201)
-    def register_parent(data: dict = Depends(body("api/parent-registration-request.json")), s: Session = Depends(db)):
+    def register_parent(
+        data: dict = Depends(body("api/parent-registration-request.json")), s: Session = Depends(db)
+    ):
         try:
             key = serialization.load_der_public_key(base64.b64decode(data["devicePublicKey"]))
             if not isinstance(key, ec.EllipticCurvePublicKey):
@@ -212,23 +271,38 @@ def build_app(
         except ValueError:
             raise KuumaError(422, "bad_device_key", "devicePublicKey must be an EC public key") from None
         token = secrets.token_urlsafe(32)
-        p = Parent(parent_id=str(uuid.uuid4()), token_hash=hashlib.sha256(token.encode()).hexdigest(),
-                   device_public_key=data["devicePublicKey"], created_at=clock())
+        p = Parent(
+            parent_id=str(uuid.uuid4()),
+            token_hash=hashlib.sha256(token.encode()).hexdigest(),
+            device_public_key=data["devicePublicKey"],
+            created_at=clock(),
+        )
         s.add(p)
         s.commit()
         audit("parent.registered", actor=p.parent_id, service="guardian")
         return {"parentId": p.parent_id, "sessionToken": token}
 
     @app.post("/v1/guardian/pairing-codes", status_code=201)
-    def create_pairing_code(data: dict = Depends(body("api/pairing-code-request.json")), p: Parent = Depends(parent),
-                            s: Session = Depends(db)):
+    def create_pairing_code(
+        data: dict = Depends(body("api/pairing-code-request.json")),
+        p: Parent = Depends(parent),
+        s: Session = Depends(db),
+    ):
         policy = data["policy"]
         if "signature" not in policy:
             raise KuumaError(422, "unsigned_policy", "The policy must be signed by the parent's phone")
         now = clock()
-        child = Child(child_id=str(uuid.uuid4()), parent_id=p.parent_id, age_bracket=policy["ageBracket"],
-                      policy_json=json.dumps(policy), policy_version=policy["policyVersion"], paired=False, created_at=now,
-                      missing_permissions="[]", tamper_open=False)
+        child = Child(
+            child_id=str(uuid.uuid4()),
+            parent_id=p.parent_id,
+            age_bracket=policy["ageBracket"],
+            policy_json=json.dumps(policy),
+            policy_version=policy["policyVersion"],
+            paired=False,
+            created_at=now,
+            missing_permissions="[]",
+            tamper_open=False,
+        )
         s.add(child)
         while True:
             code = f"{secrets.randbelow(10**6):06d}"
@@ -238,7 +312,11 @@ def build_app(
                     s.delete(existing)
                     s.flush()
                 break
-        s.add(PairingCode(code=code, child_id=child.child_id, expires_at=now + PAIRING_CODE_LIFETIME, used=False))
+        s.add(
+            PairingCode(
+                code=code, child_id=child.child_id, expires_at=now + PAIRING_CODE_LIFETIME, used=False
+            )
+        )
         s.commit()
         return {"childId": child.child_id, "pairingCode": code, "expiresAt": iso(now + PAIRING_CODE_LIFETIME)}
 
@@ -248,36 +326,60 @@ def build_app(
         return {"children": [child_status(c) for c in rows]}
 
     @app.put("/v1/guardian/children/{childId}/policy")
-    def put_policy(childId: str, policy: dict = Depends(body("types/policy.json")), p: Parent = Depends(parent),  # noqa: N803
-                   s: Session = Depends(db)):
+    def put_policy(
+        childId: str,  # noqa: N803
+        policy: dict = Depends(body("types/policy.json")),
+        p: Parent = Depends(parent),
+        s: Session = Depends(db),
+    ):
         child = owned_child(s, p, childId)
         if "signature" not in policy:
             raise KuumaError(422, "unsigned_policy", "The policy must be signed by the parent's phone")
         if policy["policyVersion"] <= child.policy_version:
             raise KuumaError(409, "stale_policy", "policyVersion must be higher than the current one")
-        child.policy_json, child.policy_version, child.age_bracket = json.dumps(policy), policy["policyVersion"], policy["ageBracket"]
+        child.policy_json, child.policy_version, child.age_bracket = (
+            json.dumps(policy),
+            policy["policyVersion"],
+            policy["ageBracket"],
+        )
         s.commit()
-        publish("guardian.policy.updated", {"childId": child.child_id, "ageBracket": policy["ageBracket"],
-                                            "watchedApps": policy["watchedApps"], "thresholds": policy["thresholds"],
-                                            "policyVersion": policy["policyVersion"]}, child.device_id)
+        publish(
+            "guardian.policy.updated",
+            {
+                "childId": child.child_id,
+                "ageBracket": policy["ageBracket"],
+                "watchedApps": policy["watchedApps"],
+                "thresholds": policy["thresholds"],
+                "policyVersion": policy["policyVersion"],
+            },
+            child.device_id,
+        )
         audit("policy.updated", actor=p.parent_id, resource=child.child_id, service="guardian")
         return policy
 
     @app.get("/v1/guardian/alerts")
     def list_alerts(p: Parent = Depends(parent), s: Session = Depends(db)):
         child_ids = [c.child_id for c in s.scalars(select(Child).where(Child.parent_id == p.parent_id)).all()]
-        rows = s.scalars(select(Alert).where(Alert.child_id.in_(child_ids)).order_by(Alert.created_at.desc()).limit(200)).all()
+        rows = s.scalars(
+            select(Alert).where(Alert.child_id.in_(child_ids)).order_by(Alert.created_at.desc()).limit(200)
+        ).all()
         return {"alerts": [alert_body(a) for a in rows]}
 
     @app.get("/v1/guardian/approvals")
     def list_approvals(p: Parent = Depends(parent), s: Session = Depends(db)):
         child_ids = [c.child_id for c in s.scalars(select(Child).where(Child.parent_id == p.parent_id)).all()]
-        rows = s.scalars(select(Approval).where(Approval.child_id.in_(child_ids)).order_by(Approval.created_at.desc())).all()
+        rows = s.scalars(
+            select(Approval).where(Approval.child_id.in_(child_ids)).order_by(Approval.created_at.desc())
+        ).all()
         return {"approvals": [approval_body(a) for a in rows]}
 
     @app.post("/v1/guardian/approvals/{approvalId}")
-    def decide(approvalId: str, data: dict = Depends(body("api/approval-decision-request.json")),  # noqa: N803
-               p: Parent = Depends(parent), s: Session = Depends(db)):
+    def decide(
+        approvalId: str,  # noqa: N803
+        data: dict = Depends(body("api/approval-decision-request.json")),
+        p: Parent = Depends(parent),
+        s: Session = Depends(db),
+    ):
         a = s.get(Approval, approvalId) if UUID.match(approvalId) else None
         child = s.get(Child, a.child_id) if a else None
         if a is None or child is None or child.parent_id != p.parent_id:
@@ -290,9 +392,12 @@ def build_app(
         a.decided_at, a.signature, a.delivered = clock(), data["signature"], False
         s.commit()
         if a.kind == "share":
-            publish(f"guardian.share.{'approved' if a.status == 'approved' else 'declined'}",
-                    {"requestId": a.request_id, "caseId": a.case_id, "decidedAt": iso(aware(a.decided_at))},
-                    child.device_id, a.case_id)
+            publish(
+                f"guardian.share.{'approved' if a.status == 'approved' else 'declined'}",
+                {"requestId": a.request_id, "caseId": a.case_id, "decidedAt": iso(aware(a.decided_at))},
+                child.device_id,
+                a.case_id,
+            )
         audit(f"approval.{a.status}", actor=p.parent_id, resource=a.approval_id, service="guardian")
         return approval_result(a)
 
@@ -312,46 +417,86 @@ def build_app(
             raise KuumaError(422, "bad_device_key", "devicePublicKey must be ECDSA P-256") from None
         child = s.get(Child, code.child_id)
         code.used = True
-        child.paired, child.device_id, child.device_public_key = True, str(uuid.uuid4()), data["devicePublicKey"]
+        child.paired, child.device_id, child.device_public_key = (
+            True,
+            str(uuid.uuid4()),
+            data["devicePublicKey"],
+        )
         child.last_heartbeat_at, child.protection_active = clock(), True
         s.commit()
-        publish("guardian.pairing.completed", {"childId": child.child_id, "deviceId": child.device_id,
-                                               "ageBracket": child.age_bracket}, child.device_id)
+        publish(
+            "guardian.pairing.completed",
+            {"childId": child.child_id, "deviceId": child.device_id, "ageBracket": child.age_bracket},
+            child.device_id,
+        )
         audit("child.paired", actor=child.parent_id, resource=child.child_id, service="guardian")
-        return {"childId": child.child_id, "deviceId": child.device_id, "policy": json.loads(child.policy_json)}
+        return {
+            "childId": child.child_id,
+            "deviceId": child.device_id,
+            "policy": json.loads(child.policy_json),
+        }
 
     @app.post("/v1/guardian/alerts", status_code=201)
-    def create_alert(data: dict = Depends(body("api/alert-request.json")), child: Child = Depends(device_child),
-                     s: Session = Depends(db)):
+    def create_alert(
+        data: dict = Depends(body("api/alert-request.json")),
+        child: Child = Depends(device_child),
+        s: Session = Depends(db),
+    ):
         child = s.merge(child)
-        a = raise_alert(s, child, kind=data.get("kind", "flag"), severity=data["severity"], case_id=data["caseId"],
-                        category=data.get("category"), app_source=data.get("appSource"),
-                        occurred_at=data.get("occurredAt"), sealed_excerpt=data.get("sealedExcerpt"))
+        a = raise_alert(
+            s,
+            child,
+            kind=data.get("kind", "flag"),
+            severity=data["severity"],
+            case_id=data["caseId"],
+            category=data.get("category"),
+            app_source=data.get("appSource"),
+            occurred_at=data.get("occurredAt"),
+            sealed_excerpt=data.get("sealedExcerpt"),
+        )
         return JSONResponse(alert_body(a), status_code=201)
 
     @app.post("/v1/guardian/approval-requests", status_code=201)
-    def create_approval_request(data: dict = Depends(body("api/approval-request.json")),
-                                child: Child = Depends(device_child), s: Session = Depends(db)):
+    def create_approval_request(
+        data: dict = Depends(body("api/approval-request.json")),
+        child: Child = Depends(device_child),
+        s: Session = Depends(db),
+    ):
         existing = s.scalars(select(Approval).where(Approval.request_id == data["requestId"])).first()
         if existing is not None:
             if existing.child_id != child.child_id:
                 raise KuumaError(409, "conflict", "requestId already used")
             return JSONResponse(approval_body(existing), status_code=201)
-        a = Approval(approval_id=str(uuid.uuid4()), request_id=data["requestId"], child_id=child.child_id,
-                     case_id=data["caseId"], kind=data["kind"], recipient_type=data.get("recipientType"), status="pending",
-                     created_at=clock(), delivered=False)
+        a = Approval(
+            approval_id=str(uuid.uuid4()),
+            request_id=data["requestId"],
+            child_id=child.child_id,
+            case_id=data["caseId"],
+            kind=data["kind"],
+            recipient_type=data.get("recipientType"),
+            status="pending",
+            created_at=clock(),
+            delivered=False,
+        )
         s.add(a)
         s.commit()
         push.send(child.parent_id, {"approvalId": a.approval_id, "kind": "approval"})
         return JSONResponse(approval_body(a), status_code=201)
 
     @app.post("/v1/guardian/heartbeat")
-    def heartbeat(data: dict = Depends(body("api/heartbeat-request.json")), child: Child = Depends(device_child),
-                  s: Session = Depends(db)):
+    def heartbeat(
+        data: dict = Depends(body("api/heartbeat-request.json")),
+        child: Child = Depends(device_child),
+        s: Session = Depends(db),
+    ):
         child = s.merge(child)
         missing = data.get("missingPermissions", [])
         active = data.get("protectionActive", True) and not missing
-        child.last_heartbeat_at, child.protection_active, child.missing_permissions = clock(), active, json.dumps(missing)
+        child.last_heartbeat_at, child.protection_active, child.missing_permissions = (
+            clock(),
+            active,
+            json.dumps(missing),
+        )
         if not active and not child.tamper_open:
             child.tamper_open = True
             raise_alert(s, child, kind="tamper", severity="high", case_id=child.child_id)
@@ -361,8 +506,13 @@ def build_app(
         out: dict = {"latestPolicyVersion": child.policy_version, "serverTime": iso(clock())}
         if data["policyVersion"] < child.policy_version:
             out["policy"] = json.loads(child.policy_json)
-        undelivered = s.scalars(select(Approval).where(Approval.child_id == child.child_id, Approval.status != "pending",
-                                                       Approval.delivered.is_(False))).all()
+        undelivered = s.scalars(
+            select(Approval).where(
+                Approval.child_id == child.child_id,
+                Approval.status != "pending",
+                Approval.delivered.is_(False),
+            )
+        ).all()
         out["decisions"] = [approval_result(a) for a in undelivered]
         for a in undelivered:
             a.delivered = True
@@ -376,7 +526,9 @@ def build_app(
         raised = 0
         cutoff = clock() - TAMPER_AFTER
         with sessions() as s:
-            for child in s.scalars(select(Child).where(Child.paired.is_(True), Child.tamper_open.is_(False))).all():
+            for child in s.scalars(
+                select(Child).where(Child.paired.is_(True), Child.tamper_open.is_(False))
+            ).all():
                 last = aware(child.last_heartbeat_at)
                 if last is not None and last < cutoff:
                     child.tamper_open = True
@@ -387,6 +539,7 @@ def build_app(
 
     app.state.sweep = sweep
     if sweep_every:
+
         def loop() -> None:
             while True:
                 time.sleep(sweep_every)

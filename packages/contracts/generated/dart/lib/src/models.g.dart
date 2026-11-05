@@ -459,11 +459,13 @@ class ApiError {
 }
 
 class Approval {
-  const Approval({required this.approvalId, required this.requestId, required this.caseId, required this.kind, this.recipientType, required this.status, required this.createdAt, this.decidedAt});
+  const Approval({required this.approvalId, required this.requestId, required this.caseId, this.childId, required this.kind, this.recipientType, required this.status, required this.createdAt, this.decidedAt});
 
   final String approvalId;
   final String requestId;
   final String caseId;
+  /// The child the request came from, so the parent's phone signs with that child's family key.
+  final String? childId;
   final ApprovalKind kind;
   final RecipientType? recipientType;
   final ApprovalStatus status;
@@ -474,6 +476,7 @@ class Approval {
         approvalId: json['approvalId'] as String,
         requestId: json['requestId'] as String,
         caseId: json['caseId'] as String,
+        childId: json['childId'] == null ? null : json['childId'] as String,
         kind: ApprovalKind.fromWire(json['kind'] as String),
         recipientType: json['recipientType'] == null ? null : RecipientType.fromWire(json['recipientType'] as String),
         status: ApprovalStatus.fromWire(json['status'] as String),
@@ -485,6 +488,7 @@ class Approval {
         'approvalId': approvalId,
         'requestId': requestId,
         'caseId': caseId,
+        if (childId != null) 'childId': childId!,
         'kind': kind.wire,
         if (recipientType != null) 'recipientType': recipientType!.wire,
         'status': status.wire,

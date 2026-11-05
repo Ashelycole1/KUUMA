@@ -291,6 +291,10 @@ const String kuumaSchemaBundle = r'''
    "caseId": {
     "$ref": "../types/uuid.json"
    },
+   "childId": {
+    "$ref": "../types/uuid.json",
+    "description": "The child the request came from, so the parent's phone signs with that child's family key."
+   },
    "createdAt": {
     "$ref": "../types/timestamp.json"
    },

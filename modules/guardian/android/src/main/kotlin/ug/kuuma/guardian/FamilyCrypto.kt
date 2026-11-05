@@ -1,7 +1,5 @@
 package ug.kuuma.guardian
 
-import ug.kuuma.contracts.Policy
-import ug.kuuma.core.crypto.Base64Url
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Locale
@@ -9,6 +7,8 @@ import javax.crypto.Cipher
 import javax.crypto.Mac
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
+import ug.kuuma.contracts.Policy
+import ug.kuuma.core.crypto.Base64Url
 
 /**
  * The family key: 32 random bytes the parent's phone makes when adding a child and passes
@@ -33,8 +33,8 @@ class FamilyCrypto(private val key: ByteArray) {
 
     fun verifyPolicy(p: Policy) = verify(policyMessage(p), p.signature)
 
-    fun verifyDecision(approvalId: String, requestId: String, decision: String, decidedAt: String, signature: String?) =
-        verify(decisionMessage(approvalId, requestId, decision, decidedAt), signature)
+    fun verifyDecision(approvalId: String, requestId: String, decision: String, signature: String?) =
+        verify(decisionMessage(approvalId, requestId, decision), signature)
 
     /** Seals an excerpt for the parent's phone: base64url(IV || AES-256-GCM ciphertext). */
     fun seal(text: String, random: SecureRandom = SecureRandom()): String {
@@ -58,11 +58,12 @@ class FamilyCrypto(private val key: ByteArray) {
             String.format(Locale.US, "%.3f", p.thresholds.flagMinConfidence),
             p.thresholds.alertMinSeverity.wire,
             p.thresholds.captureMinSeverity.wire,
-            p.policyVersion.toString(),
+            p.policyVersion.toString()
         ).joinToString("|")
 
-        fun decisionMessage(approvalId: String, requestId: String, decision: String, decidedAt: String) =
-            "$approvalId|$requestId|$decision|$decidedAt"
+        /** Not decidedAt: the server stamps that after the parent signs. */
+        fun decisionMessage(approvalId: String, requestId: String, decision: String) =
+            "$approvalId|$requestId|$decision"
     }
 }
 

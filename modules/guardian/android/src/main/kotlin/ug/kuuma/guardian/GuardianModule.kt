@@ -6,6 +6,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import androidx.sqlite.db.SupportSQLiteDatabase
+import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.KSerializer
 import ug.kuuma.contracts.AlertRequest
 import ug.kuuma.contracts.ApprovalRequest
@@ -23,12 +29,6 @@ import ug.kuuma.core.module.ModuleContext
 import ug.kuuma.core.module.ScreenSlot
 import ug.kuuma.core.permissions.GrantKind
 import ug.kuuma.core.permissions.KuumaPermission
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 
 /** What the app shell gives Guardian. */
 data class GuardianConfig(
@@ -39,7 +39,7 @@ data class GuardianConfig(
     /** Every module's declared permissions (Core's permission registry), for the setup wizard. */
     val permissions: () -> List<KuumaPermission> = { emptyList() },
     /** How often the phone checks in. PLACEHOLDER until the alert delivery time is agreed. */
-    val heartbeatMinutes: Long = 15,
+    val heartbeatMinutes: Long = 15
 )
 
 /**
@@ -51,12 +51,27 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
     override val namespace = Namespace.GUARDIAN
     override val displayName = "Guardian"
     override val permissions = listOf(
-        KuumaPermission("android.permission.POST_NOTIFICATIONS", Namespace.GUARDIAN, "guardian.permission.notifications.reason", minSdk = 33),
-        KuumaPermission("android.permission.CAMERA", Namespace.GUARDIAN, "guardian.permission.camera.reason", required = false),
+        KuumaPermission(
+            "android.permission.POST_NOTIFICATIONS",
+            Namespace.GUARDIAN,
+            "guardian.permission.notifications.reason",
+            minSdk = 33
+        ),
+        KuumaPermission(
+            "android.permission.CAMERA",
+            Namespace.GUARDIAN,
+            "guardian.permission.camera.reason",
+            required = false
+        )
     )
     override val screens = listOf(ScreenSlot("guardian.pairing", "child.settings", "guardian.pairing.title"))
 
-    private val worker = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "kuuma-guardian").apply { isDaemon = true } }
+    private val worker = Executors.newSingleThreadScheduledExecutor { r ->
+        Thread(r, "kuuma-guardian").apply {
+            isDaemon =
+                true
+        }
+    }
     private lateinit var engine: GuardianEngine
 
     override fun onRegister(context: ModuleContext) {
@@ -71,23 +86,52 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
             SafeLog.i("guardian.ready", LogField.bool("paired", engine.isPaired))
         }
         context.events.subscribe(Events.SENTINEL_MESSAGE_FLAGGED) { e ->
-            submit { engine.onFlagged(e.payload.flagId, e.payload.severity, e.payload.category, e.payload.appSource) }
+            submit {
+                engine.onFlagged(
+                    e.payload.flagId,
+                    e.payload.severity,
+                    e.payload.category,
+                    e.payload.appSource,
+                    e.caseId
+                )
+            }
         }
         context.events.subscribe(Events.SENTINEL_FLAG_UPDATED) { e ->
-            submit { engine.onFlagUpdated(e.payload.flagId, e.payload.severity, e.payload.category, e.payload.dismissed == true) }
+            submit {
+                engine.onFlagUpdated(
+                    e.payload.flagId,
+                    e.payload.severity,
+                    e.payload.category,
+                    e.payload.dismissed == true
+                )
+            }
         }
         context.events.subscribe(Events.SENTINEL_CAPTURE_READY) { e ->
             val offending = e.payload.messages.lastOrNull { !it.fromChild }?.text
             submit { engine.onCapture(e.payload.flagId, offending) }
         }
-        context.events.subscribe(Events.CASEFILE_EVIDENCE_SEALED) { e -> submit { engine.onEvidenceSealed(e.payload.flagId, e.caseId) } }
-        context.events.subscribe(Events.CASEFILE_CASE_UPDATED) { e -> submit { engine.onCaseUpdated(e.payload.caseId, e.payload.topSeverity) } }
-        context.events.subscribe(Events.CASEFILE_CASE_ESCALATED) { e -> submit { engine.onEscalated(e.payload.caseId) } }
+        context.events.subscribe(Events.CASEFILE_EVIDENCE_SEALED) { e ->
+            submit { engine.onEvidenceSealed(e.payload.flagId, e.caseId) }
+        }
+        context.events.subscribe(Events.CASEFILE_CASE_UPDATED) { e ->
+            submit { engine.onCaseUpdated(e.payload.caseId, e.payload.topSeverity) }
+        }
+        context.events.subscribe(Events.CASEFILE_CASE_ESCALATED) { e ->
+            submit { engine.onEscalated(e.payload.caseId) }
+        }
         context.events.subscribe(Events.CASEFILE_SHARE_REQUESTED) { e ->
             submit { engine.onShareRequested(e.payload.requestId, e.payload.caseId, e.payload.recipientType) }
         }
-        context.events.subscribe(Events.COMPANION_SOS_TRIGGERED) { e -> submit { engine.onSos(e.payload.caseId, e.payload.triggeredAt) } }
-        if (config.api != null) worker.scheduleWithFixedDelay({ submit { engine.heartbeat() } }, 1, config.heartbeatMinutes, TimeUnit.MINUTES)
+        context.events.subscribe(Events.COMPANION_SOS_TRIGGERED) { e ->
+            submit { engine.onSos(e.payload.caseId, e.payload.triggeredAt) }
+        }
+        if (config.api !=
+            null
+        ) {
+            worker.scheduleWithFixedDelay({
+                submit { engine.heartbeat() }
+            }, 1, config.heartbeatMinutes, TimeUnit.MINUTES)
+        }
     }
 
     /** Calls from the setup wizard (kuuma_guardian). */
@@ -100,10 +144,16 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
                 "policyVersion" to engine.policy?.policyVersion?.toInt(),
                 "ageBracket" to engine.policy?.ageBracket?.wire,
                 "watchedApps" to engine.policy?.watchedApps?.map { it.wire },
-                "pendingAlerts" to engine.pendingAlerts,
+                "pendingAlerts" to engine.pendingAlerts
             )
             "consent" -> engine.recordConsent()
-            "pair" -> engine.pair(args["qr"] as String).name.also { if (it == PairResult.PAIRED.name) runCatching { engine.heartbeat() } }
+            "pair" -> engine.pair(args["qr"] as String).name.also {
+                if (it ==
+                    PairResult.PAIRED.name
+                ) {
+                    runCatching { engine.heartbeat() }
+                }
+            }
             "permissions" -> config.permissions().map { p ->
                 mapOf(
                     "permission" to p.permission,
@@ -111,7 +161,7 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
                     "reasonKey" to p.reasonKey,
                     "kind" to p.kind.name,
                     "required" to p.required,
-                    "granted" to granted(p),
+                    "granted" to granted(p)
                 )
             }
             "openSettings" -> openSettings(args["permission"] as String)
@@ -136,37 +186,59 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
 
     // ------------------------------------------------------------------ permissions (Android)
 
-    private fun missingPermissions(): List<String> = config.permissions().filter { it.required && !granted(it) }.map { it.permission }
+    private fun missingPermissions(): List<String> = config.permissions().filter {
+        it.required && !granted(it)
+    }.map { it.permission }
 
     private fun granted(p: KuumaPermission): Boolean {
         val ctx = config.androidContext ?: return true
         if (!p.appliesTo(Build.VERSION.SDK_INT)) return true
         return when (p.permission) {
             "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" ->
-                Settings.Secure.getString(ctx.contentResolver, "enabled_notification_listeners")?.contains(ctx.packageName) == true
+                Settings.Secure.getString(
+                    ctx.contentResolver,
+                    "enabled_notification_listeners"
+                )?.contains(ctx.packageName) ==
+                    true
             "android.permission.BIND_ACCESSIBILITY_SERVICE" ->
-                Settings.Secure.getString(ctx.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)?.contains(ctx.packageName) == true
+                Settings.Secure.getString(
+                    ctx.contentResolver,
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+                )?.contains(ctx.packageName) ==
+                    true
             "android.permission.BIND_INPUT_METHOD" ->
-                Settings.Secure.getString(ctx.contentResolver, Settings.Secure.ENABLED_INPUT_METHODS)?.contains(ctx.packageName) == true
-            else -> p.kind == GrantKind.INSTALL ||
-                Build.VERSION.SDK_INT < 23 ||
-                ctx.checkSelfPermission(p.permission) == PackageManager.PERMISSION_GRANTED
+                Settings.Secure.getString(
+                    ctx.contentResolver,
+                    Settings.Secure.ENABLED_INPUT_METHODS
+                )?.contains(ctx.packageName) ==
+                    true
+            else ->
+                p.kind == GrantKind.INSTALL ||
+                    Build.VERSION.SDK_INT < 23 ||
+                    ctx.checkSelfPermission(p.permission) == PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun openSettings(permission: String): Boolean {
         val ctx = config.androidContext ?: return false
         val action = when (permission) {
-            "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" -> "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"
+            "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" -> NOTIFICATION_LISTENER_SETTINGS
             "android.permission.BIND_ACCESSIBILITY_SERVICE" -> Settings.ACTION_ACCESSIBILITY_SETTINGS
             "android.permission.BIND_INPUT_METHOD" -> Settings.ACTION_INPUT_METHOD_SETTINGS
             else -> Settings.ACTION_APPLICATION_DETAILS_SETTINGS
         }
         val intent = Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (action == Settings.ACTION_APPLICATION_DETAILS_SETTINGS) intent.data = android.net.Uri.parse("package:${ctx.packageName}")
+        if (action ==
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        ) {
+            intent.data =
+                android.net.Uri.parse("package:${ctx.packageName}")
+        }
         return runCatching { ctx.startActivity(intent) }.isSuccess
     }
 }
+
+private const val NOTIFICATION_LISTENER_SETTINGS = "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"
 
 /** guardian.db (SQLCipher via the module's own ModuleContext): one key-value table. */
 class SqlGuardianStore(private val db: SupportSQLiteDatabase) : GuardianStore {
@@ -174,10 +246,18 @@ class SqlGuardianStore(private val db: SupportSQLiteDatabase) : GuardianStore {
         db.execSQL("CREATE TABLE IF NOT EXISTS kv (k TEXT PRIMARY KEY, v TEXT NOT NULL)")
     }
 
-    override fun get(key: String): String? = db.query("SELECT v FROM kv WHERE k = ?", arrayOf(key)).use { if (it.moveToFirst()) it.getString(0) else null }
+    override fun get(key: String): String? = db.query("SELECT v FROM kv WHERE k = ?", arrayOf(key)).use {
+        if (it.moveToFirst()) it.getString(0) else null
+    }
 
     override fun put(key: String, value: String?) {
-        if (value == null) db.execSQL("DELETE FROM kv WHERE k = ?", arrayOf<Any>(key)) else db.execSQL("INSERT OR REPLACE INTO kv VALUES (?, ?)", arrayOf<Any>(key, value))
+        if (value ==
+            null
+        ) {
+            db.execSQL("DELETE FROM kv WHERE k = ?", arrayOf<Any>(key))
+        } else {
+            db.execSQL("INSERT OR REPLACE INTO kv VALUES (?, ?)", arrayOf<Any>(key, value))
+        }
     }
 }
 
@@ -185,10 +265,15 @@ class SqlGuardianStore(private val db: SupportSQLiteDatabase) : GuardianStore {
 class HttpGuardianApi(
     private val baseUrl: String,
     private val deviceId: () -> String?,
-    private val sign: (deviceId: String, method: String, path: String, body: ByteArray) -> Map<String, String>,
+    private val sign: (deviceId: String, method: String, path: String, body: ByteArray) -> Map<String, String>
 ) : GuardianApi {
-    override fun pair(request: PairingRequest): PairingResponse =
-        call("/v1/guardian/pairings", request, PairingRequest.serializer(), PairingResponse.serializer(), signed = false)
+    override fun pair(request: PairingRequest): PairingResponse = call(
+        "/v1/guardian/pairings",
+        request,
+        PairingRequest.serializer(),
+        PairingResponse.serializer(),
+        signed = false
+    )
 
     override fun heartbeat(request: HeartbeatRequest): HeartbeatResponse =
         call("/v1/guardian/heartbeat", request, HeartbeatRequest.serializer(), HeartbeatResponse.serializer())
@@ -201,7 +286,13 @@ class HttpGuardianApi(
         call<ApprovalRequest, Unit>("/v1/guardian/approval-requests", request, ApprovalRequest.serializer(), null)
     }
 
-    private fun <I, O> call(path: String, body: I, inSer: KSerializer<I>, outSer: KSerializer<O>?, signed: Boolean = true): O {
+    private fun <I, O> call(
+        path: String,
+        body: I,
+        inSer: KSerializer<I>,
+        outSer: KSerializer<O>?,
+        signed: Boolean = true
+    ): O {
         val bytes = ContractJson.json.encodeToString(inSer, body).toByteArray()
         val conn = URL(baseUrl.trimEnd('/') + path).openConnection() as HttpURLConnection
         try {
