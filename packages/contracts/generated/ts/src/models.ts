@@ -489,6 +489,10 @@ export interface SentinelFlagUpdatedPayload {
   category: HarmCategory;
   groomingSignals: GroomingStage[];
   translationRef?: OpaqueRef;
+  /**
+   * True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.
+   */
+  dismissed?: boolean;
 }
 
 /**

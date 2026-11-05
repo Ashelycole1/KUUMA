@@ -475,6 +475,7 @@ class SentinelFlagUpdatedPayload(ContractModel):
     category: HarmCategory
     grooming_signals: list[GroomingStage] = Field(alias="groomingSignals")
     translation_ref: OpaqueRef | None = Field(default=None, alias="translationRef")
+    dismissed: bool | None = Field(default=None)
 
 
 class SentinelMessageFlaggedPayload(ContractModel):

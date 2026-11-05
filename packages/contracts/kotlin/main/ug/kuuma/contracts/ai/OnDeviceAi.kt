@@ -25,7 +25,26 @@ data class ClassifyContext(
     val appSource: AppSource? = null,
     /** Earlier messages in the same conversation, oldest first. Phone only. */
     val previousMessages: List<String> = emptyList(),
-    val ageBracket: AgeBracket? = null
+    val ageBracket: AgeBracket? = null,
+    /** How this sender and the child usually talk, so banter can be told from abuse. Phone only. */
+    val contact: ContactContext? = null
+)
+
+/**
+ * Local counters about one sender, kept by Sentinel on the phone and never sent anywhere.
+ * Counts only: no names, numbers or text.
+ */
+data class ContactContext(
+    /** Messages this sender sent the child. */
+    val messagesFromThem: Int,
+    /** Messages the child sent this sender (two-way talk suggests a real relationship). */
+    val messagesFromChild: Int,
+    /** Earlier flags raised on this sender. */
+    val priorFlags: Int,
+    /** Earlier flags on this sender that the child marked "not harmful". */
+    val dismissedFlags: Int,
+    /** Days since Sentinel first saw this sender. */
+    val daysKnown: Int
 )
 
 /** Checks a reply the child is typing before it is sent (used by the Companion keyboard). */

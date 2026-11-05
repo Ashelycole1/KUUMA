@@ -1137,13 +1137,15 @@ class SentinelConversationActivePayload extends PhoneOnlyPayload {
 
 /// Sentinel revised a flag, e.g. after more context or a cloud analysis.
 class SentinelFlagUpdatedPayload extends CloudSendablePayload {
-  const SentinelFlagUpdatedPayload({required this.flagId, required this.severity, required this.category, required this.groomingSignals, this.translationRef});
+  const SentinelFlagUpdatedPayload({required this.flagId, required this.severity, required this.category, required this.groomingSignals, this.translationRef, this.dismissed});
 
   final String flagId;
   final Severity severity;
   final HarmCategory category;
   final List<GroomingStage> groomingSignals;
   final String? translationRef;
+  /// True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.
+  final bool? dismissed;
 
   factory SentinelFlagUpdatedPayload.fromJson(Map<String, dynamic> json) => SentinelFlagUpdatedPayload(
         flagId: json['flagId'] as String,
@@ -1151,6 +1153,7 @@ class SentinelFlagUpdatedPayload extends CloudSendablePayload {
         category: HarmCategory.fromWire(json['category'] as String),
         groomingSignals: (json['groomingSignals'] as List<dynamic>).map((e) => GroomingStage.fromWire(e as String)).toList(),
         translationRef: json['translationRef'] == null ? null : json['translationRef'] as String,
+        dismissed: json['dismissed'] == null ? null : json['dismissed'] as bool,
       );
 
   @override
@@ -1160,6 +1163,7 @@ class SentinelFlagUpdatedPayload extends CloudSendablePayload {
         'category': category.wire,
         'groomingSignals': groomingSignals.map((e) => e.wire).toList(),
         if (translationRef != null) 'translationRef': translationRef!,
+        if (dismissed != null) 'dismissed': dismissed!,
       };
 }
 

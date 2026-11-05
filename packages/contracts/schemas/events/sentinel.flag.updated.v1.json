@@ -50,6 +50,10 @@
         },
         "translationRef": {
           "$ref": "../types/opaque-ref.json"
+        },
+        "dismissed": {
+          "type": "boolean",
+          "description": "True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag."
         }
       }
     }

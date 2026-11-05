@@ -1436,6 +1436,10 @@ const String kuumaSchemaBundle = r'''
      "category": {
       "$ref": "../types/harm-category.json"
      },
+     "dismissed": {
+      "description": "True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.",
+      "type": "boolean"
+     },
      "flagId": {
       "$ref": "../types/uuid.json"
      },
