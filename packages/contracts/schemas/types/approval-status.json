@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/approval-status.json",
+  "title": "ApprovalStatus",
+  "type": "string",
+  "enum": [
+    "pending",
+    "approved",
+    "declined",
+    "expired"
+  ]
+}

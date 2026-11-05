@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/child-list.json",
+  "title": "ChildList",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "children"
+  ],
+  "properties": {
+    "children": {
+      "type": "array",
+      "items": {
+        "$ref": "child-status.json"
+      }
+    }
+  }
+}

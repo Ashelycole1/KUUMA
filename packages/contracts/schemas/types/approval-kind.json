@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/approval-kind.json",
+  "title": "ApprovalKind",
+  "description": "What a parent is asked to approve.",
+  "type": "string",
+  "enum": [
+    "share",
+    "deletion"
+  ]
+}

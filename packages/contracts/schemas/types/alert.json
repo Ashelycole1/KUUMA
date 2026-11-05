@@ -30,6 +30,21 @@
     },
     "read": {
       "type": "boolean"
+    },
+    "childId": {
+      "$ref": "uuid.json"
+    },
+    "kind": {
+      "$ref": "alert-kind.json"
+    },
+    "appSource": {
+      "$ref": "app-source.json"
+    },
+    "occurredAt": {
+      "$ref": "timestamp.json"
+    },
+    "sealedExcerpt": {
+      "$ref": "sealed-excerpt.json"
     }
   }
 }

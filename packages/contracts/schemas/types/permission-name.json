@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/permission-name.json",
+  "title": "PermissionName",
+  "description": "An Android permission or special access name.",
+  "type": "string",
+  "pattern": "^[A-Za-z][A-Za-z0-9_.]{2,120}$"
+}

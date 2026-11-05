@@ -34,6 +34,11 @@ data class Alert(
     val category: HarmCategory? = null,
     val createdAt: Timestamp,
     val read: Boolean,
+    val childId: Uuid? = null,
+    val kind: AlertKind? = null,
+    val appSource: AppSource? = null,
+    val occurredAt: Timestamp? = null,
+    val sealedExcerpt: SealedExcerpt? = null,
 )
 
 @Serializable
@@ -46,6 +51,10 @@ data class AlertRequest(
     val caseId: Uuid,
     val severity: Severity,
     val category: HarmCategory? = null,
+    val kind: AlertKind? = null,
+    val appSource: AppSource? = null,
+    val occurredAt: Timestamp? = null,
+    val sealedExcerpt: SealedExcerpt? = null,
 )
 
 /**
@@ -89,8 +98,37 @@ data class ApiError(
 )
 
 @Serializable
+data class Approval(
+    val approvalId: Uuid,
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val kind: ApprovalKind,
+    val recipientType: RecipientType? = null,
+    val status: ApprovalStatus,
+    val createdAt: Timestamp,
+    val decidedAt: Timestamp? = null,
+)
+
+@Serializable
 data class ApprovalDecisionRequest(
     val decision: ApprovalDecision,
+    val signature: FamilySignature? = null,
+)
+
+@Serializable
+data class ApprovalList(
+    val approvals: List<Approval>,
+)
+
+/**
+ * The child's phone asks the parent to approve a share or deletion (from casefile.share.requested).
+ */
+@Serializable
+data class ApprovalRequest(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val kind: ApprovalKind,
+    val recipientType: RecipientType? = null,
 )
 
 @Serializable
@@ -100,6 +138,8 @@ data class ApprovalResult(
     val caseId: Uuid,
     val decision: ApprovalDecision,
     val decidedAt: Timestamp,
+    val kind: ApprovalKind? = null,
+    val signature: FamilySignature? = null,
 )
 
 /**
@@ -148,6 +188,22 @@ data class CapturedMessage(
     val fromChild: Boolean,
 )
 
+@Serializable
+data class ChildList(
+    val children: List<ChildStatus>,
+)
+
+@Serializable
+data class ChildStatus(
+    val childId: Uuid,
+    val paired: Boolean,
+    val ageBracket: AgeBracket,
+    val policyVersion: Long,
+    val lastHeartbeatAt: Timestamp? = null,
+    val protectionActive: Boolean? = null,
+    val missingPermissions: List<PermissionName>? = null,
+)
+
 /**
  * The body of every non-2xx API response.
  */
@@ -176,12 +232,24 @@ data class HeartbeatRequest(
      * False when the accessibility/notification service is off.
      */
     val protectionActive: Boolean? = null,
+    /**
+     * Permissions Kuuma needs that are currently off.
+     */
+    val missingPermissions: List<PermissionName>? = null,
 )
 
 @Serializable
 data class HeartbeatResponse(
     val latestPolicyVersion: Long,
     val serverTime: Timestamp,
+    /**
+     * Present when a newer policy than the phone's exists.
+     */
+    val policy: Policy? = null,
+    /**
+     * Parent decisions on this child's approval requests not yet delivered.
+     */
+    val decisions: List<ApprovalResult>? = null,
 )
 
 /**
@@ -205,6 +273,21 @@ data class LinkSuggestionsResponse(
     val suggestions: List<LinkSuggestion>,
 )
 
+/**
+ * The parent starts adding a child with the first, signed policy.
+ */
+@Serializable
+data class PairingCodeRequest(
+    val policy: Policy,
+)
+
+@Serializable
+data class PairingCodeResponse(
+    val childId: Uuid,
+    val pairingCode: String,
+    val expiresAt: Timestamp,
+)
+
 @Serializable
 data class PairingRequest(
     val pairingCode: String,
@@ -223,6 +306,23 @@ data class PairingResponse(
 )
 
 /**
+ * Creates a parent account tied to a random ID. No name, phone number or email.
+ */
+@Serializable
+data class ParentRegistrationRequest(
+    /**
+     * Base64 X.509 SubjectPublicKeyInfo of the parent phone's key (device binding).
+     */
+    val devicePublicKey: String,
+)
+
+@Serializable
+data class ParentRegistrationResponse(
+    val parentId: Uuid,
+    val sessionToken: String,
+)
+
+/**
  * The monitoring policy a parent sets for one child.
  */
 @Serializable
@@ -231,6 +331,10 @@ data class Policy(
     val watchedApps: List<AppSource>,
     val thresholds: Thresholds,
     val policyVersion: Long,
+    /**
+     * Parent's signature over ageBracket|watchedApps(sorted, comma)|flagMinConfidence(3 dp)|alertMinSeverity|captureMinSeverity|policyVersion. The child's phone rejects a policy without a valid one.
+     */
+    val signature: FamilySignature? = null,
 )
 
 /**

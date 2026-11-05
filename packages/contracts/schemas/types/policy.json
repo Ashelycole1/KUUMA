@@ -27,6 +27,10 @@
     "policyVersion": {
       "type": "integer",
       "minimum": 1
+    },
+    "signature": {
+      "$ref": "family-signature.json",
+      "description": "Parent's signature over ageBracket|watchedApps(sorted, comma)|flagMinConfidence(3 dp)|alertMinSeverity|captureMinSeverity|policyVersion. The child's phone rejects a policy without a valid one."
     }
   }
 }

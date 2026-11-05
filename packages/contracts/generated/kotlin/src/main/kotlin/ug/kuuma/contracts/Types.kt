@@ -14,6 +14,13 @@ import kotlinx.serialization.Serializable
 typealias AdviceKey = String
 
 /**
+ * base64url HMAC-SHA256 by the parent's phone with the family key. The family key travels only in the pairing QR code, so the server can neither read nor forge what it signs.
+ *
+ * Pattern: `^[A-Za-z0-9_-]{43}$`
+ */
+typealias FamilySignature = String
+
+/**
  * A pseudonymous label for an offender inside one case, e.g. 'Person A'. Never a real name or handle.
  *
  * Pattern: `^Person [A-Z]{1,2}$`
@@ -26,6 +33,20 @@ typealias OffenderLabel = String
  * Pattern: `^or1_[A-Za-z0-9_-]{43}$`
  */
 typealias OpaqueRef = String
+
+/**
+ * An Android permission or special access name.
+ *
+ * Pattern: `^[A-Za-z][A-Za-z0-9_.]{2,120}$`
+ */
+typealias PermissionName = String
+
+/**
+ * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.
+ *
+ * Pattern: `^[A-Za-z0-9_-]{24,10000}$`
+ */
+typealias SealedExcerpt = String
 
 /**
  * A SHA-256 digest as 64 lowercase hex characters.
@@ -66,6 +87,24 @@ enum class AgeBracket(val wire: String) {
 }
 
 /**
+ * What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+ */
+@Serializable
+enum class AlertKind(val wire: String) {
+    @SerialName("flag") FLAG("flag"),
+    @SerialName("escalation") ESCALATION("escalation"),
+    @SerialName("sos") SOS("sos"),
+    @SerialName("tamper") TAMPER("tamper"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): AlertKind =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown AlertKind: $wire")
+    }
+}
+
+/**
  * The messaging app a message arrived through.
  */
 @Serializable
@@ -98,6 +137,37 @@ enum class ApprovalDecision(val wire: String) {
         fun fromWire(wire: String): ApprovalDecision =
             entries.firstOrNull { it.wire == wire }
                 ?: throw IllegalArgumentException("Unknown ApprovalDecision: $wire")
+    }
+}
+
+/**
+ * What a parent is asked to approve.
+ */
+@Serializable
+enum class ApprovalKind(val wire: String) {
+    @SerialName("share") SHARE("share"),
+    @SerialName("deletion") DELETION("deletion"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ApprovalKind =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ApprovalKind: $wire")
+    }
+}
+
+@Serializable
+enum class ApprovalStatus(val wire: String) {
+    @SerialName("pending") PENDING("pending"),
+    @SerialName("approved") APPROVED("approved"),
+    @SerialName("declined") DECLINED("declined"),
+    @SerialName("expired") EXPIRED("expired"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ApprovalStatus =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ApprovalStatus: $wire")
     }
 }
 
@@ -256,8 +326,11 @@ enum class ShareStatus(val wire: String) {
 /** Patterns for the string aliases above, for runtime validation. */
 object ContractPatterns {
     val ADVICE_KEY = Regex("^advice\\.[a-z0-9_]+(\\.[a-z0-9_]+)*\$")
+    val FAMILY_SIGNATURE = Regex("^[A-Za-z0-9_-]{43}\$")
     val OFFENDER_LABEL = Regex("^Person [A-Z]{1,2}\$")
     val OPAQUE_REF = Regex("^or1_[A-Za-z0-9_-]{43}\$")
+    val PERMISSION_NAME = Regex("^[A-Za-z][A-Za-z0-9_.]{2,120}\$")
+    val SEALED_EXCERPT = Regex("^[A-Za-z0-9_-]{24,10000}\$")
     val SHA256 = Regex("^[0-9a-f]{64}\$")
     val TIMESTAMP = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z\$")
     val UUID = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\$")

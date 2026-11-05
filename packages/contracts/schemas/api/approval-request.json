@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/approval-request.json",
+  "title": "ApprovalRequest",
+  "description": "The child's phone asks the parent to approve a share or deletion (from casefile.share.requested).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "caseId",
+    "kind"
+  ],
+  "properties": {
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "kind": {
+      "$ref": "../types/approval-kind.json"
+    },
+    "recipientType": {
+      "$ref": "../types/recipient-type.json"
+    }
+  }
+}

@@ -24,6 +24,14 @@
     "protectionActive": {
       "type": "boolean",
       "description": "False when the accessibility/notification service is off."
+    },
+    "missingPermissions": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/permission-name.json"
+      },
+      "maxItems": 20,
+      "description": "Permissions Kuuma needs that are currently off."
     }
   }
 }

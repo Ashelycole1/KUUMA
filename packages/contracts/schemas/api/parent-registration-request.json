@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/parent-registration-request.json",
+  "title": "ParentRegistrationRequest",
+  "description": "Creates a parent account tied to a random ID. No name, phone number or email.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "devicePublicKey"
+  ],
+  "properties": {
+    "devicePublicKey": {
+      "type": "string",
+      "description": "Base64 X.509 SubjectPublicKeyInfo of the parent phone's key (device binding)."
+    }
+  }
+}
