@@ -1137,13 +1137,15 @@ class SentinelConversationActivePayload extends PhoneOnlyPayload {
 
 /// Sentinel revised a flag, e.g. after more context or a cloud analysis.
 class SentinelFlagUpdatedPayload extends CloudSendablePayload {
-  const SentinelFlagUpdatedPayload({required this.flagId, required this.severity, required this.category, required this.groomingSignals, this.translationRef});
+  const SentinelFlagUpdatedPayload({required this.flagId, required this.severity, required this.category, required this.groomingSignals, this.translationRef, this.dismissed});
 
   final String flagId;
   final Severity severity;
   final HarmCategory category;
   final List<GroomingStage> groomingSignals;
   final String? translationRef;
+  /// True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.
+  final bool? dismissed;
 
   factory SentinelFlagUpdatedPayload.fromJson(Map<String, dynamic> json) => SentinelFlagUpdatedPayload(
         flagId: json['flagId'] as String,
@@ -1151,6 +1153,7 @@ class SentinelFlagUpdatedPayload extends CloudSendablePayload {
         category: HarmCategory.fromWire(json['category'] as String),
         groomingSignals: (json['groomingSignals'] as List<dynamic>).map((e) => GroomingStage.fromWire(e as String)).toList(),
         translationRef: json['translationRef'] == null ? null : json['translationRef'] as String,
+        dismissed: json['dismissed'] == null ? null : json['dismissed'] as bool,
       );
 
   @override
@@ -1160,6 +1163,7 @@ class SentinelFlagUpdatedPayload extends CloudSendablePayload {
         'category': category.wire,
         'groomingSignals': groomingSignals.map((e) => e.wire).toList(),
         if (translationRef != null) 'translationRef': translationRef!,
+        if (dismissed != null) 'dismissed': dismissed!,
       };
 }
 
@@ -1203,20 +1207,50 @@ class SentinelMessageFlaggedPayload extends CloudSendablePayload {
       };
 }
 
+/// Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.
+class ShareDownload {
+  const ShareDownload({required this.requestId, required this.bundleHash, required this.downloadUrl, required this.expiresAt});
+
+  final String requestId;
+  /// SHA-256 of the encrypted bundle, so the recipient can check the download.
+  final String bundleHash;
+  /// Short-lived URL of the encrypted bundle.
+  final String downloadUrl;
+  final String expiresAt;
+
+  factory ShareDownload.fromJson(Map<String, dynamic> json) => ShareDownload(
+        requestId: json['requestId'] as String,
+        bundleHash: json['bundleHash'] as String,
+        downloadUrl: json['downloadUrl'] as String,
+        expiresAt: json['expiresAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'bundleHash': bundleHash,
+        'downloadUrl': downloadUrl,
+        'expiresAt': expiresAt,
+      };
+}
+
 class ShareRequest {
-  const ShareRequest({required this.requestId, required this.recipientType});
+  const ShareRequest({required this.requestId, required this.recipientType, this.bundleId});
 
   final String requestId;
   final RecipientType recipientType;
+  /// The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle.
+  final String? bundleId;
 
   factory ShareRequest.fromJson(Map<String, dynamic> json) => ShareRequest(
         requestId: json['requestId'] as String,
         recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        bundleId: json['bundleId'] == null ? null : json['bundleId'] as String,
       );
 
   Map<String, dynamic> toJson() => {
         'requestId': requestId,
         'recipientType': recipientType.wire,
+        if (bundleId != null) 'bundleId': bundleId!,
       };
 }
 

@@ -237,6 +237,16 @@ class FakeGuardian(BaseFake):
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
         self.bus.subscribe("casefile.case.escalated", self.on_escalated)
+        self.bus.subscribe("casefile.share.requested", self.on_share_requested)
+
+    def on_share_requested(self, ev: dict) -> None:
+        """A fake parent who approves every share request at once."""
+        self.now = dt.datetime.fromisoformat(ev["occurredAt"])
+        p = ev["payload"]
+        self.publish(
+            "guardian.share.approved",
+            {"requestId": p["requestId"], "caseId": p["caseId"], "decidedAt": ts(self.now)},
+        )
 
     def on_escalated(self, ev: dict) -> None:
         self.now = dt.datetime.fromisoformat(ev["occurredAt"])

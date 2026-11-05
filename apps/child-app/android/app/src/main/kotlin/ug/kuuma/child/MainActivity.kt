@@ -10,6 +10,7 @@ import io.flutter.plugin.common.MethodChannel
 /** FlutterFragmentActivity (not FlutterActivity) so kuuma_ui's fingerprint unlock works. */
 class MainActivity : FlutterFragmentActivity() {
     private val main = Handler(Looper.getMainLooper())
+    private val moduleCalls = java.util.concurrent.Executors.newFixedThreadPool(2)
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -40,6 +41,25 @@ class MainActivity : FlutterFragmentActivity() {
                     result.success(null)
                 }
                 else -> result.notImplemented()
+            }
+        }
+
+        // Each module's Flutter screens talk to its own Kotlin half (KuumaModule.onCall), and only to it.
+        for (module in KuumaRuntime.registry.modules.filterNot { it.isFake }) {
+            MethodChannel(messenger, "ug.kuuma/module/${module.namespace.wire}").setMethodCallHandler { call, result ->
+                @Suppress("UNCHECKED_CAST")
+                val args = (call.arguments as? Map<String, Any?>).orEmpty()
+                moduleCalls.execute {
+                    try {
+                        val value = module.onCall(call.method, args)
+                        main.post { result.success(value) }
+                    } catch (e: UnsupportedOperationException) {
+                        main.post { result.notImplemented() }
+                    } catch (e: Exception) {
+                        // The code only: messages could carry content.
+                        main.post { result.error(e.javaClass.simpleName, null, null) }
+                    }
+                }
             }
         }
 

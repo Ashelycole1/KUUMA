@@ -228,6 +228,10 @@ data class SentinelFlagUpdatedPayload(
     val category: HarmCategory,
     val groomingSignals: List<GroomingStage>,
     val translationRef: OpaqueRef? = null,
+    /**
+     * True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.
+     */
+    val dismissed: Boolean? = null,
 ) : CloudSendablePayload
 
 /**

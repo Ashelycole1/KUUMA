@@ -13,6 +13,7 @@ import ug.kuuma.contracts.EventType
 import ug.kuuma.contracts.Events
 import ug.kuuma.contracts.GroomingStage
 import ug.kuuma.contracts.GuardianAlertSentPayload
+import ug.kuuma.contracts.GuardianShareApprovedPayload
 import ug.kuuma.contracts.HarmCategory
 import ug.kuuma.contracts.Language
 import ug.kuuma.contracts.Namespace
@@ -170,12 +171,22 @@ class FakeCasefile(private val world: FakeWorld) : BaseFake(Namespace.CASEFILE) 
 }
 
 class FakeGuardian : BaseFake(Namespace.GUARDIAN) {
-    override fun subscribe() = on(Events.CASEFILE_CASE_ESCALATED) { p, caseId ->
-        publish(
-            Events.GUARDIAN_ALERT_SENT,
-            GuardianAlertSentPayload(UUID.randomUUID().toString(), p.caseId, Severity.HIGH),
-            caseId
-        )
+    override fun subscribe() {
+        on(Events.CASEFILE_CASE_ESCALATED) { p, caseId ->
+            publish(
+                Events.GUARDIAN_ALERT_SENT,
+                GuardianAlertSentPayload(UUID.randomUUID().toString(), p.caseId, Severity.HIGH),
+                caseId
+            )
+        }
+        // A fake parent who approves every share request at once.
+        on(Events.CASEFILE_SHARE_REQUESTED) { p, caseId ->
+            publish(
+                Events.GUARDIAN_SHARE_APPROVED,
+                GuardianShareApprovedPayload(p.requestId, p.caseId, EventBus.iso(System.currentTimeMillis())),
+                caseId
+            )
+        }
     }
 }
 

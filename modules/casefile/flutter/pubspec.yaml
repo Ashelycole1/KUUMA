@@ -1,5 +1,5 @@
 name: kuuma_casefile
-description: Casefile screens for the Kuuma apps. Skeleton from Core; the Casefile owner fills it.
+description: Casefile screens - incident history, case timeline, evidence check, export and share.
 version: 0.1.0
 publish_to: none
 

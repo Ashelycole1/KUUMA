@@ -1,9 +1,9 @@
 [project]
 name = "kuuma-casefile-service"
 version = "0.1.0"
-description = "Kuuma Casefile service. Skeleton from Core; the Casefile owner fills it."
+description = "Kuuma Casefile service. Timestamps, encrypted bundle slots, expiring shares and verification."
 requires-python = ">=3.12"
-dependencies = ["kuuma-server-common", "kuuma-contracts"]
+dependencies = ["kuuma-server-common", "kuuma-contracts", "minio==7.2.15"]
 
 [tool.uv.sources]
 kuuma-server-common = { workspace = true }

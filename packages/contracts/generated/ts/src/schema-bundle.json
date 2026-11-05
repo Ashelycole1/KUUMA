@@ -424,11 +424,46 @@
   "title": "PairingResponse",
   "type": "object"
  },
+ "https://schemas.kuuma.ug/api/share-download.json": {
+  "$id": "https://schemas.kuuma.ug/api/share-download.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment.",
+  "properties": {
+   "bundleHash": {
+    "$ref": "../types/sha256.json",
+    "description": "SHA-256 of the encrypted bundle, so the recipient can check the download."
+   },
+   "downloadUrl": {
+    "description": "Short-lived URL of the encrypted bundle.",
+    "format": "uri",
+    "type": "string"
+   },
+   "expiresAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   }
+  },
+  "required": [
+   "requestId",
+   "bundleHash",
+   "downloadUrl",
+   "expiresAt"
+  ],
+  "title": "ShareDownload",
+  "type": "object"
+ },
  "https://schemas.kuuma.ug/api/share-request.json": {
   "$id": "https://schemas.kuuma.ug/api/share-request.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+   "bundleId": {
+    "$ref": "../types/uuid.json",
+    "description": "The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle."
+   },
    "recipientType": {
     "$ref": "../types/recipient-type.json"
    },
@@ -1429,6 +1464,10 @@
     "properties": {
      "category": {
       "$ref": "../types/harm-category.json"
+     },
+     "dismissed": {
+      "description": "True when a later verdict (cloud analysis or the child's feedback) found the message not harmful. Absent means false. severity and category then repeat the original flag.",
+      "type": "boolean"
      },
      "flagId": {
       "$ref": "../types/uuid.json"

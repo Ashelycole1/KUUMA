@@ -14,6 +14,10 @@
     },
     "recipientType": {
       "$ref": "../types/recipient-type.json"
+    },
+    "bundleId": {
+      "$ref": "../types/uuid.json",
+      "description": "The uploaded, encrypted bundle to share. Defaults to the case's latest uploaded bundle."
     }
   }
 }

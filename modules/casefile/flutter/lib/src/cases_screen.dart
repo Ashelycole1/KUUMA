@@ -1,0 +1,64 @@
+import 'package:flutter/material.dart';
+import 'package:kuuma_contracts/kuuma_contracts.dart';
+import 'package:kuuma_ui/kuuma_ui.dart';
+
+import 'case_screen.dart';
+
+/// Incident history: one card per offender case, newest first.
+class CasesScreen extends StatefulWidget {
+  const CasesScreen({super.key, required this.vault});
+
+  final ModuleChannel vault;
+
+  @override
+  State<CasesScreen> createState() => _CasesScreenState();
+}
+
+class _CasesScreenState extends State<CasesScreen> {
+  List<Map<Object?, Object?>>? _cases;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final list = await widget.vault.call<List<Object?>>('listCases') ?? const [];
+    if (mounted) setState(() => _cases = list.cast<Map<Object?, Object?>>());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cases = _cases;
+    if (cases == null) return const Center(child: CircularProgressIndicator());
+    if (cases.isEmpty) {
+      return EmptyState(
+        icon: Icons.folder_open_outlined,
+        title: context.t('casefile.cases.empty_title'),
+        message: context.t('casefile.cases.empty_body'),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: _load,
+      child: ListView(children: [
+        for (final c in cases)
+          KuumaCard(
+            leading: const Icon(Icons.person_outline),
+            title: c['offenderLabel'] as String,
+            subtitle: c['incidentCount'] == 1
+                ? context.t('casefile.case.incident_one')
+                : context.t('casefile.case.incidents', {'n': '${c['incidentCount']}'}),
+            trailing: SeverityBadge(Severity.fromWire(c['topSeverity'] as String)),
+            onTap: () async {
+              await Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) =>
+                    CaseScreen(vault: widget.vault, caseId: c['caseId'] as String, label: c['offenderLabel'] as String),
+              ));
+              _load();
+            },
+          ),
+      ]),
+    );
+  }
+}

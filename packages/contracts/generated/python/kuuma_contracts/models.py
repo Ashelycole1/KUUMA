@@ -475,6 +475,7 @@ class SentinelFlagUpdatedPayload(ContractModel):
     category: HarmCategory
     grooming_signals: list[GroomingStage] = Field(alias="groomingSignals")
     translation_ref: OpaqueRef | None = Field(default=None, alias="translationRef")
+    dismissed: bool | None = Field(default=None)
 
 
 class SentinelMessageFlaggedPayload(ContractModel):
@@ -491,9 +492,19 @@ class SentinelMessageFlaggedPayload(ContractModel):
     language: Language
 
 
+class ShareDownload(ContractModel):
+    """Where a recipient downloads a shared, encrypted case bundle. The decryption key is never sent to the server: it travels in the share link's #fragment."""
+
+    request_id: Uuid = Field(alias="requestId")
+    bundle_hash: Sha256 = Field(alias="bundleHash")
+    download_url: str = Field(alias="downloadUrl")
+    expires_at: Timestamp = Field(alias="expiresAt")
+
+
 class ShareRequest(ContractModel):
     request_id: Uuid = Field(alias="requestId")
     recipient_type: RecipientType = Field(alias="recipientType")
+    bundle_id: Uuid | None = Field(default=None, alias="bundleId")
 
 
 class ShareResponse(ContractModel):

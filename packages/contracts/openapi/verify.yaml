@@ -31,6 +31,29 @@ paths:
                 timestamp: "2026-11-05T09:30:00Z"
                 chainValid: true
         default: { $ref: "#/components/responses/Error" }
+  /v1/verify/shares/{requestId}:
+    get:
+      operationId: getShare
+      summary: Download link for a shared, encrypted case bundle (the key is in the share link's fragment).
+      security: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/uuid.json" }
+          example: e1d2c3b4-a5f6-4e7d-9c8b-7a6f5e4d3c2b
+      responses:
+        "200":
+          description: The share is live.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/share-download.json" }
+              example:
+                requestId: e1d2c3b4-a5f6-4e7d-9c8b-7a6f5e4d3c2b
+                bundleHash: e5704e345ba042f43d7b567d99c7a335469806e7f1e711526ccb3587d8b22d61
+                downloadUrl: http://localhost:9000/kuuma-bundles/d4e5f6a7-b8c9-4d0e-8f1a-2b3c4d5e6f7a
+                expiresAt: "2026-12-05T09:30:00Z"
+        default: { $ref: "#/components/responses/Error" }
 components:
   responses:
     Error:
