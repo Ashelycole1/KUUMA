@@ -1,0 +1,78 @@
+{
+  "format": "kuuma-casefile/1",
+  "caseId": "77485ff1-19f1-4435-94a4-66f730733be4",
+  "generatedAt": "2026-11-05T16:12:28Z",
+  "recipientType": "police",
+  "offenderLabel": "Person A",
+  "victim": null,
+  "summary": {
+    "incidentCount": 1,
+    "topSeverity": "high",
+    "categories": ["threat"],
+    "firstIncidentAt": "2026-11-05T16:12:28Z",
+    "lastIncidentAt": "2026-11-05T16:12:28Z",
+    "lateNightIncidents": 0,
+    "groomingStages": []
+  },
+  "guidance": {
+    "disclaimer": "Guidance only, not legal advice. Possible offences are suggested automatically and have not yet been reviewed by a Ugandan lawyer. A lawyer or the police decide what applies.",
+    "possibleOffences": [
+      "Possible cyber harassment (Computer Misuse Act 2011, s.24) and threatening violence (Penal Code Act)."
+    ],
+    "machineTranslation": "Translations, where present, are machine-made and marked as such."
+  },
+  "exhibits": [
+    {
+      "exhibit": "E1",
+      "itemId": "aca2c849-8246-411e-a84b-ced94a404ab8",
+      "kind": "FLAG",
+      "chainIndex": 0,
+      "itemHash": "c6478eb197d2ea9a073012544edbd4c7cbfdf8a07d16c35cf858ee24545cd36d",
+      "content": "{\"appSource\":\"sms\",\"category\":\"threat\",\"confidence\":0.95,\"conversationRef\":\"or1_qpO1-vRuaO1KZYvyUUt1kYFfImpqZhljdYZZaHBXhYY\",\"flagId\":\"8562b7c9-e9f7-413d-ade5-6e9f54b1d770\",\"flaggedAt\":\"2026-11-05T16:12:28Z\",\"flaggedAtMillis\":\"1793895148781\",\"language\":\"en\",\"messageRef\":\"or1_vT1LDOFj-NuAfYPaiAr3OD-Vii7OUssnpfN_zHbqkFI\",\"senderRef\":\"or1_ePzeOhttouHQqbREoupUON9EqS8Zk7FFeKHj0j8nqb4\",\"severity\":\"high\"}"
+    },
+    {
+      "exhibit": "E2",
+      "itemId": "bf33b6ef-45fc-4567-859d-99989091c686",
+      "kind": "MESSAGE",
+      "chainIndex": 1,
+      "itemHash": "223541f928ff5627d27c18a5d78ad4db363c02019d90b147a3c88e6c8f1a3369",
+      "content": "{\"appSource\":\"sms\",\"conversationRef\":\"or1_qpO1-vRuaO1KZYvyUUt1kYFfImpqZhljdYZZaHBXhYY\",\"flagId\":\"8562b7c9-e9f7-413d-ade5-6e9f54b1d770\",\"fromChild\":false,\"messageRef\":\"or1_vT1LDOFj-NuAfYPaiAr3OD-Vii7OUssnpfN_zHbqkFI\",\"senderDisplayName\":\"Unknown sender (invented)\",\"senderRef\":\"or1_ePzeOhttouHQqbREoupUON9EqS8Zk7FFeKHj0j8nqb4\",\"sentAt\":\"2026-11-04T20:03:00Z\",\"sentAtMillis\":\"1793822580000\",\"text\":\"Tomorrow after school I will hurt you.\"}"
+    }
+  ],
+  "chain": {
+    "algorithm": "ECDSA-P256-SHA256",
+    "itemHash": "sha256(\"kuuma-vault/1\\n\" + kind + \"\\n\" + content)",
+    "chainHash": "sha256(prevHash + \"|\" + itemHash + \"|\" + index)",
+    "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEXTtpVeH5jY61OVeLGEkE1JCTKezgwccEF7xr7QK3M3QT8/yBpkfYitJoPMNKS9nfUZc3cWfU9uBqieeYS+g32g==",
+    "keyProtection": "SOFTWARE",
+    "root": "68cf254b736c2ff349fb9bca0b9f95c25cf66068223b4948b7ad7d612955ba77",
+    "links": [
+      {
+        "index": 0,
+        "itemHash": "c6478eb197d2ea9a073012544edbd4c7cbfdf8a07d16c35cf858ee24545cd36d",
+        "prevHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "chainHash": "fdf568edc367406d45e4084b3486a3a1e6a84ef0b976920073c3f1afd4562f2d",
+        "signature": "MEUCIQCH26YD2fipHbMtiJ0qXHTIcf+XbqTtyioIIhTpqu225wIgHE5Jby0S8o9oy6hYNYSud2I8lgcuKNHFCsXkER4/eJg="
+      },
+      {
+        "index": 1,
+        "itemHash": "223541f928ff5627d27c18a5d78ad4db363c02019d90b147a3c88e6c8f1a3369",
+        "prevHash": "fdf568edc367406d45e4084b3486a3a1e6a84ef0b976920073c3f1afd4562f2d",
+        "chainHash": "e88ae8c8a4ffc5b68128749827bb64fd8c67903673a5f1c0b95f2f9d5cde774e",
+        "signature": "MEQCIHgoZlb9MGNe4Thd8yoZUx5+2fC3ELuNTvGOvDs11vgDAiBq2guKr+myoWVKW+4d2CzbaYpT8pPd2Ap7dgZFmVBnEA=="
+      },
+      {
+        "index": 2,
+        "itemHash": "dcf77bceac1d9bfb8689b50799334bd963e019481ca6fbd6134ff6fd2d13745e",
+        "prevHash": "e88ae8c8a4ffc5b68128749827bb64fd8c67903673a5f1c0b95f2f9d5cde774e",
+        "chainHash": "68cf254b736c2ff349fb9bca0b9f95c25cf66068223b4948b7ad7d612955ba77",
+        "signature": "MEUCIBBompi3vjv4XNOhgTe6NcdqHX1wZY+Md7ZJkiHOUOerAiEA5oI84jW+oE/0cbUx3Aj6ntI2Di9xTD7m+SWWbf2vj/k="
+      }
+    ]
+  },
+  "custody": [
+    "{\"action\":\"export\",\"actor\":\"child\",\"at\":\"2026-11-05T16:12:28Z\",\"caseId\":\"77485ff1-19f1-4435-94a4-66f730733be4\",\"itemIds\":[],\"recipientType\":\"police\"}"
+  ],
+  "timestamp": null,
+  "verifyUrl": "http://localhost:8080/verify"
+}

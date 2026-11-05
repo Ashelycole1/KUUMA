@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Verify a Kuuma case file</title>
+    <style>
+      :root {
+        --fg: #1d2623;
+        --muted: #5b6b66;
+        --ok: #2f6f62;
+        --bad: #b4584b;
+        --bg: #f7f6f2;
+        --card: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #e6ece9;
+          --muted: #9db0aa;
+          --bg: #121715;
+          --card: #1b2220;
+        }
+      }
+      body {
+        margin: 0;
+        font:
+          16px/1.5 system-ui,
+          sans-serif;
+        color: var(--fg);
+        background: var(--bg);
+      }
+      main {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      h1 {
+        font-size: 1.6rem;
+        margin: 0 0 0.5rem;
+      }
+      p.lead {
+        color: var(--muted);
+        margin-top: 0;
+      }
+      .card {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin: 1rem 0;
+      }
+      #result.ok {
+        border-left: 6px solid var(--ok);
+      }
+      #result.bad {
+        border-left: 6px solid var(--bad);
+      }
+      #verdict {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+      #details {
+        white-space: pre-wrap;
+        color: var(--muted);
+        font:
+          13px/1.5 ui-monospace,
+          monospace;
+        word-break: break-all;
+      }
+      a#pdf {
+        display: inline-block;
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Verify a Kuuma case file</h1>
+      <p class="lead">
+        Checks that every exhibit is exactly what was sealed on the victim's phone, that no item was added,
+        removed or reordered, and when the evidence was timestamped. Nothing you open here is uploaded.
+      </p>
+      <p id="status"></p>
+      <section id="result" class="card" hidden>
+        <h2 id="verdict"></h2>
+        <p id="summary"></p>
+        <p id="details"></p>
+        <a id="pdf" hidden>Download the case file (PDF)</a>
+      </section>
+      <section class="card">
+        <label for="file">Or choose an exported case file (<code>.json</code>):</label><br />
+        <input id="file" type="file" accept="application/json,.json" />
+      </section>
+    </main>
+    <script type="module" src="/verify/assets/page.js"></script>
+  </body>
+</html>

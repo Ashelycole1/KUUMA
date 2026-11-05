@@ -3,7 +3,9 @@ package ug.kuuma.child
 import android.app.Application
 import android.content.Context
 import ug.kuuma.ai.runtime.DummyHarmClassifier
+import ug.kuuma.casefile.CasefileConfig
 import ug.kuuma.casefile.CasefileModule
+import ug.kuuma.casefile.HttpCasesApi
 import ug.kuuma.companion.CompanionModule
 import ug.kuuma.contracts.ContractJson
 import ug.kuuma.contracts.Envelope
@@ -63,7 +65,17 @@ object KuumaRuntime {
         }
         val reader = DeviceStateReader(app)
         val sentinel = SentinelModule(SentinelConfig(classifier, refs, app, gateway, reader::read))
-        return listOf(sentinel, CompanionModule(), CasefileModule(), GuardianModule())
+        val headers = { method: String, path: String, body: ByteArray ->
+            signer.requestHeaders(deviceId, method, path, body, System.currentTimeMillis() / 1000)
+        }
+        val casefile = CasefileModule(
+            CasefileConfig(
+                androidContext = app,
+                api = apiBaseUrl?.let { HttpCasesApi(it, headers) },
+                shareBaseUrl = (apiBaseUrl ?: "https://verify.kuuma.ug") + "/verify",
+            ),
+        )
+        return listOf(sentinel, CompanionModule(), casefile, GuardianModule())
     }
 
     fun init(app: Application) {

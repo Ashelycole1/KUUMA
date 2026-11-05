@@ -25,6 +25,8 @@ class DebugToolsImpl : DebugHooks {
     override fun install(context: Context, registry: ModuleRegistry, classifier: HarmClassifier, refs: OpaqueRefs) {
         fakes = FakeSet(classifier, refs)
         fakes.all.forEach(registry::register)
+        // The real vault replaces Casefile's fake, so Sentinel's flags are not handled twice.
+        fakes.casefile.enabled = false
         // Debug only: `adb shell cmd notification post ...` notifications come from the shell
         // package; treat them as SMS so the real notification listener can be tested on an emulator.
         WatchedApps.addSmsPackage("com.android.shell")

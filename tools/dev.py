@@ -45,6 +45,8 @@ def main() -> int:
         return run([*COMPOSE, "down"], check=False)
     if action == "logs":
         return run([*COMPOSE, "logs", "-f", "--tail", "100"], check=False)
+    # The gateway serves Casefile's verification page from its built files.
+    run(["pnpm", "--filter", "@kuuma/casefile-web", "run", "build"], check=False)
     run([*COMPOSE, "up", "--build", "-d", "--wait"], check=False)
     if not wait_for_gateway():
         print("The gateway did not come up. See `make dev-logs`.", file=sys.stderr)

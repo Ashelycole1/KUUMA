@@ -1,11 +1,13 @@
-/// Casefile screens. Skeleton from Core: replace the placeholder screens with real ones.
+/// Casefile screens: incident history, case timeline, evidence check, export and share.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:kuuma_ui/kuuma_ui.dart';
 
-import 'src/placeholder_screen.dart';
+import 'src/cases_screen.dart';
 
+export 'src/case_screen.dart';
+export 'src/cases_screen.dart';
 export 'src/placeholder_screen.dart';
 
 class CasefileFlutterModule implements KuumaFlutterModule {
@@ -15,8 +17,36 @@ class CasefileFlutterModule implements KuumaFlutterModule {
   @override
   void register(SlotRegistry slots, KuumaL10n l10n) {
     l10n.register(prefix, {
-      'en': {'casefile.tab.title': 'My cases'},
-      'sw': {},
+      'en': {
+        'casefile.tab.title': 'My cases',
+        'casefile.cases.empty_title': 'Nothing saved yet',
+        'casefile.cases.empty_body': 'When Kuuma spots a harmful message, a safe copy is kept here.',
+        'casefile.case.incidents': '{n} incidents',
+        'casefile.case.incident_one': '1 incident',
+        'casefile.case.timeline': 'What happened',
+        'casefile.case.tap_to_show': 'Hidden message. Tap to show.',
+        'casefile.case.flagged': 'Kuuma flagged this',
+        'casefile.case.you': 'You',
+        'casefile.action.check': 'Check evidence',
+        'casefile.action.export': 'Save as PDF',
+        'casefile.action.share': 'Share',
+        'casefile.check.ok': 'Evidence is intact: nothing has been changed.',
+        'casefile.check.bad': 'Warning: some evidence was changed or removed.',
+        'casefile.export.done': 'Saved the case file.',
+        'casefile.share.title': 'Share with',
+        'casefile.share.waiting': 'Waiting for your parent to approve.',
+        'casefile.share.ready': 'Ready to share. Send this link:',
+        'casefile.share.offline': 'Prepared. It will be uploaded when you are online.',
+        'casefile.recipient.school': 'School',
+        'casefile.recipient.police': 'Police',
+        'casefile.recipient.platform': 'The app or website',
+        'casefile.recipient.lawyer': 'Lawyer',
+      },
+      'sw': {
+        'casefile.tab.title': 'Kesi zangu',
+        'casefile.recipient.school': 'Shule',
+        'casefile.recipient.police': 'Polisi'
+      },
     });
     slots.register(
         prefix,
@@ -26,7 +56,7 @@ class CasefileFlutterModule implements KuumaFlutterModule {
           titleKey: 'casefile.tab.title',
           icon: Icons.folder_outlined,
           order: 20,
-          builder: (_) => const PlaceholderScreen(moduleName: 'Casefile', screenId: 'casefile.cases'),
+          builder: (_) => CasesScreen(vault: ModuleChannel('casefile')),
         ));
   }
 }
