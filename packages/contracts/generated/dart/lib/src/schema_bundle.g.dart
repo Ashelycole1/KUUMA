@@ -141,8 +141,12 @@ const String kuumaSchemaBundle = r'''
    "language": {
     "$ref": "../types/language.json"
    },
+   "onDevice": {
+    "$ref": "../types/verdict.json",
+    "description": "The phone's own verdict. Returned unchanged (verdictSource on_device) when no cloud model judges the message."
+   },
    "text": {
-    "description": "Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n].",
+    "description": "Already redacted on the phone: names, phone numbers, emails and handles replaced with [CONTACT_n], [PHONE_n], [EMAIL_n], [HANDLE_n].",
     "maxLength": 4000,
     "minLength": 1,
     "type": "string"
@@ -165,11 +169,21 @@ const String kuumaSchemaBundle = r'''
     },
     "type": "array"
    },
+   "interpretation": {
+    "$ref": "../types/interpretation.json"
+   },
+   "latencyMs": {
+    "minimum": 0,
+    "type": "integer"
+   },
    "modelVersion": {
     "type": "string"
    },
    "verdict": {
     "$ref": "../types/verdict.json"
+   },
+   "verdictSource": {
+    "$ref": "../types/verdict-source.json"
    }
   },
   "required": [
@@ -850,9 +864,26 @@ const String kuumaSchemaBundle = r'''
   "$id": "https://schemas.kuuma.ug/api/translate-response.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "description": "POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence.",
   "properties": {
    "from": {
     "$ref": "../types/language.json"
+   },
+   "latencyMs": {
+    "minimum": 0,
+    "type": "integer"
+   },
+   "machineTranslated": {
+    "description": "True for every model translation.",
+    "type": "boolean"
+   },
+   "model": {
+    "maxLength": 100,
+    "type": "string"
+   },
+   "promptVersion": {
+    "pattern": "^[a-z_]+@[0-9]+$",
+    "type": "string"
    },
    "text": {
     "type": "string"
@@ -2181,6 +2212,35 @@ const String kuumaSchemaBundle = r'''
   "title": "HarmCategory",
   "type": "string"
  },
+ "https://schemas.kuuma.ug/types/interpretation.json": {
+  "$id": "https://schemas.kuuma.ug/types/interpretation.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged.",
+  "properties": {
+   "englishMeaning": {
+    "maxLength": 4000,
+    "type": "string"
+   },
+   "model": {
+    "description": "Model tag, e.g. sunflower-14b:q4.",
+    "maxLength": 100,
+    "type": "string"
+   },
+   "promptVersion": {
+    "description": "Prompt id and version, e.g. interpret@1.",
+    "pattern": "^[a-z_]+@[0-9]+$",
+    "type": "string"
+   }
+  },
+  "required": [
+   "englishMeaning",
+   "model",
+   "promptVersion"
+  ],
+  "title": "Interpretation",
+  "type": "object"
+ },
  "https://schemas.kuuma.ug/types/language.json": {
   "$id": "https://schemas.kuuma.ug/types/language.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2434,6 +2494,17 @@ const String kuumaSchemaBundle = r'''
   "description": "A random (v4) UUID in lowercase canonical form.",
   "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
   "title": "Uuid",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/verdict-source.json": {
+  "$id": "https://schemas.kuuma.ug/types/verdict-source.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model.",
+  "enum": [
+   "on_device",
+   "reasoning_model"
+  ],
+  "title": "VerdictSource",
   "type": "string"
  },
  "https://schemas.kuuma.ug/types/verdict.json": {

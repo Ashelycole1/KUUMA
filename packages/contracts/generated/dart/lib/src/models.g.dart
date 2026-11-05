@@ -244,6 +244,20 @@ enum ShareStatus {
           orElse: () => throw ArgumentError('Unknown ShareStatus: $wire'));
 }
 
+/// Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model.
+enum VerdictSource {
+  onDevice('on_device'),
+  reasoningModel('reasoning_model');
+
+  const VerdictSource(this.wire);
+
+  final String wire;
+
+  static VerdictSource fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown VerdictSource: $wire'));
+}
+
 class AcceptedResponse {
   const AcceptedResponse({required this.accepted});
 
@@ -391,20 +405,23 @@ class AlertRequest {
 
 /// POST /v1/ai/analyse. Text is transient: the AI service must not store or log it.
 class AnalyseRequest {
-  const AnalyseRequest({required this.text, this.language, this.appSource, this.context});
+  const AnalyseRequest({required this.text, this.language, this.appSource, this.context, this.onDevice});
 
-  /// Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n].
+  /// Already redacted on the phone: names, phone numbers, emails and handles replaced with [CONTACT_n], [PHONE_n], [EMAIL_n], [HANDLE_n].
   final String text;
   final Language? language;
   final AppSource? appSource;
   /// Up to 10 earlier redacted messages, oldest first.
   final List<String>? context;
+  /// The phone's own verdict. Returned unchanged (verdictSource on_device) when no cloud model judges the message.
+  final Verdict? onDevice;
 
   factory AnalyseRequest.fromJson(Map<String, dynamic> json) => AnalyseRequest(
         text: json['text'] as String,
         language: json['language'] == null ? null : Language.fromWire(json['language'] as String),
         appSource: json['appSource'] == null ? null : AppSource.fromWire(json['appSource'] as String),
         context: json['context'] == null ? null : (json['context'] as List<dynamic>).map((e) => e as String).toList(),
+        onDevice: json['onDevice'] == null ? null : Verdict.fromJson(json['onDevice'] as Map<String, dynamic>),
       );
 
   Map<String, dynamic> toJson() => {
@@ -412,26 +429,36 @@ class AnalyseRequest {
         if (language != null) 'language': language!.wire,
         if (appSource != null) 'appSource': appSource!.wire,
         if (context != null) 'context': context!,
+        if (onDevice != null) 'onDevice': onDevice!.toJson(),
       };
 }
 
 class AnalyseResponse {
-  const AnalyseResponse({required this.verdict, required this.groomingSignals, required this.modelVersion});
+  const AnalyseResponse({required this.verdict, required this.groomingSignals, required this.modelVersion, this.verdictSource, this.interpretation, this.latencyMs});
 
   final Verdict verdict;
   final List<GroomingStage> groomingSignals;
   final String modelVersion;
+  final VerdictSource? verdictSource;
+  final Interpretation? interpretation;
+  final int? latencyMs;
 
   factory AnalyseResponse.fromJson(Map<String, dynamic> json) => AnalyseResponse(
         verdict: Verdict.fromJson(json['verdict'] as Map<String, dynamic>),
         groomingSignals: (json['groomingSignals'] as List<dynamic>).map((e) => GroomingStage.fromWire(e as String)).toList(),
         modelVersion: json['modelVersion'] as String,
+        verdictSource: json['verdictSource'] == null ? null : VerdictSource.fromWire(json['verdictSource'] as String),
+        interpretation: json['interpretation'] == null ? null : Interpretation.fromJson(json['interpretation'] as Map<String, dynamic>),
+        latencyMs: json['latencyMs'] == null ? null : json['latencyMs'] as int,
       );
 
   Map<String, dynamic> toJson() => {
         'verdict': verdict.toJson(),
         'groomingSignals': groomingSignals.map((e) => e.wire).toList(),
         'modelVersion': modelVersion,
+        if (verdictSource != null) 'verdictSource': verdictSource!.wire,
+        if (interpretation != null) 'interpretation': interpretation!.toJson(),
+        if (latencyMs != null) 'latencyMs': latencyMs!,
       };
 }
 
@@ -1141,6 +1168,29 @@ class HeartbeatResponse {
       };
 }
 
+/// Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged.
+class Interpretation {
+  const Interpretation({required this.englishMeaning, required this.model, required this.promptVersion});
+
+  final String englishMeaning;
+  /// Model tag, e.g. sunflower-14b:q4.
+  final String model;
+  /// Prompt id and version, e.g. interpret@1.
+  final String promptVersion;
+
+  factory Interpretation.fromJson(Map<String, dynamic> json) => Interpretation(
+        englishMeaning: json['englishMeaning'] as String,
+        model: json['model'] as String,
+        promptVersion: json['promptVersion'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'englishMeaning': englishMeaning,
+        'model': model,
+        'promptVersion': promptVersion,
+      };
+}
+
 /// A suggestion that two sender refs are probably the same offender.
 class LinkSuggestion {
   const LinkSuggestion({required this.senderRefA, required this.senderRefB, required this.confidence});
@@ -1652,23 +1702,37 @@ class TranslateRequest {
       };
 }
 
+/// POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence.
 class TranslateResponse {
-  const TranslateResponse({required this.text, required this.from, required this.to});
+  const TranslateResponse({required this.text, required this.from, required this.to, this.machineTranslated, this.model, this.promptVersion, this.latencyMs});
 
   final String text;
   final Language from;
   final Language to;
+  /// True for every model translation.
+  final bool? machineTranslated;
+  final String? model;
+  final String? promptVersion;
+  final int? latencyMs;
 
   factory TranslateResponse.fromJson(Map<String, dynamic> json) => TranslateResponse(
         text: json['text'] as String,
         from: Language.fromWire(json['from'] as String),
         to: Language.fromWire(json['to'] as String),
+        machineTranslated: json['machineTranslated'] == null ? null : json['machineTranslated'] as bool,
+        model: json['model'] == null ? null : json['model'] as String,
+        promptVersion: json['promptVersion'] == null ? null : json['promptVersion'] as String,
+        latencyMs: json['latencyMs'] == null ? null : json['latencyMs'] as int,
       );
 
   Map<String, dynamic> toJson() => {
         'text': text,
         'from': from.wire,
         'to': to.wire,
+        if (machineTranslated != null) 'machineTranslated': machineTranslated!,
+        if (model != null) 'model': model!,
+        if (promptVersion != null) 'promptVersion': promptVersion!,
+        if (latencyMs != null) 'latencyMs': latencyMs!,
       };
 }
 

@@ -354,12 +354,14 @@ version = "0.1.0"
 source = { editable = "ai/service" }
 dependencies = [
     { name = "kuuma-contracts" },
+    { name = "kuuma-llm" },
     { name = "kuuma-server-common" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "kuuma-contracts", editable = "packages/contracts/generated/python" },
+    { name = "kuuma-llm", editable = "packages/kuuma-llm" },
     { name = "kuuma-server-common", editable = "packages/server-common" },
 ]
 
@@ -451,6 +453,16 @@ source = { editable = "packages/lang/python" }
 name = "kuuma-llm"
 version = "0.0.1"
 source = { editable = "packages/kuuma-llm" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = "==0.28.1" },
+    { name = "pyyaml", specifier = "==6.0.2" },
+]
 
 [[package]]
 name = "kuuma-server-common"

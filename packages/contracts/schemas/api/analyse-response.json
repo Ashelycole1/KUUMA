@@ -21,6 +21,16 @@
     },
     "modelVersion": {
       "type": "string"
+    },
+    "verdictSource": {
+      "$ref": "../types/verdict-source.json"
+    },
+    "interpretation": {
+      "$ref": "../types/interpretation.json"
+    },
+    "latencyMs": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
