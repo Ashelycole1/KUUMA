@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neutral wording: these show in system settings, where someone else may see them. -->
+    <string name="sentinel_service_label">Kuuma protection</string>
+    <string name="sentinel_accessibility_description">Lets Kuuma read the chat you have open so it can keep a safe copy of harmful messages. Kuuma never types, taps or sends anything.</string>
+</resources>

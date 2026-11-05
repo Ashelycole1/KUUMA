@@ -17,7 +17,12 @@ import ug.kuuma.core.module.KuumaModule
 import ug.kuuma.core.module.ModuleRegistry
 import ug.kuuma.core.storage.EncryptedStorage
 import ug.kuuma.guardian.GuardianModule
+import ug.kuuma.sentinel.SentinelConfig
 import ug.kuuma.sentinel.SentinelModule
+import ug.kuuma.sentinel.android.DeviceStateReader
+import ug.kuuma.sentinel.cloud.HttpAiGateway
+import ug.kuuma.sentinel.cloud.RequestSigner
+import ug.kuuma.core.crypto.DeviceSigner
 import java.util.UUID
 
 /** Debug-only tools (fakes, scenario player), present only in debug builds (src/debug). */
@@ -45,7 +50,21 @@ object KuumaRuntime {
     val recent = ArrayDeque<Map<String, Any?>>()
     private val listeners = mutableListOf<(Map<String, Any?>) -> Unit>()
 
-    private fun modules(): List<KuumaModule> = listOf(SentinelModule(), CompanionModule(), CasefileModule(), GuardianModule())
+    /**
+     * The API gateway. Debug builds talk to the local stack (`make dev`); 10.0.2.2 is the
+     * laptop as seen from the Android emulator. Release builds have no cloud until staging exists.
+     */
+    private val apiBaseUrl: String? = if (BuildConfig.DEBUG) "http://10.0.2.2:8080" else null
+
+    private fun modules(app: Application, deviceId: String, classifier: HarmClassifier, refs: OpaqueRefs): List<KuumaModule> {
+        val signer = DeviceSigner(app)
+        val gateway = apiBaseUrl?.let { url ->
+            HttpAiGateway(url, RequestSigner { method, path, body -> signer.requestHeaders(deviceId, method, path, body, System.currentTimeMillis() / 1000) })
+        }
+        val reader = DeviceStateReader(app)
+        val sentinel = SentinelModule(SentinelConfig(classifier, refs, app, gateway, reader::read))
+        return listOf(sentinel, CompanionModule(), CasefileModule(), GuardianModule())
+    }
 
     fun init(app: Application) {
         val prefs = app.getSharedPreferences("kuuma_runtime", Context.MODE_PRIVATE)
@@ -62,7 +81,7 @@ object KuumaRuntime {
         val classifier: HarmClassifier = DummyHarmClassifier() // AI owner swaps in the real runtime
         val refs = OpaqueRefs(SecretWrapper(app).getOrCreate("opaque-ref-salt").first)
 
-        modules().forEach(registry::register)
+        modules(app, deviceId, classifier, refs).forEach(registry::register)
 
         if (BuildConfig.DEBUG) {
             debug = runCatching {
