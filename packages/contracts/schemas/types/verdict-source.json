@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/verdict-source.json",
+  "title": "VerdictSource",
+  "description": "Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model.",
+  "type": "string",
+  "enum": [
+    "on_device",
+    "reasoning_model"
+  ]
+}

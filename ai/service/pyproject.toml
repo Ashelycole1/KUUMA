@@ -1,13 +1,14 @@
 [project]
 name = "kuuma-ai-service"
 version = "0.1.0"
-description = "Kuuma AI service. Skeleton from Core; the AI owner fills it."
+description = "Kuuma AI service: /v1/ai, with Sunflower on a local Ollama behind KUUMA_AI_MODE."
 requires-python = ">=3.12"
-dependencies = ["kuuma-server-common", "kuuma-contracts"]
+dependencies = ["kuuma-server-common", "kuuma-contracts", "kuuma-llm"]
 
 [tool.uv.sources]
 kuuma-server-common = { workspace = true }
 kuuma-contracts = { workspace = true }
+kuuma-llm = { workspace = true }
 
 [build-system]
 requires = ["hatchling==1.27.0"]

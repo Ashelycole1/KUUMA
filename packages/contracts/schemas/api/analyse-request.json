@@ -13,7 +13,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 4000,
-      "description": "Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n]."
+      "description": "Already redacted on the phone: names, phone numbers, emails and handles replaced with [CONTACT_n], [PHONE_n], [EMAIL_n], [HANDLE_n]."
     },
     "language": {
       "$ref": "../types/language.json"
@@ -29,6 +29,10 @@
       },
       "maxItems": 10,
       "description": "Up to 10 earlier redacted messages, oldest first."
+    },
+    "onDevice": {
+      "$ref": "../types/verdict.json",
+      "description": "The phone's own verdict. Returned unchanged (verdictSource on_device) when no cloud model judges the message."
     }
   }
 }

@@ -74,6 +74,12 @@ services:
       SERVICE_DIR: ai/service
       REDIS_URL: redis://redis:6379/0
       DATABASE_URL_AI: postgresql+psycopg://ai_svc:${AI_DB_PASSWORD}@postgres:5432/kuuma
+      # stub (default) or sunflower. Sunflower runs in Ollama on the host PC, not in a container.
+      KUUMA_AI_MODE: ${KUUMA_AI_MODE:-stub}
+      KUUMA_SUNFLOWER_BASE_URL: ${KUUMA_SUNFLOWER_DOCKER_URL:-http://host.docker.internal:11434/v1}
+      KUUMA_SUNFLOWER_MODEL: ${KUUMA_SUNFLOWER_MODEL:-sunflower-14b:q4}
+      KUUMA_SUNFLOWER_TIMEOUT: ${KUUMA_SUNFLOWER_TIMEOUT:-180}
+    extra_hosts: ["host.docker.internal:host-gateway"]
 
   companion:
     <<: *service

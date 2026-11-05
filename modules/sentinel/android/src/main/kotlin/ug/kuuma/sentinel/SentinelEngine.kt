@@ -15,6 +15,7 @@ import ug.kuuma.contracts.SentinelConversationActivePayload
 import ug.kuuma.contracts.SentinelFlagUpdatedPayload
 import ug.kuuma.contracts.SentinelMessageFlaggedPayload
 import ug.kuuma.contracts.Verdict
+import ug.kuuma.contracts.VerdictSource
 import ug.kuuma.contracts.ai.ClassifyContext
 import ug.kuuma.contracts.ai.HarmClassifier
 import ug.kuuma.core.bus.EventBus
@@ -112,8 +113,13 @@ class SentinelEngine(
         when (route) {
             Route.CLEAR -> Unit
             Route.FLAG -> flag(m, verdict, language, classifier.modelVersion)
-            Route.FLAG_AND_CONFIRM -> askCloud(m, language, flag(m, verdict, language, classifier.modelVersion))
-            Route.ASK_CLOUD -> askCloud(m, language, null)
+            Route.FLAG_AND_CONFIRM -> askCloud(
+                m,
+                language,
+                verdict,
+                flag(m, verdict, language, classifier.modelVersion)
+            )
+            Route.ASK_CLOUD -> askCloud(m, language, verdict, null)
         }
     }
 
@@ -272,7 +278,7 @@ class SentinelEngine(
 
     // ------------------------------------------------------------------ cloud second opinion
 
-    private fun askCloud(m: IncomingMessage, language: Language, flagId: String?) {
+    private fun askCloud(m: IncomingMessage, language: Language, onDevice: Verdict, flagId: String?) {
         val queue = cloud ?: return
         val participants = buffer.participants(m.appSource, m.conversationKey)
         val text = redactor.redactMessage(m.text, participants).text.take(4000)
@@ -282,11 +288,13 @@ class SentinelEngine(
         }.filter { it.isNotBlank() }
         val ticket = UUID.randomUUID().toString()
         pending[ticket] = Pending(m, language, flagId)
-        queue.enqueue(CloudJob.Analyse(ticket, AnalyseRequest(text, language, m.appSource, context), clock()))
+        queue.enqueue(CloudJob.Analyse(ticket, AnalyseRequest(text, language, m.appSource, context, onDevice), clock()))
     }
 
     private fun onCloudVerdict(ticket: String, response: AnalyseResponse) {
         val p = pending.remove(ticket) ?: return
+        // Our own verdict sent back (the cloud only added an interpretation): nothing to change.
+        if (response.verdictSource == VerdictSource.ON_DEVICE) return
         val v = response.verdict
         if (p.flagId == null) {
             // We were unsure; the cloud decides.

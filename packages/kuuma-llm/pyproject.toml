@@ -1,9 +1,9 @@
 [project]
 name = "kuuma-llm"
 version = "0.0.1"
-description = "LLM client and prompt-registry interfaces. Skeleton from Core; the AI owner fills it."
+description = "Model clients (Sunflower via a local Ollama), prompt registry, scrubbing guard and cache."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["httpx==0.28.1", "pyyaml==6.0.2"]
 
 [build-system]
 requires = ["hatchling==1.27.0"]

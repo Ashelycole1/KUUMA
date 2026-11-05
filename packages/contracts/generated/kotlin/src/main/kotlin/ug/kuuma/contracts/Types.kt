@@ -323,6 +323,22 @@ enum class ShareStatus(val wire: String) {
     }
 }
 
+/**
+ * Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model.
+ */
+@Serializable
+enum class VerdictSource(val wire: String) {
+    @SerialName("on_device") ON_DEVICE("on_device"),
+    @SerialName("reasoning_model") REASONING_MODEL("reasoning_model"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): VerdictSource =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown VerdictSource: $wire")
+    }
+}
+
 /** Patterns for the string aliases above, for runtime validation. */
 object ContractPatterns {
     val ADVICE_KEY = Regex("^advice\\.[a-z0-9_]+(\\.[a-z0-9_]+)*\$")

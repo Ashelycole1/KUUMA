@@ -63,7 +63,7 @@ data class AlertRequest(
 @Serializable
 data class AnalyseRequest(
     /**
-     * Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n].
+     * Already redacted on the phone: names, phone numbers, emails and handles replaced with [CONTACT_n], [PHONE_n], [EMAIL_n], [HANDLE_n].
      */
     val text: String,
     val language: Language? = null,
@@ -72,6 +72,10 @@ data class AnalyseRequest(
      * Up to 10 earlier redacted messages, oldest first.
      */
     val context: List<String>? = null,
+    /**
+     * The phone's own verdict. Returned unchanged (verdictSource on_device) when no cloud model judges the message.
+     */
+    val onDevice: Verdict? = null,
 )
 
 @Serializable
@@ -79,6 +83,9 @@ data class AnalyseResponse(
     val verdict: Verdict,
     val groomingSignals: List<GroomingStage>,
     val modelVersion: String,
+    val verdictSource: VerdictSource? = null,
+    val interpretation: Interpretation? = null,
+    val latencyMs: Long? = null,
 )
 
 /**
@@ -254,6 +261,22 @@ data class HeartbeatResponse(
      * Parent decisions on this child's approval requests not yet delivered.
      */
     val decisions: List<ApprovalResult>? = null,
+)
+
+/**
+ * Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged.
+ */
+@Serializable
+data class Interpretation(
+    val englishMeaning: String,
+    /**
+     * Model tag, e.g. sunflower-14b:q4.
+     */
+    val model: String,
+    /**
+     * Prompt id and version, e.g. interpret@1.
+     */
+    val promptVersion: String,
 )
 
 /**
@@ -444,11 +467,21 @@ data class TranslateRequest(
     val to: Language,
 )
 
+/**
+ * POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence.
+ */
 @Serializable
 data class TranslateResponse(
     val text: String,
     val from: Language,
     val to: Language,
+    /**
+     * True for every model translation.
+     */
+    val machineTranslated: Boolean? = null,
+    val model: String? = null,
+    val promptVersion: String? = null,
+    val latencyMs: Long? = null,
 )
 
 /**

@@ -1,0 +1,10 @@
+id: interpret
+version: 1
+model_family: sunflower
+temperature: 0.2
+max_tokens: 120
+# Short and plain: long instructions get translated instead of followed (measured on SURFACE-02).
+# {context} is empty, or "Earlier messages in the chat:\n<one per line>\n\n". {text} is one line.
+template: |-
+  {context}Explain in English what this message means, including any threat or insult. It may mix Luganda, Runyankole, Swahili and English. Reply in one sentence.
+  Message: {text}

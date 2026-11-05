@@ -1,0 +1,9 @@
+id: translate
+version: 1
+model_family: sunflower
+temperature: 0.0
+max_tokens: 200
+# Sunbird's own phrasing, nothing else: Sunflower translates any extra instructions as text
+# (measured on SURFACE-02). {instruction} is "Translate from Luganda to English" or
+# "Translate to English"; {text} is one line, with placeholders in Sunflower's own tags.
+template: "{instruction}: {text}"

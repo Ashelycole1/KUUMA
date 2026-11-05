@@ -44,3 +44,7 @@ pubspec_overrides.yaml
 .kuuma/
 out/
 *.log
+
+# Model weights never go in git (Sunflower lives in ~/kuuma-models or ai/local/*/models).
+ai/local/*/models/
+*.gguf

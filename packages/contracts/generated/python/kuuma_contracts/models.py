@@ -176,6 +176,13 @@ class ShareStatus(StrEnum):
     EXPIRED = 'expired'
 
 
+class VerdictSource(StrEnum):
+    """Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model."""
+
+    ON_DEVICE = 'on_device'
+    REASONING_MODEL = 'reasoning_model'
+
+
 class AcceptedResponse(ContractModel):
     accepted: bool
 
@@ -229,12 +236,16 @@ class AnalyseRequest(ContractModel):
     language: Language | None = Field(default=None)
     app_source: AppSource | None = Field(default=None, alias="appSource")
     context: list[str] | None = Field(default=None)
+    on_device: Verdict | None = Field(default=None, alias="onDevice")
 
 
 class AnalyseResponse(ContractModel):
     verdict: Verdict
     grooming_signals: list[GroomingStage] = Field(alias="groomingSignals")
     model_version: str = Field(alias="modelVersion")
+    verdict_source: VerdictSource | None = Field(default=None, alias="verdictSource")
+    interpretation: Interpretation | None = Field(default=None)
+    latency_ms: int | None = Field(default=None, alias="latencyMs")
 
 
 class ApiError(ContractModel):
@@ -480,6 +491,14 @@ class HeartbeatResponse(ContractModel):
     decisions: list[ApprovalResult] | None = Field(default=None)
 
 
+class Interpretation(ContractModel):
+    """Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged."""
+
+    english_meaning: str = Field(alias="englishMeaning")
+    model: str
+    prompt_version: str = Field(alias="promptVersion")
+
+
 class LinkSuggestion(ContractModel):
     """A suggestion that two sender refs are probably the same offender."""
 
@@ -652,9 +671,15 @@ class TranslateRequest(ContractModel):
 
 
 class TranslateResponse(ContractModel):
+    """POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence."""
+
     text: str
     from_: Language = Field(alias="from")
     to: Language
+    machine_translated: bool | None = Field(default=None, alias="machineTranslated")
+    model: str | None = Field(default=None)
+    prompt_version: str | None = Field(default=None, alias="promptVersion")
+    latency_ms: int | None = Field(default=None, alias="latencyMs")
 
 
 class Verdict(ContractModel):

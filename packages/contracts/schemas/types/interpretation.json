@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/interpretation.json",
+  "title": "Interpretation",
+  "description": "Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "englishMeaning",
+    "model",
+    "promptVersion"
+  ],
+  "properties": {
+    "englishMeaning": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "model": {
+      "type": "string",
+      "maxLength": 100,
+      "description": "Model tag, e.g. sunflower-14b:q4."
+    },
+    "promptVersion": {
+      "type": "string",
+      "pattern": "^[a-z_]+@[0-9]+$",
+      "description": "Prompt id and version, e.g. interpret@1."
+    }
+  }
+}

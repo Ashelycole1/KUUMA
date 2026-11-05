@@ -19,7 +19,11 @@ paths:
         content:
           application/json:
             schema: { $ref: "../schemas/api/analyse-request.json" }
-            example: { text: "wewe ni mjinga [CONTACT_1]", language: sw, appSource: whatsapp }
+            example:
+              text: "wewe ni mjinga [CONTACT_1]"
+              language: sw
+              appSource: whatsapp
+              onDevice: { harmful: true, category: insult, severity: medium, confidence: 0.82 }
       responses:
         "200":
           description: The verdict.
@@ -30,6 +34,9 @@ paths:
                 verdict: { harmful: true, category: insult, severity: medium, confidence: 0.82 }
                 groomingSignals: []
                 modelVersion: stub-0.0.0
+                verdictSource: on_device
+                interpretation: { englishMeaning: "you are an idiot [CONTACT_1]", model: stub, promptVersion: interpret@1 }
+                latencyMs: 0
         default: { $ref: "#/components/responses/Error" }
   /v1/ai/advice:
     post:
@@ -65,7 +72,14 @@ paths:
           content:
             application/json:
               schema: { $ref: "../schemas/api/translate-response.json" }
-              example: { text: "you are stupid", from: lg, to: en }
+              example:
+                text: "you are stupid"
+                from: lg
+                to: en
+                machineTranslated: true
+                model: stub
+                promptVersion: translate@1
+                latencyMs: 0
         default: { $ref: "#/components/responses/Error" }
   /v1/ai/link-suggestions:
     post:

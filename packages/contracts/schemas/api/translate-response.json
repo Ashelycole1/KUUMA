@@ -18,6 +18,23 @@
     },
     "to": {
       "$ref": "../types/language.json"
+    },
+    "machineTranslated": {
+      "type": "boolean",
+      "description": "True for every model translation."
+    },
+    "model": {
+      "type": "string",
+      "maxLength": 100
+    },
+    "promptVersion": {
+      "type": "string",
+      "pattern": "^[a-z_]+@[0-9]+$"
+    },
+    "latencyMs": {
+      "type": "integer",
+      "minimum": 0
     }
-  }
+  },
+  "description": "POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence."
 }

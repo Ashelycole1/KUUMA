@@ -138,6 +138,12 @@ export type Severity = (typeof severityValues)[number];
 export const shareStatusValues = ["pending_approval", "approved", "declined", "completed", "expired"] as const;
 export type ShareStatus = (typeof shareStatusValues)[number];
 
+/**
+ * Who produced an analyse verdict. on_device: the phone's classifier verdict, passed back unchanged (the cloud added only an interpretation). reasoning_model: the cloud reasoning model.
+ */
+export const verdictSourceValues = ["on_device", "reasoning_model"] as const;
+export type VerdictSource = (typeof verdictSourceValues)[number];
+
 export interface AcceptedResponse {
   accepted: boolean;
 }
@@ -190,7 +196,7 @@ export interface AlertRequest {
  */
 export interface AnalyseRequest {
   /**
-   * Already redacted on the phone: names and numbers replaced with [CONTACT_n] / [PHONE_n].
+   * Already redacted on the phone: names, phone numbers, emails and handles replaced with [CONTACT_n], [PHONE_n], [EMAIL_n], [HANDLE_n].
    */
   text: string;
   language?: Language;
@@ -199,12 +205,19 @@ export interface AnalyseRequest {
    * Up to 10 earlier redacted messages, oldest first.
    */
   context?: string[];
+  /**
+   * The phone's own verdict. Returned unchanged (verdictSource on_device) when no cloud model judges the message.
+   */
+  onDevice?: Verdict;
 }
 
 export interface AnalyseResponse {
   verdict: Verdict;
   groomingSignals: GroomingStage[];
   modelVersion: string;
+  verdictSource?: VerdictSource;
+  interpretation?: Interpretation;
+  latencyMs?: number;
 }
 
 /**
@@ -496,6 +509,21 @@ export interface HeartbeatResponse {
 }
 
 /**
+ * Plain-English meaning of a redacted, possibly code-switched message, from the language model. Transient: never stored or logged.
+ */
+export interface Interpretation {
+  englishMeaning: string;
+  /**
+   * Model tag, e.g. sunflower-14b:q4.
+   */
+  model: string;
+  /**
+   * Prompt id and version, e.g. interpret@1.
+   */
+  promptVersion: string;
+}
+
+/**
  * A suggestion that two sender refs are probably the same offender.
  */
 export interface LinkSuggestion {
@@ -718,10 +746,20 @@ export interface TranslateRequest {
   to: Language;
 }
 
+/**
+ * POST /v1/ai/translate response. Machine translations are labelled as such wherever they are shown; the original stays the evidence.
+ */
 export interface TranslateResponse {
   text: string;
   from: Language;
   to: Language;
+  /**
+   * True for every model translation.
+   */
+  machineTranslated?: boolean;
+  model?: string;
+  promptVersion?: string;
+  latencyMs?: number;
 }
 
 /**
