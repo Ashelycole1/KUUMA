@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="Kuuma"
+        android:label="Nilinde"
         android:name=".KuumaChildApplication"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">

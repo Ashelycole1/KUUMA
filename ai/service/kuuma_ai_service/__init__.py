@@ -1,1 +1,1 @@
-"""Kuuma AI service."""
+"""Nilinde AI service."""

@@ -1,6 +1,6 @@
 # Sunflower-14B for Ollama, from Sunbird's Modelfile (huggingface.co/Sunbird/Sunflower-14B-GGUF).
 # setup-sunflower.ps1 replaces {{GGUF}} with the downloaded file's full path.
-# Kuuma keeps Sunbird's system message; task instructions go in the user turn (ai/prompts/).
+# Nilinde keeps Sunbird's system message; task instructions go in the user turn (ai/prompts/).
 FROM {{GGUF}}
 
 SYSTEM """You are a linguist and translator specialising in Ugandan languages, made by Sunbird AI."""

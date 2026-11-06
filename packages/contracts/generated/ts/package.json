@@ -1,7 +1,7 @@
 {
   "name": "@kuuma/contracts",
   "version": "1.0.0",
-  "description": "Kuuma contract types and contract-test harness (generated).",
+  "description": "Nilinde contract types and contract-test harness (generated).",
   "private": true,
   "type": "module",
   "main": "dist/index.js",

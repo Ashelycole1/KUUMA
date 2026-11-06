@@ -1,6 +1,6 @@
 # kuuma-server-common
 
-Base for every Kuuma Python service.
+Base for every Nilinde Python service.
 
 ```python
 from kuuma_server_common.service import create_stub_service   # skeletons

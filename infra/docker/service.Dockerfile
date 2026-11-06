@@ -1,4 +1,4 @@
-# One image for every Kuuma Python service; docker-compose picks the app with APP / SERVICE_DIR.
+# One image for every Nilinde Python service; docker-compose picks the app with APP / SERVICE_DIR.
 # Build context: the repo root.
 FROM python:3.12.10-slim
 

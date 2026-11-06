@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-lang"
 version = "0.1.0"
-description = "Kuuma shared vocabulary: harm categories, severities, grooming stages, languages, advice keys."
+description = "Nilinde shared vocabulary: harm categories, severities, grooming stages, languages, advice keys."
 requires-python = ">=3.12"
 dependencies = []
 

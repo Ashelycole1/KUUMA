@@ -21,6 +21,7 @@ from kuuma_server_common import safe_log
 MODEL = "sunflower-14b:q4"
 LUGANDA = "Nja kukukuba bw'onodda ku ssomero enkya"
 ON_DEVICE = {"harmful": True, "category": "threat", "severity": "medium", "confidence": 0.58}
+SURE = {"harmful": True, "category": "threat", "severity": "high", "confidence": 0.95}
 
 
 class FakeLlm:
@@ -111,24 +112,44 @@ def test_analyse_adds_an_interpretation(logs):
         assert r.status_code == 200, r.text
         body = r.json()
         validate_body("api/analyse-response.json", body)
-        assert body["verdict"] == ON_DEVICE and body["verdictSource"] == "on_device"
+        # The phone was unsure: the meaning decides.
+        assert body["verdictSource"] == "reasoning_model"
+        assert body["verdict"]["harmful"] and body["verdict"]["category"] == "threat"
         assert body["interpretation"]["englishMeaning"].startswith("I will beat you")
     assert "kukuba" not in logs.getvalue() and "beat" not in logs.getvalue()
 
 
-def test_analyse_skips_sunflower_for_plain_english():
+def test_analyse_skips_sunflower_for_plain_english_the_phone_is_sure_of():
     llm = FakeLlm()
     with make(llm) as c:
         c.app.state.warm_up and asyncio.run(asyncio.sleep(0))
         calls = len(llm.calls)
-        r = c.post(
-            "/v1/ai/analyse", json={"text": "see you at school", "language": "en", "onDevice": ON_DEVICE}
-        )
+        r = c.post("/v1/ai/analyse", json={"text": "i will kill you", "language": "en", "onDevice": SURE})
         assert r.status_code == 200 and "interpretation" not in r.json()
+        assert r.json()["verdict"] == SURE and r.json()["verdictSource"] == "on_device"
         assert len(llm.calls) == calls
 
 
-def test_analyse_unknown_language_gets_interpretation_without_changing_verdict():
+def test_a_sure_on_device_verdict_is_never_overturned():
+    llm = FakeLlm(["Thank you", "The sender greets you warmly."])
+    with make(llm) as c:
+        r = c.post("/v1/ai/analyse", json={"text": LUGANDA, "language": "lg", "onDevice": SURE})
+        assert r.json()["verdict"] == SURE and "interpretation" in r.json()
+
+
+def test_unsure_english_is_read_by_sunflower_and_cleared():
+    llm = FakeLlm(["Thank you", "The sender says the game was stupid; it is not aimed at anyone."])
+    maybe = {"harmful": True, "category": "insult", "severity": "medium", "confidence": 0.45}
+    with make(llm) as c:
+        r = c.post(
+            "/v1/ai/analyse", json={"text": "that game was stupid", "language": "en", "onDevice": maybe}
+        )
+        body = r.json()
+        validate_body("api/analyse-response.json", body)
+        assert body["verdictSource"] == "reasoning_model" and body["verdict"]["harmful"] is False
+
+
+def test_analyse_unknown_language_gets_interpreted_and_judged():
     llm = FakeLlm()
     # No language hint, and no marker words: the old gate silently skipped this input.
     with make(llm) as c:
@@ -141,8 +162,9 @@ def test_analyse_unknown_language_gets_interpretation_without_changing_verdict()
         validate_body("api/analyse-response.json", response)
         assert "interpret" in llm.calls
         assert response["interpretation"]["model"] == MODEL
-        assert response["verdict"] == ON_DEVICE
-        assert response["verdictSource"] == "on_device"
+        # "Thank you very much." is not harmful: the phone's maybe is cleared.
+        assert response["verdict"]["harmful"] is False
+        assert response["verdictSource"] == "reasoning_model"
 
 
 def test_analyse_unknown_language_model_failure_preserves_on_device_verdict():

@@ -36,8 +36,13 @@ void main() {
           return 'r1';
         case 'shares':
           return [
-            {'requestId': 'r1', 'recipientType': 'school', 'status': 'pending_approval', 'link': null}
+            {'requestId': 'r1', 'recipientType': 'school', 'status': 'completed', 'link': 'http://k/verify/s/r1#k=x'}
           ];
+        case 'export':
+          return {'pdfPath': '/x.pdf', 'root': 'abc', 'downloadUri': 'content://media/downloads/1'};
+        case 'sendLink':
+        case 'openFile':
+          return true;
       }
       return null;
     });
@@ -63,7 +68,7 @@ void main() {
     expect(find.text('invented insult'), findsOneWidget);
   });
 
-  testWidgets('checks evidence and requests a share', (tester) async {
+  testWidgets('checks evidence and reports directly, with no parent step', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
     await tester.tap(find.text('Person A'));
@@ -71,11 +76,25 @@ void main() {
     await tester.tap(find.text('Check evidence'));
     await tester.pumpAndSettle();
     expect(find.text('Evidence is intact: nothing has been changed.'), findsOneWidget);
-    await tester.tap(find.text('Share'));
+    await tester.tap(find.text('Report'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('School'));
     await tester.pumpAndSettle();
-    expect(find.text('Waiting for your parent to approve.'), findsOneWidget);
-    expect(calls, containsAllInOrder(['listCases', 'timeline', 'verify', 'requestShare', 'shares']));
+    expect(find.text('Your report is ready. Send this link to them:'), findsOneWidget);
+    expect(find.text('http://k/verify/s/r1#k=x'), findsOneWidget);
+    // The phone's share menu opens straight away.
+    expect(calls, containsAllInOrder(['listCases', 'timeline', 'verify', 'requestShare', 'shares', 'sendLink']));
+  });
+
+  testWidgets('Save as PDF puts it in Downloads and opens it', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Person A'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save as PDF'));
+    await tester.pumpAndSettle();
+    expect(find.text('Saved to Downloads/Nilinde.'), findsOneWidget);
+    expect(calls, containsAllInOrder(['export', 'openFile']));
+    expect(find.text('Open the PDF'), findsOneWidget);
   });
 }

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Kuuma Companion API
+  title: Nilinde Companion API
   version: 1.0.0
   description: Owned by the Companion build.
 servers:

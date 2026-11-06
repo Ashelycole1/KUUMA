@@ -76,7 +76,7 @@ class FakeCompanionBridge implements CompanionBridge {
           AdviceCardView(key: 'advice.general.do_not_reply', text: "You don't have to reply."),
           AdviceCardView(
             key: 'advice.general.save_evidence',
-            text: 'Kuuma keeps a safe copy.',
+            text: 'Nilinde keeps a safe copy.',
             steps: ["Don't delete the messages."],
           ),
         ],

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kuuma_contracts/kuuma_contracts.dart';
@@ -322,13 +321,17 @@ class PairingQrScreen extends StatelessWidget {
             textAlign: TextAlign.center),
         const SizedBox(height: 12),
         Text(context.t('guardian.qr.private'), style: theme.textTheme.bodySmall, textAlign: TextAlign.center),
-        // Debug builds only: emulators have no camera to scan with, so copy the text instead.
-        if (kDebugMode)
-          TextButton(
-            key: const Key('copy-qr'),
-            onPressed: () => Clipboard.setData(ClipboardData(text: pending.qr.text)),
-            child: const Text('Copy pairing text (debug)'),
-          ),
+        // No camera to scan with (or both apps on one phone): copy the text instead.
+        TextButton(
+          key: const Key('copy-qr'),
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final copied = context.t('guardian.qr.copied');
+            await Clipboard.setData(ClipboardData(text: pending.qr.text));
+            messenger.showSnackBar(SnackBar(content: Text(copied)));
+          },
+          child: Text(context.t('guardian.qr.copy')),
+        ),
         const SizedBox(height: 24),
         KuumaButton(
           label: context.t('guardian.qr.done'),

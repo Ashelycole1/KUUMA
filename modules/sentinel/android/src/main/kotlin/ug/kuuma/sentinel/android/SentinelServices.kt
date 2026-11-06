@@ -25,7 +25,7 @@ import ug.kuuma.sentinel.ingest.StyleMessage
 import ug.kuuma.sentinel.ingest.WatchedApps
 
 /**
- * Reads incoming notifications. SMS is read from its notification too, so Kuuma needs no
+ * Reads incoming notifications. SMS is read from its notification too, so Nilinde needs no
  * SMS permission. The service only copies text out; it never dismisses, replies to or
  * otherwise touches the notification, so the sender sees nothing.
  */

@@ -1,7 +1,7 @@
 # Sunflower on this PC
 
 Sunbird AI's Sunflower-14B, served by Ollama on SURFACE-02 (RTX 3060 Laptop 6 GB, 32 GB RAM).
-Only the AI service talks to it, through `packages/kuuma-llm`. Design: `Kuuma — Sunflower Integration Design.md`.
+Only the AI service talks to it, through `packages/kuuma-llm`. Design: `Nilinde — Sunflower Integration Design.md`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ai\local\sunflower\setup-sunflower.ps1      # Q4_K_M, 9.0 GB

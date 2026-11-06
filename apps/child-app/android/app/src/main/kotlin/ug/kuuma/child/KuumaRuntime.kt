@@ -2,7 +2,7 @@ package ug.kuuma.child
 
 import android.app.Application
 import android.content.Context
-import ug.kuuma.ai.runtime.DummyHarmClassifier
+import ug.kuuma.ai.runtime.StarterHarmClassifier
 import ug.kuuma.casefile.CasefileConfig
 import ug.kuuma.casefile.CasefileModule
 import ug.kuuma.casefile.HttpCasesApi
@@ -57,9 +57,23 @@ object KuumaRuntime {
 
     /**
      * The API gateway. Debug builds talk to the local stack (`make dev`); 10.0.2.2 is the
-     * laptop as seen from the Android emulator. Release builds have no cloud until staging exists.
+     * laptop as seen from the Android emulator. A real phone on USB reaches it on 127.0.0.1
+     * after `adb reverse tcp:8080 tcp:8080`. Release builds have no cloud until staging exists.
      */
-    private val apiBaseUrl: String? = if (BuildConfig.DEBUG) "http://10.0.2.2:8080" else null
+    private val apiBaseUrl: String? =
+        when {
+            !BuildConfig.DEBUG -> null
+            isEmulator() -> "http://10.0.2.2:8080"
+            else -> "http://127.0.0.1:8080"
+        }
+
+    private const val DEBUG_SHARE_BASE = "http://127.0.0.1:8080"
+
+    private fun isEmulator(): Boolean =
+        android.os.Build.FINGERPRINT.startsWith("generic") ||
+            android.os.Build.PRODUCT.startsWith("sdk_") ||
+            android.os.Build.HARDWARE.contains("ranchu") ||
+            android.os.Build.HARDWARE.contains("goldfish")
 
     private fun modules(
         app: Application,
@@ -82,7 +96,9 @@ object KuumaRuntime {
                 androidContext = app,
                 api = apiBaseUrl?.let { HttpCasesApi(it, headers) },
                 translator = apiBaseUrl?.let { HttpTranslator(it, headers) },
-                shareBaseUrl = (apiBaseUrl ?: "https://verify.kuuma.ug") + "/verify",
+                // Debug: 127.0.0.1 (through adb reverse) on the emulator too, because browsers only
+                // allow the page's decryption on https:// or localhost, never on 10.0.2.2.
+                shareBaseUrl = (if (apiBaseUrl != null) DEBUG_SHARE_BASE else "https://verify.kuuma.ug") + "/verify",
             ),
         )
         // Guardian signs with the device id the Guardian service issued at pairing.
@@ -114,7 +130,9 @@ object KuumaRuntime {
             bus.subscribeAll { type, env -> record(DebugEventMapper.toMap(type, env)) }
         }
 
-        val classifier: HarmClassifier = DummyHarmClassifier() // AI owner swaps in the real runtime
+        // The starter lexicon until the AI owner's Knit model ships. Not DummyHarmClassifier: its TEST
+        // terms ("as a gift", "our secret") flag harmless messages on a real phone.
+        val classifier: HarmClassifier = StarterHarmClassifier()
         val refs = OpaqueRefs(SecretWrapper(app).getOrCreate("opaque-ref-salt").first)
 
         modules(app, deviceId, classifier, refs, registry).forEach(registry::register)

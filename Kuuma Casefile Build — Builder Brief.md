@@ -1,8 +1,8 @@
-# Kuuma Casefile Build — Builder Brief
+# Nilinde Casefile Build — Builder Brief
 
 Nov 5, 2026 · @Niwasiima Ashelycole
 
-The Casefile owner builds Kuuma's investigation core: the evidence vault, sealing and chain of custody, offender profiles, timelines, case files and anonymous sharing. Everything here must hold up in front of a school, police officer or court.
+The Casefile owner builds Nilinde's investigation core: the evidence vault, sealing and chain of custody, offender profiles, timelines, case files and anonymous sharing. Everything here must hold up in front of a school, police officer or court.
 
 ## Your job
 

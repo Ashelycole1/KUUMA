@@ -4,6 +4,7 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import ug.kuuma.ai.runtime.DummyReplyRiskChecker
 import ug.kuuma.companion.content.ContentPack
+import ug.kuuma.companion.keyboard.KindReplyChecker
 import ug.kuuma.contracts.AdviceKey
 import ug.kuuma.contracts.AgeBracket
 import ug.kuuma.contracts.CompanionAdviceShownPayload
@@ -39,13 +40,13 @@ interface CompanionListener {
  * Companion: what the victim sees and touches. Reacts to Sentinel's flags; never reads other
  * apps and never stores evidence. It keeps only IDs and enums in memory, nothing the child types.
  *
- * The Kuuma Keyboard ([ug.kuuma.companion.keyboard.KuumaKeyboardService]) runs in the same process
+ * The Nilinde Keyboard ([ug.kuuma.companion.keyboard.KuumaKeyboardService]) runs in the same process
  * and reaches the registered module through [current].
  */
 class CompanionModule(
     pack: ContentPack = ContentPack.bundled(),
-    /** On-device reply checker from the AI build. The app may swap in the real one. */
-    @Volatile var replyChecker: ReplyRiskChecker = DummyReplyRiskChecker(),
+    /** On-device reply checker from the AI build (phone numbers), plus the kindness check. */
+    @Volatile var replyChecker: ReplyRiskChecker = KindReplyChecker(DummyReplyRiskChecker()),
     private val clock: () -> Long = System::currentTimeMillis,
     private val newId: () -> String = { UUID.randomUUID().toString() }
 ) : KuumaModule {
@@ -82,7 +83,7 @@ class CompanionModule(
     @Volatile var ageBracket: AgeBracket? = null
         private set
 
-    /** Language the child reads Kuuma in; null means "the language of the flagged message". */
+    /** Language the child reads Nilinde in; null means "the language of the flagged message". */
     @Volatile var preferredLanguage: Language? = null
 
     override fun onRegister(context: ModuleContext) {

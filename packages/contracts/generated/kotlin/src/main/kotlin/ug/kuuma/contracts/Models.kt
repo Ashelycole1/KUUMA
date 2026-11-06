@@ -223,6 +223,90 @@ data class ErrorResponse(
     val error: ApiError,
 )
 
+@Serializable
+data class Evidence(
+    val requestId: Uuid,
+    val childId: Uuid,
+    val caseId: Uuid,
+    val status: EvidenceStatus,
+    val createdAt: Timestamp,
+    val completedAt: Timestamp? = null,
+    val sealedEvidence: SealedEvidence? = null,
+)
+
+/**
+ * PHONE ONLY (travels sealed). The messages of one case as the child's phone holds them, with who sent them. Never sent to a service in the clear.
+ */
+@Serializable
+data class EvidenceBundle(
+    val caseId: Uuid,
+    val offenderLabel: OffenderLabel,
+    /**
+     * Names the sender appeared under in the messaging app.
+     */
+    val senderNames: List<String>,
+    /**
+     * Phone numbers the sender used or wrote.
+     */
+    val senderNumbers: List<String>,
+    val messages: List<EvidenceMessage>,
+    /**
+     * Older messages were left out to fit.
+     */
+    val truncated: Boolean? = null,
+    val createdAt: Timestamp,
+)
+
+@Serializable
+data class EvidenceList(
+    val evidence: List<Evidence>,
+)
+
+/**
+ * One message in an EvidenceBundle (phone only, travels sealed).
+ */
+@Serializable
+data class EvidenceMessage(
+    val sentAt: Timestamp,
+    val appSource: AppSource? = null,
+    /**
+     * As the messaging app showed them; absent for the child's own messages.
+     */
+    val sender: String? = null,
+    val fromChild: Boolean,
+    val text: String,
+)
+
+/**
+ * A parent's request to see a case's messages, delivered to the child's phone at its heartbeat. The phone asks the child only if the family-key signature verifies.
+ */
+@Serializable
+data class EvidenceOrder(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val signature: FamilySignature,
+    val requestedAt: Timestamp,
+)
+
+/**
+ * POST /v1/guardian/children/{childId}/evidence. The parent asks to see a case's messages; the child decides. Signed with the family key over evidence|requestId|caseId.
+ */
+@Serializable
+data class EvidenceRequest(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val signature: FamilySignature,
+)
+
+/**
+ * POST /v1/guardian/evidence/{requestId}/result, from the child's phone (device-signed).
+ */
+@Serializable
+data class EvidenceResultRequest(
+    val status: EvidenceOutcome,
+    val sealedEvidence: SealedEvidence? = null,
+)
+
 /**
  * Sent only when the child consented to training (consentToTrain).
  */
@@ -244,7 +328,7 @@ data class HeartbeatRequest(
      */
     val protectionActive: Boolean? = null,
     /**
-     * Permissions Kuuma needs that are currently off.
+     * Permissions Nilinde needs that are currently off.
      */
     val missingPermissions: List<PermissionName>? = null,
 )
@@ -265,6 +349,10 @@ data class HeartbeatResponse(
      * Parent report requests for this child not yet delivered.
      */
     val reports: List<ReportOrder>? = null,
+    /**
+     * Parent requests to see a case's messages, not yet delivered.
+     */
+    val evidenceRequests: List<EvidenceOrder>? = null,
 )
 
 /**

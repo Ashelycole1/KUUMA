@@ -302,7 +302,7 @@ def py_type(t, model: Model) -> str:
 def emit_python(model: Model) -> dict[str, str]:
     L = [
         f"# {HEADER}",
-        '"""Kuuma contract types (pydantic v2)."""',
+        '"""Nilinde contract types (pydantic v2)."""',
         "",
         "from __future__ import annotations",
         "",

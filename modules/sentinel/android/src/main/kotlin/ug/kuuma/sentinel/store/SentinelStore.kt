@@ -18,11 +18,26 @@ interface SentinelStore {
     fun updateFlag(flag: FlagRecord)
     fun markDismissed(flagId: String)
     fun flagsIn(conversationRef: String): List<FlagRecord>
+
+    /**
+     * Records that a message (by [key], a ref of chat + text) was screened at [at]. False if it
+     * already was within [windowMillis]: the same message seen again (a notification re-posted,
+     * read again after the app restarts, or read from the screen) is screened only once.
+     */
+    fun markScreened(key: String, at: Long, windowMillis: Long): Boolean
 }
 
 class InMemorySentinelStore : SentinelStore {
     private val contacts = HashMap<String, ContactStats>()
     private val flags = LinkedHashMap<String, FlagRecord>()
+    private val screened = HashMap<String, Long>()
+
+    @Synchronized override fun markScreened(key: String, at: Long, windowMillis: Long): Boolean {
+        val previous = screened[key]
+        if (previous != null && kotlin.math.abs(at - previous) < windowMillis) return false
+        screened[key] = at
+        return true
+    }
 
     @Synchronized override fun stats(senderRef: String) = contacts[senderRef]
 
@@ -82,7 +97,21 @@ class SqlSentinelStore(private val db: SupportSQLiteDatabase) : SentinelStore {
                     "at INTEGER NOT NULL, dismissed INTEGER NOT NULL)"
             )
             db.execSQL("CREATE INDEX IF NOT EXISTS verdicts_conversation ON verdicts(conversation_ref)")
+            // Refs only (an HMAC of chat + text), never the text.
+            db.execSQL("CREATE TABLE IF NOT EXISTS screened (key TEXT PRIMARY KEY, at INTEGER NOT NULL)")
         }
+
+        private const val KEEP_SCREENED = 7 * 24 * 3_600_000L
+    }
+
+    override fun markScreened(key: String, at: Long, windowMillis: Long): Boolean {
+        val previous = db.query("SELECT at FROM screened WHERE key = ?", arrayOf(key)).use { c ->
+            if (c.moveToFirst()) c.getLong(0) else null
+        }
+        if (previous != null && kotlin.math.abs(at - previous) < windowMillis) return false
+        db.execSQL("INSERT OR REPLACE INTO screened (key, at) VALUES (?, ?)", arrayOf<Any>(key, at))
+        db.execSQL("DELETE FROM screened WHERE at < ?", arrayOf<Any>(at - KEEP_SCREENED))
+        return true
     }
 
     override fun stats(senderRef: String): ContactStats? = db.query(

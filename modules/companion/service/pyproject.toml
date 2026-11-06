@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-companion-service"
 version = "0.1.0"
-description = "Kuuma Companion service. Skeleton from Core; the Companion owner fills it."
+description = "Nilinde Companion service. Skeleton from Core; the Companion owner fills it."
 requires-python = ">=3.12"
 dependencies = ["kuuma-server-common", "kuuma-contracts"]
 

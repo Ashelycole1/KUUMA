@@ -57,7 +57,7 @@ void main() {
     final s = ParentSession(api: FakeGuardianParentApi(), vault: MemoryGuardianVault(), pinIterations: 10);
     await tester.pumpWidget(app(ParentGate(session: s, child: const Text('inside'))));
     await tester.pumpAndSettle();
-    expect(find.text('Kuuma for parents'), findsOneWidget);
+    expect(find.text('Nilinde for parents'), findsOneWidget);
     await tester.enterText(find.byKey(const Key('pin-new')), '2580');
     await tester.enterText(find.byKey(const Key('pin-confirm')), '1111');
     await tester.pump();
@@ -131,6 +131,24 @@ void main() {
     expect(api.policies[p.childId]!.policyVersion, 2);
     expect(api.policies[p.childId]!.thresholds.alertMinSeverity, Severity.high);
     expect(FamilyCrypto(p.qr.familyKey).verifyPolicy(api.policies[p.childId]!), isTrue);
+  });
+
+  testWidgets('the 7-day chart fits at large system font sizes', (tester) async {
+    final (s, api) = await unlocked();
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    for (final sev in [Severity.high, Severity.high, Severity.medium, Severity.low]) {
+      api.addAlert(p.childId, severity: sev);
+    }
+    await s.refresh();
+    for (final scale in [1.0, 1.3, 2.0]) {
+      await tester.pumpWidget(MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+        child: tab(s, const AlertsScreen()),
+      ));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull, reason: 'overflow at text scale $scale');
+      expect(find.byType(SeverityTrend), findsOneWidget);
+    }
   });
 
   testWidgets('alerts: trend, guidance, and the message only on request', (tester) async {
@@ -275,7 +293,7 @@ void main() {
 
       scan!('not a code');
       await tester.pumpAndSettle();
-      expect(find.text('That is not a Kuuma pairing code.'), findsOneWidget);
+      expect(find.text('That is not a Nilinde pairing code.'), findsOneWidget);
       scan!('kuuma-pair:1:999999:$key');
       await tester.pumpAndSettle();
       expect(find.textContaining('expired'), findsOneWidget);

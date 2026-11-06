@@ -1,8 +1,8 @@
-# Kuuma Sentinel Build — Builder Brief
+# Nilinde Sentinel Build — Builder Brief
 
 Nov 5, 2026 · @Niwasiima Ashelycole
 
-The Sentinel owner builds Kuuma's eyes and ears on the phone: reading incoming messages, capturing harmful conversations silently, and publishing a flag for every harmful message. Sentinel is phone-only; it has no cloud service of its own.
+The Sentinel owner builds Nilinde's eyes and ears on the phone: reading incoming messages, capturing harmful conversations silently, and publishing a flag for every harmful message. Sentinel is phone-only; it has no cloud service of its own.
 
 ## Your job
 

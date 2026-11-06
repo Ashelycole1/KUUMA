@@ -30,7 +30,7 @@ const String _kuumaLangJson = r'''
     "categories": [],
     "id": "advice.general.save_evidence",
     "text": {
-     "en": "Kuuma can keep a safe copy of these messages in case you need them later."
+     "en": "Nilinde can keep a safe copy of these messages in case you need them later."
     }
    },
    {
@@ -105,6 +105,13 @@ const String _kuumaLangJson = r'''
     "id": "advice.reply.no_location",
     "text": {
      "en": "Think twice before sharing where you are or where you live."
+    }
+   },
+   {
+    "categories": [],
+    "id": "advice.reply.be_kind",
+    "text": {
+     "en": "This may sound hurtful. Read it once more before sending."
     }
    }
   ]

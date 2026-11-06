@@ -96,3 +96,19 @@ class Report(Base):
     completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sealed_link: Mapped[str | None] = mapped_column(Text, nullable=True)
     delivered: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class EvidenceRequest(Base):
+    """A parent's request to see a case's messages. The child decides on their phone; the
+    messages come back sealed with the family key, so the server never reads them."""
+
+    __tablename__ = "evidence_requests"
+    request_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    child_id: Mapped[str] = mapped_column(String(36), index=True)
+    case_id: Mapped[str] = mapped_column(String(36))
+    signature: Mapped[str] = mapped_column(String(43))
+    status: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sealed_evidence: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivered: Mapped[bool] = mapped_column(Boolean, default=False)

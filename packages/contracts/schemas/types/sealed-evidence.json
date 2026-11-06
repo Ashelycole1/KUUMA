@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/sealed-evidence.json",
+  "title": "SealedEvidence",
+  "description": "base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of an EvidenceBundle as JSON. Only the parent's phone can open it; the server stores ciphertext only.",
+  "type": "string",
+  "minLength": 24,
+  "maxLength": 200000,
+  "pattern": "^[A-Za-z0-9_-]+$"
+}

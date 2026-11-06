@@ -216,13 +216,14 @@ def build_app(
         )
         s.add(share)
         s.commit()
-        is_child = device is not None and s.get(ChildDevice, device) is not None
+        # The child decides who sees their evidence: a share needs nobody's approval.
+        # (A parent's decline, if one arrived for this request, still stops it.)
         decision = s.get(ShareDecision, share.request_id)
-        if not is_child or (decision and decision.approved):
-            complete(s, share)
-        elif decision is not None:
+        if decision is not None and not decision.approved:
             share.status = "declined"
             s.commit()
+        else:
+            complete(s, share)
         return JSONResponse(share_body(share), status_code=202)
 
     # ------------------------------------------------------------------ verification (public)

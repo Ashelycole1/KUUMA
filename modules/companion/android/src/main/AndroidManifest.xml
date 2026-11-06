@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
-        <!-- The Kuuma Keyboard. Merged into the child app; runs in the app's process so it can
+        <!-- The Nilinde Keyboard. Merged into the child app; runs in the app's process so it can
              reach the registered CompanionModule. -->
         <service
             android:name="ug.kuuma.companion.keyboard.KuumaKeyboardService"

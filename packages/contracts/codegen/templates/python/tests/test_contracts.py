@@ -36,8 +36,8 @@ def flagged() -> SentinelMessageFlagged:
     )
 
 
-def test_twenty_events():
-    assert len(EVENTS) == 20
+def test_twenty_two_events():
+    assert len(EVENTS) == 22
 
 
 def test_generated_model_matches_schema():

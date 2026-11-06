@@ -358,7 +358,7 @@ class CasefileEngineTest {
         play("slow-grooming")
         val case = engine.cases().single()
         assertEquals(GroomingStage.entries.drop(1), case.groomingStages) // trust_building is never flagged
-        // Late-night contact is counted from when messages were sent (22:30-23:10), not when Kuuma saw them.
+        // Late-night contact is counted from when messages were sent (22:30-23:10), not when Nilinde saw them.
         assertEquals(4, case.lateNightCount(java.util.TimeZone.getTimeZone("UTC")))
         val timeline = engine.timeline(case.caseId)
         assertEquals(ItemKind.MESSAGE, timeline.first().kind) // each flag sits after its message
@@ -422,21 +422,20 @@ class CasefileEngineTest {
         val container = Json.parseToJsonElement(String(ShareCrypto.decrypt(blob, key))).jsonObject
         assertEquals("kuuma-share/1", container["format"]!!.jsonPrimitive.content)
         assertTrue((container["case"] as JsonObject)["exhibits"] is JsonArray)
-        assertTrue(payloads(Events.CASEFILE_SHARE_REQUESTED).single().requestId == requestId)
+        assertTrue(payloads(Events.CASEFILE_SHARE_REQUESTED).isEmpty()) // nobody has to approve
     }
 
-    @Test fun `child share waits for the parent, deletion too`() {
+    @Test fun `a child shares without the parent, but deleting needs the parent`() {
         engine.onPaired()
         play("english-threat")
         val caseId = engine.cases().single().caseId
-        // Turn off the auto-approving fake parent: nothing is shared without approval.
+        // No parent answering at all: the child's share still goes out, and the parent is not asked.
         fakes.guardian.enabled = false
         val requestId = engine.requestShare(caseId, RecipientType.POLICE)
-        assertEquals("pending_approval", engine.share(requestId)!!.status)
-        assertTrue(api.uploads.isEmpty())
+        assertEquals("completed", engine.share(requestId)!!.status)
+        assertEquals(1, api.uploads.size)
+        assertTrue(payloads(Events.CASEFILE_SHARE_REQUESTED).isEmpty())
         fakes.guardian.enabled = true
-        val second = engine.requestShare(caseId, RecipientType.POLICE) // the fake parent approves at once
-        assertEquals("completed", engine.share(second)!!.status)
         assertEquals(DeletionResult.NEEDS_PARENT_APPROVAL, engine.deleteVault())
         assertEquals(DeletionResult.DELETED, engine.deleteVault(parentApproved = true))
         assertTrue(engine.cases().isEmpty())

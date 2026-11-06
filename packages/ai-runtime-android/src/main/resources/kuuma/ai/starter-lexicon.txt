@@ -1,0 +1,98 @@
+# Starter on-device lexicon for StarterHarmClassifier. PLACEHOLDER until the AI owner's lexicon
+# (packages/lang/lexicon) and the Knit model are in. A native speaker must review the Luganda,
+# Swahili and Runyankole before a pilot. Never add slurs to test with.
+#
+# Format:  category  severity  kind  |  term
+#   kind = phrase : harmful on its own ("i will kill you"): flagged straight away.
+#   kind = word   : harmful when aimed at someone ("you idiot", "oli musilu", "wewe mjinga");
+#                   on its own ("this game is stupid") Sunflower is asked first.
+#   kind = maybe  : always asks Sunflower first ("kill" is as often a joke as a threat).
+# Terms are lowercase and matched as whole words. Spelling variants go on their own line.
+
+# ---- Threats (English)
+threat high phrase | i will kill you
+threat high phrase | ill kill you
+threat high phrase | i'll kill you
+threat high phrase | i will hurt you
+threat high phrase | i'll hurt you
+threat high phrase | i will beat you
+threat high phrase | i'll beat you
+threat high phrase | you will see what i do to you
+threat high phrase | watch your back
+threat high phrase | i know where you live
+threat high phrase | you are dead
+threat high phrase | you're dead
+threat high phrase | hurt you after school
+threat high phrase | beat you after school
+threat medium maybe | kill
+threat medium maybe | hurt
+threat medium maybe | beat
+
+# ---- Threats (Luganda / Swahili)
+threat high phrase | nja kukutta
+threat high phrase | nja kukukuba
+threat high phrase | ndikutta
+threat high phrase | nitakuua
+threat high phrase | nitakupiga
+threat medium maybe | utaona
+
+# ---- Self-harm encouragement
+self_harm_encouragement high phrase | kill yourself
+self_harm_encouragement high phrase | kys
+self_harm_encouragement high phrase | go die
+self_harm_encouragement high phrase | you should die
+self_harm_encouragement high phrase | nobody would miss you
+self_harm_encouragement high phrase | jitte
+self_harm_encouragement high phrase | jiue
+
+# ---- Insults (English): aimed at someone
+insult medium word | stupid
+insult medium word | idiot
+insult medium word | fool
+insult medium word | dumb
+insult medium word | ugly
+insult medium word | useless
+insult medium word | worthless
+insult medium word | loser
+insult medium word | embarrassing
+insult medium word | pathetic
+insult medium phrase | nobody likes you
+insult medium phrase | everyone hates you
+insult medium phrase | you are worthless
+
+# ---- Insults (Luganda), with common spellings
+insult medium word | musiru
+insult medium word | musilu
+insult medium word | omusiru
+insult medium word | omusilu
+insult medium word | kasiru
+insult medium word | kasilu
+insult medium word | kisiru
+insult medium word | kisilu
+insult medium word | mbwa
+insult medium word | embwa
+insult medium phrase | tolina mugaso
+insult medium phrase | oli mubi
+
+# ---- Insults (Swahili)
+insult medium word | mjinga
+insult medium word | mpumbavu
+insult medium word | bwege
+insult medium word | fala
+insult medium phrase | huna maana
+
+# ---- Harassment
+harassment medium phrase | shut up
+harassment medium phrase | i hate you
+harassment medium phrase | nakuchukia
+harassment medium phrase | sikwagala
+
+# ---- Grooming (phrases only: single words like "secret" are far too common)
+grooming high phrase | keep it our secret
+grooming high phrase | this is our secret
+grooming high phrase | don't tell your parents
+grooming high phrase | dont tell your parents
+grooming high phrase | don't tell your mum
+grooming high phrase | send me a photo of yourself
+grooming high phrase | meet me alone
+grooming medium phrase | you are so mature for your age

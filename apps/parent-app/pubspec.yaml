@@ -1,5 +1,5 @@
 name: kuuma_parent_app
-description: Kuuma parent app shell. Core-owned; Guardian's screens plug in through kuuma_ui slots.
+description: Nilinde parent app shell. Core-owned; Guardian's screens plug in through kuuma_ui slots.
 publish_to: none
 version: 0.1.0+1
 

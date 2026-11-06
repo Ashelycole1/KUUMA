@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.evidence.requested.v1.json",
+  "title": "GuardianEvidenceRequested",
+  "description": "PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.",
+  "x-kuuma": {
+    "event": "guardian.evidence.requested",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.evidence.requested"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianEvidenceRequestedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        }
+      }
+    }
+  }
+}

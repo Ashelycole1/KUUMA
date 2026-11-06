@@ -1,4 +1,4 @@
-"""Sunbird AI's Sunflower: Kuuma's language specialist (Luganda, Runyankole, Swahili, English).
+"""Sunbird AI's Sunflower: Nilinde's language specialist (Luganda, Runyankole, Swahili, English).
 
 It interprets and translates redacted messages. It never decides whether a message is
 harmful: the phone's classifier, or later the reasoning model, does that.
@@ -28,7 +28,7 @@ _LABEL = re.compile(r"^\s*(translation|english|meaning|answer)\s*:\s*", re.IGNOR
 
 
 class SunflowerError(RuntimeError):
-    """The model answered, but not with something Kuuma can use (empty, placeholders changed...)."""
+    """The model answered, but not with something Nilinde can use (empty, placeholders changed...)."""
 
 
 @dataclass(frozen=True)

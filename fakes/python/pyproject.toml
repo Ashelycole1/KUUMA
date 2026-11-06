@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-fakes"
 version = "0.1.0"
-description = "Kuuma fake framework: base fakes per module and the scenario runner (laptop side)."
+description = "Nilinde fake framework: base fakes per module and the scenario runner (laptop side)."
 requires-python = ">=3.12"
 dependencies = ["kuuma-contracts", "kuuma-server-common", "pyyaml==6.0.2"]
 

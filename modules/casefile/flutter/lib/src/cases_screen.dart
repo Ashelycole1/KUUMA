@@ -50,15 +50,17 @@ class _CasesScreenState extends State<CasesScreen> {
         for (final c in cases)
           KuumaCard(
             leading: const Icon(Icons.person_outline),
-            title: c['offenderLabel'] as String,
-            subtitle: c['incidentCount'] == 1
-                ? context.t('casefile.case.incident_one')
-                : context.t('casefile.case.incidents', {'n': '${c['incidentCount']}'}),
+            title: senderTitle(c),
+            subtitle: [
+              ...senderExtras(c),
+              c['incidentCount'] == 1
+                  ? context.t('casefile.case.incident_one')
+                  : context.t('casefile.case.incidents', {'n': '${c['incidentCount']}'}),
+            ].join(' · '),
             trailing: SeverityBadge(Severity.fromWire(c['topSeverity'] as String)),
             onTap: () async {
               await Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) =>
-                    CaseScreen(vault: widget.vault, caseId: c['caseId'] as String, label: c['offenderLabel'] as String),
+                builder: (_) => CaseScreen(vault: widget.vault, caseId: c['caseId'] as String, label: senderTitle(c)),
               ));
               _load();
             },
@@ -66,4 +68,19 @@ class _CasesScreenState extends State<CasesScreen> {
       ]),
     );
   }
+}
+
+List<String> _strings(Object? v) => (v as List<Object?>? ?? const []).whereType<String>().toList();
+
+/// The sender as the child's messaging app showed them (saved name, else number), else "Person A".
+String senderTitle(Map<Object?, Object?> c) {
+  final names = _strings(c['senderNames']);
+  final numbers = _strings(c['senderNumbers']);
+  return names.firstOrNull ?? numbers.firstOrNull ?? c['offenderLabel'] as String;
+}
+
+/// Other names and numbers the sender used or wrote, after the one in the title.
+List<String> senderExtras(Map<Object?, Object?> c) {
+  final all = {..._strings(c['senderNames']), ..._strings(c['senderNumbers'])}.toList();
+  return all.isEmpty ? const [] : all.sublist(1);
 }

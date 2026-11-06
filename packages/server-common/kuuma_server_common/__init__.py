@@ -1,4 +1,4 @@
-"""Shared base for Kuuma Python services. See README.md."""
+"""Shared base for Nilinde Python services. See README.md."""
 
 from kuuma_server_common.app import create_app
 from kuuma_server_common.audit import audit

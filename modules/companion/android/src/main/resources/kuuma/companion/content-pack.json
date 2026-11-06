@@ -23,13 +23,13 @@
           "default": [
             "Don't delete the messages or the chat, even after you block the person.",
             "If the app asks whether to delete the chat when you block or report, choose not to.",
-            "Tap the shield key on the Kuuma Keyboard to save another copy at any time."
+            "Tap the shield key on the Nilinde Keyboard to save another copy at any time."
           ]
         }
       },
       "text": {
         "en": {
-          "default": "Kuuma keeps a safe copy of these messages in case you need them later."
+          "default": "Nilinde keeps a safe copy of these messages in case you need them later."
         }
       }
     },
@@ -37,7 +37,7 @@
       "key": "advice.general.block_sender",
       "text": {
         "en": {
-          "default": "You can block this person in the app. They won't be told that Kuuma helped you."
+          "default": "You can block this person in the app. They won't be told that Nilinde helped you."
         }
       }
     },
@@ -122,6 +122,14 @@
       "text": {
         "en": {
           "default": "Think twice before sharing where you are or where you live."
+        }
+      }
+    },
+    {
+      "key": "advice.reply.be_kind",
+      "text": {
+        "en": {
+          "default": "This may sound hurtful. Read it once more before sending."
         }
       }
     }
@@ -359,7 +367,7 @@
   "ui": {
     "bannerTitle": {
       "en": {
-        "default": "Kuuma is here"
+        "default": "Nilinde is here"
       }
     },
     "feedbackNotAbuse": {
@@ -369,7 +377,7 @@
     },
     "feedbackQuestion": {
       "en": {
-        "default": "Did Kuuma get this right?"
+        "default": "Did Nilinde get this right?"
       }
     },
     "saferWording": {

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Kuuma AI API
+  title: Nilinde AI API
   version: 1.0.0
   description: |
     Owned by the AI build. Text sent here is already redacted on the phone and is

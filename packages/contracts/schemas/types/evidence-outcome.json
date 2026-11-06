@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/evidence-outcome.json",
+  "title": "EvidenceOutcome",
+  "description": "What the child decided about a parent's request to see a case's messages.",
+  "type": "string",
+  "enum": [
+    "ready",
+    "declined",
+    "failed"
+  ]
+}

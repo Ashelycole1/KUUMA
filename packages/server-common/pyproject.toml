@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-server-common"
 version = "0.1.0"
-description = "Shared base for Kuuma Python services: app factory, auth, safe logging, DB, Redis Streams."
+description = "Shared base for Nilinde Python services: app factory, auth, safe logging, DB, Redis Streams."
 requires-python = ">=3.12"
 dependencies = [
   "kuuma-contracts",

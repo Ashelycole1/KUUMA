@@ -1,5 +1,5 @@
 name: kuuma_child_app
-description: Kuuma child app shell. Core-owned; modules plug in through the module registry.
+description: Nilinde child app shell. Core-owned; modules plug in through the module registry.
 publish_to: none
 version: 0.1.0+1
 

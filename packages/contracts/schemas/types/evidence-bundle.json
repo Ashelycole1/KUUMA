@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/evidence-bundle.json",
+  "title": "EvidenceBundle",
+  "description": "PHONE ONLY (travels sealed). The messages of one case as the child's phone holds them, with who sent them. Never sent to a service in the clear.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "offenderLabel",
+    "senderNames",
+    "senderNumbers",
+    "messages",
+    "createdAt"
+  ],
+  "properties": {
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "offenderLabel": {
+      "$ref": "../types/offender-label.json"
+    },
+    "senderNames": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 200
+      },
+      "maxItems": 20,
+      "description": "Names the sender appeared under in the messaging app."
+    },
+    "senderNumbers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 50
+      },
+      "maxItems": 20,
+      "description": "Phone numbers the sender used or wrote."
+    },
+    "messages": {
+      "type": "array",
+      "maxItems": 500,
+      "items": {
+        "$ref": "../types/evidence-message.json"
+      }
+    },
+    "truncated": {
+      "type": "boolean",
+      "description": "Older messages were left out to fit."
+    },
+    "createdAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

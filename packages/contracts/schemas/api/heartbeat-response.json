@@ -33,6 +33,13 @@
         "$ref": "../types/report-order.json"
       },
       "description": "Parent report requests for this child not yet delivered."
+    },
+    "evidenceRequests": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/evidence-order.json"
+      },
+      "description": "Parent requests to see a case's messages, not yet delivered."
     }
   }
 }

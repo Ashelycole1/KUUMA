@@ -188,7 +188,9 @@ object CaseIndex {
                     val fromChild = c["fromChild"]?.jsonPrimitive?.booleanOrNull == true
                     TimelineEntry(
                         c.str("sentAtMillis")!!.toLong(), item.itemId, item.kind, c.str("appSource"),
-                        if (fromChild) null else label, fromChild, null, null, c.str("text")
+                        // On the child's own screen: the name or number their messaging app showed.
+                        if (fromChild) null else c.str("senderDisplayName") ?: label,
+                        fromChild, null, null, c.str("text")
                     )
                 }
                 else -> TimelineEntry(

@@ -34,7 +34,16 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from kuuma_contracts.testing import ContractViolation, validate_body
-from kuuma_guardian_service.db import Alert, Approval, Base, Child, PairingCode, Parent, Report
+from kuuma_guardian_service.db import (
+    Alert,
+    Approval,
+    Base,
+    Child,
+    EvidenceRequest,
+    PairingCode,
+    Parent,
+    Report,
+)
 from kuuma_server_common import KuumaError, StreamPublisher, audit, create_app, device_auth, get_logger
 from kuuma_server_common.service import envelope, redis_client
 
@@ -493,6 +502,83 @@ def build_app(
         audit(f"report.{r.status}", actor=child.child_id, resource=r.report_id, service="guardian")
         return report_body(r)
 
+    # ------------------------------------------------------------------ evidence for the parent
+
+    def evidence_body(e: EvidenceRequest) -> dict:
+        out = {
+            "requestId": e.request_id,
+            "childId": e.child_id,
+            "caseId": e.case_id,
+            "status": e.status,
+            "createdAt": iso(aware(e.created_at)),
+        }
+        if e.completed_at:
+            out["completedAt"] = iso(aware(e.completed_at))
+        if e.sealed_evidence:
+            out["sealedEvidence"] = e.sealed_evidence
+        return out
+
+    def evidence_order(e: EvidenceRequest) -> dict:
+        return {
+            "requestId": e.request_id,
+            "caseId": e.case_id,
+            "signature": e.signature,
+            "requestedAt": iso(aware(e.created_at)),
+        }
+
+    @app.post("/v1/guardian/children/{childId}/evidence", status_code=201)
+    def create_evidence_request(
+        childId: str,  # noqa: N803
+        data: dict = Depends(body("api/evidence-request.json")),
+        p: Parent = Depends(parent),
+        s: Session = Depends(db),
+    ):
+        child = owned_child(s, p, childId)
+        if not child.paired:
+            raise KuumaError(409, "not_paired", "This child's phone is not paired yet")
+        if s.get(EvidenceRequest, data["requestId"]) is not None:
+            raise KuumaError(409, "duplicate_request", "This request was already made")
+        e = EvidenceRequest(
+            request_id=data["requestId"],
+            child_id=child.child_id,
+            case_id=data["caseId"],
+            signature=data["signature"],
+            status="requested",
+            created_at=clock(),
+            delivered=False,
+        )
+        s.add(e)
+        s.commit()
+        audit("evidence.requested", actor=p.parent_id, resource=e.request_id, service="guardian")
+        return evidence_body(e)
+
+    @app.get("/v1/guardian/evidence")
+    def list_evidence(p: Parent = Depends(parent), s: Session = Depends(db)):
+        ids = [c.child_id for c in s.scalars(select(Child).where(Child.parent_id == p.parent_id))]
+        rows = s.scalars(
+            select(EvidenceRequest)
+            .where(EvidenceRequest.child_id.in_(ids))
+            .order_by(EvidenceRequest.created_at.desc())
+        ).all()
+        return {"evidence": [evidence_body(e) for e in rows]}
+
+    @app.post("/v1/guardian/evidence/{requestId}/result")
+    def evidence_result(
+        requestId: str,  # noqa: N803
+        data: dict = Depends(body("api/evidence-result-request.json")),
+        child: Child = Depends(device_child),
+        s: Session = Depends(db),
+    ):
+        e = s.get(EvidenceRequest, requestId) if UUID.match(requestId) else None
+        if e is None or e.child_id != child.child_id:
+            raise KuumaError(404, "not_found", "No such request")
+        if data["status"] == "ready" and "sealedEvidence" not in data:
+            raise KuumaError(422, "missing_evidence", "Allowed evidence needs its sealed messages")
+        e.status, e.completed_at, e.sealed_evidence = data["status"], clock(), data.get("sealedEvidence")
+        s.commit()
+        audit(f"evidence.{e.status}", actor=child.child_id, resource=e.request_id, service="guardian")
+        return evidence_body(e)
+
     # ------------------------------------------------------------------ child phone
 
     @app.post("/v1/guardian/pairings", status_code=201)
@@ -614,6 +700,14 @@ def build_app(
         out["reports"] = [report_order(r) for r in orders]
         for r in orders:
             r.delivered = True
+        asks = s.scalars(
+            select(EvidenceRequest).where(
+                EvidenceRequest.child_id == child.child_id, EvidenceRequest.delivered.is_(False)
+            )
+        ).all()
+        out["evidenceRequests"] = [evidence_order(e) for e in asks]
+        for e in asks:
+            e.delivered = True
         s.commit()
         return out
 

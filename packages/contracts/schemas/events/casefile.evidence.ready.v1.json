@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.evidence.ready.v1.json",
+  "title": "CasefileEvidenceReady",
+  "description": "PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.",
+  "x-kuuma": {
+    "event": "casefile.evidence.ready",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.evidence.ready"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileEvidenceReadyPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "status"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "status": {
+          "$ref": "../types/evidence-outcome.json"
+        },
+        "evidence": {
+          "$ref": "../types/evidence-bundle.json"
+        }
+      }
+    }
+  }
+}

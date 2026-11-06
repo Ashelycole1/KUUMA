@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Shown in the phone's keyboard list. Kept neutral so it doesn't reveal what Kuuma is. -->
+    <!-- Shown in the phone's keyboard list. Kept neutral so it doesn't reveal what Nilinde is. -->
     <string name="companion_keyboard_label">Simple Keyboard</string>
     <string name="companion_subtype_en">English</string>
     <string name="companion_subtype_lg">Luganda</string>
@@ -8,4 +8,7 @@
     <string name="companion_capture_done">✓ Saved</string>
     <string name="companion_capture_unavailable">Open the chat first</string>
     <string name="companion_sos_done">✓ Sent</string>
+    <!-- The kinder wording, shown inside the keyboard: tap to use it. -->
+    <string name="companion_try_instead">Try: “%1$s”</string>
+    <string name="companion_take_out">Tap to take out %1$s</string>
 </resources>

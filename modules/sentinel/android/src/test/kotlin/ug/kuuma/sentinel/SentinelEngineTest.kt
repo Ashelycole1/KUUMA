@@ -161,6 +161,19 @@ class SentinelEngineTest {
         assertEquals("Classmate", capture.messages.last().senderDisplayName)
     }
 
+    @Test fun `a message seen again (re-posted, or after a restart) raises one flag`() {
+        engine().onNotification(notification("com.whatsapp", "Kato", "I will hurt you"))
+        now += 10 * 60_000L // past the in-memory window
+        val restarted = engine() // same sentinel.db
+        restarted.onNotification(notification("com.whatsapp", "Kato", "I will hurt you", at = now - 10 * 60_000L))
+        restarted.onNotification(notification("com.whatsapp", "Kato", "I will hurt you"))
+        assertEquals(1, payloads(Events.SENTINEL_MESSAGE_FLAGGED).size)
+        // A new message with the same words much later is a new message.
+        now += SentinelEngine.SCREENED_WINDOW + 1
+        restarted.onNotification(notification("com.whatsapp", "Kato", "I will hurt you"))
+        assertEquals(2, payloads(Events.SENTINEL_MESSAGE_FLAGGED).size)
+    }
+
     @Test fun `apps outside the parent's policy are ignored`() {
         val e = engine()
         e.onNotification(notification("com.instagram.android", "Someone", "I will hurt you"))
@@ -299,7 +312,7 @@ class SentinelEngineTest {
 
     @Test fun `messages Android hid are screened from the screen when the chat is opened`() {
         val e = engine()
-        // Android 15 hid this one (it carried a phone number); Kuuma only knows which chat it was.
+        // Android 15 hid this one (it carried a phone number); Nilinde only knows which chat it was.
         e.onHiddenNotification(notification("com.whatsapp", "Kato", "Sensitive notification content hidden"))
         assertTrue(payloads(Events.SENTINEL_MESSAGE_FLAGGED).isEmpty())
         val screen = ScreenNode(

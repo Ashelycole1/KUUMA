@@ -3,7 +3,7 @@
 
     <!-- /v1/guardian: pairing, alerts, approvals, heartbeat. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Android 13+: tells the child what Kuuma found. Declared in GuardianModule.permissions. -->
+    <!-- Android 13+: tells the child what Nilinde found. Declared in GuardianModule.permissions. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Scanning the pairing QR code (optional: debug builds can paste it instead). -->
     <uses-permission android:name="android.permission.CAMERA" />

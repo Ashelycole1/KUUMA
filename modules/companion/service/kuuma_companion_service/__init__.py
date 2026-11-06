@@ -1,1 +1,1 @@
-"""Kuuma Companion service."""
+"""Nilinde Companion service."""

@@ -1,4 +1,4 @@
-"""FastAPI app factory used by every Kuuma service.
+"""FastAPI app factory used by every Nilinde service.
 
     app = create_app("guardian", api_prefixes=["/v1/guardian"])
     app.include_router(my_router)

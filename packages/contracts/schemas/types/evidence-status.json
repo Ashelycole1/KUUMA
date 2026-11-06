@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/evidence-status.json",
+  "title": "EvidenceStatus",
+  "description": "A parent's request to see a case's messages. requested: waiting for the child. ready: the child allowed it and the messages are sealed for the parent. declined: the child said no. failed: the phone could not build it.",
+  "type": "string",
+  "enum": [
+    "requested",
+    "ready",
+    "declined",
+    "failed"
+  ]
+}

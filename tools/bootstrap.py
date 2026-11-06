@@ -163,7 +163,7 @@ def ensure_flutter() -> Path:
         ).stdout
         try:
             if json.loads(ver).get("frameworkVersion") != TC["flutter"]:
-                print(f"  note: Flutter on PATH is not {TC['flutter']}; Kuuma pins {TC['flutter']}")
+                print(f"  note: Flutter on PATH is not {TC['flutter']}; Nilinde pins {TC['flutter']}")
         except ValueError:
             pass
         return Path(found).parent.parent
@@ -289,7 +289,7 @@ def write_dotenv() -> None:
 
 
 def main() -> int:
-    print(f"Kuuma bootstrap — toolchains in {TOOLCHAINS}")
+    print(f"Nilinde bootstrap — toolchains in {TOOLCHAINS}")
     TOOLCHAINS.mkdir(parents=True, exist_ok=True)
     uv = ensure_uv()
     jdk = ensure_jdk()

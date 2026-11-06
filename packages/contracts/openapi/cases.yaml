@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Kuuma Cases API
+  title: Nilinde Cases API
   version: 1.0.0
   description: Owned by the Casefile build. Evidence leaves the phone only as encrypted bundles.
 servers:

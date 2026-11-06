@@ -1,4 +1,4 @@
-# Kuuma — the one place every tool and library version is pinned.
+# Nilinde — the one place every tool and library version is pinned.
 #
 # Language-specific manifests (gradle/libs.versions.toml, pubspec.yaml files,
 # pyproject.toml files, package.json files) must agree with this file.

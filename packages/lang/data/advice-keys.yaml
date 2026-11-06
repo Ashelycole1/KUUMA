@@ -11,7 +11,7 @@ values:
     text: { en: "This is not your fault, and you are not alone." }
   - id: advice.general.save_evidence
     categories: []
-    text: { en: "Kuuma can keep a safe copy of these messages in case you need them later." }
+    text: { en: "Nilinde can keep a safe copy of these messages in case you need them later." }
   - id: advice.general.block_sender
     categories: [insult, harassment, hate, sexual_harassment]
     text: { en: "You can block this person in the app." }
@@ -36,3 +36,6 @@ values:
   - id: advice.reply.no_location
     categories: []
     text: { en: "Think twice before sharing where you are or where you live." }
+  - id: advice.reply.be_kind
+    categories: []
+    text: { en: "This may sound hurtful. Read it once more before sending." }
