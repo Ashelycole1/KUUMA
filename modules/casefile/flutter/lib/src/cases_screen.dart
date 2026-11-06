@@ -41,7 +41,12 @@ class _CasesScreenState extends State<CasesScreen> {
     }
     return RefreshIndicator(
       onRefresh: _load,
-      child: ListView(children: [
+      child: ListView(padding: const EdgeInsets.only(bottom: KuumaSpace.xl), children: [
+        KuumaHero(
+          icon: Icons.lock_person_outlined,
+          title: context.t('casefile.cases.intro_title'),
+          message: context.t('casefile.cases.intro_body'),
+        ),
         for (final c in cases)
           KuumaCard(
             leading: const Icon(Icons.person_outline),

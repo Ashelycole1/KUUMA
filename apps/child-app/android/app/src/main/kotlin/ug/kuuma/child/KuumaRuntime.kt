@@ -6,6 +6,7 @@ import ug.kuuma.ai.runtime.DummyHarmClassifier
 import ug.kuuma.casefile.CasefileConfig
 import ug.kuuma.casefile.CasefileModule
 import ug.kuuma.casefile.HttpCasesApi
+import ug.kuuma.casefile.HttpTranslator
 import ug.kuuma.companion.CompanionModule
 import ug.kuuma.contracts.ContractJson
 import ug.kuuma.contracts.Envelope
@@ -80,6 +81,7 @@ object KuumaRuntime {
             CasefileConfig(
                 androidContext = app,
                 api = apiBaseUrl?.let { HttpCasesApi(it, headers) },
+                translator = apiBaseUrl?.let { HttpTranslator(it, headers) },
                 shareBaseUrl = (apiBaseUrl ?: "https://verify.kuuma.ug") + "/verify",
             ),
         )

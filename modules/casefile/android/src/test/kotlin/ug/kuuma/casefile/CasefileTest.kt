@@ -18,6 +18,7 @@ import org.junit.Test
 import ug.kuuma.ai.runtime.DummyHarmClassifier
 import ug.kuuma.casefile.export.RootTimestamp
 import ug.kuuma.casefile.export.ShareCrypto
+import ug.kuuma.casefile.export.Translator
 import ug.kuuma.casefile.vault.ChainProblem
 import ug.kuuma.casefile.vault.InMemoryVaultStore
 import ug.kuuma.casefile.vault.ItemKind
@@ -37,6 +38,8 @@ import ug.kuuma.contracts.RecipientType
 import ug.kuuma.contracts.ShareRequest
 import ug.kuuma.contracts.ShareResponse
 import ug.kuuma.contracts.ShareStatus
+import ug.kuuma.contracts.TranslateRequest
+import ug.kuuma.contracts.TranslateResponse
 import ug.kuuma.contracts.testing.ContractAssert
 import ug.kuuma.core.bus.EventBus
 import ug.kuuma.core.crypto.Base64Url
@@ -167,12 +170,32 @@ class CasefileEngineTest {
         }
     }
 
+    /** Stands in for /v1/ai/translate: records what left the phone, can go offline. */
+    private class FakeTranslator : Translator {
+        val sent = mutableListOf<TranslateRequest>()
+        var online = true
+        override fun translate(request: TranslateRequest): TranslateResponse {
+            if (!online) throw java.io.IOException("offline")
+            sent += request
+            return TranslateResponse(
+                "EN(${request.text})",
+                request.from,
+                request.to,
+                true,
+                "sunflower-14b:q4",
+                "translate@1",
+                1200
+            )
+        }
+    }
+
     private class Captured(val type: EventType<*>, val env: Envelope<*>)
 
     private val bus = EventBus({ "7a9e2c41-5d3b-4f6a-8e1c-2b3d4e5f6a7b" })
     private val events = mutableListOf<Captured>()
     private val store = InMemoryVaultStore()
     private val api = Api()
+    private val translator = FakeTranslator()
     private val fakes = FakeSet(DummyHarmClassifier(), OpaqueRefs(ByteArray(32) { 5 }))
     private lateinit var engine: CasefileEngine
 
@@ -182,7 +205,7 @@ class CasefileEngineTest {
         fakes.casefile.enabled = false // the real vault replaces Casefile's fake
         val host = Host(Namespace.CASEFILE)
         registry.register(host)
-        engine = CasefileEngine(host.ctx.publisher, store, TestSigner(), api)
+        engine = CasefileEngine(host.ctx.publisher, store, TestSigner(), api, translator = translator)
         bus.subscribe(Events.SENTINEL_MESSAGE_FLAGGED) { engine.onFlagged(it.payload) }
         bus.subscribe(Events.SENTINEL_FLAG_UPDATED) { engine.onFlagUpdated(it.payload) }
         bus.subscribe(Events.SENTINEL_CAPTURE_READY) { engine.onCapture(it.payload) }
@@ -219,6 +242,45 @@ class CasefileEngineTest {
                     Events.CASEFILE_CASE_UPDATED
             }.env as Envelope<ug.kuuma.contracts.CasefileCaseUpdatedPayload>
         )
+    }
+
+    @Test fun `non-English messages get labelled machine translations beside the evidence`() {
+        play("luganda-insults")
+        val case = engine.cases().single()
+        val file = engine.export(case.caseId, RecipientType.POLICE)
+        val translations = file.json["translations"]!!.jsonArray
+        assertEquals(translator.sent.size, translations.size)
+        assertTrue(translations.isNotEmpty())
+        val t = translations.first().jsonObject
+        assertEquals("lg", t["from"]!!.jsonPrimitive.content)
+        assertEquals("true", t["machineTranslated"]!!.jsonPrimitive.content)
+        assertEquals("translate@1", t["promptVersion"]!!.jsonPrimitive.content)
+        // Names left the phone as placeholders and were put back on the phone.
+        assertTrue(translator.sent.none { "invented" in it.text })
+        val pdf = String(file.pdf, Charsets.ISO_8859_1)
+        assertTrue(pdf.contains("Machine translation from Luganda"))
+        assertTrue(pdf.contains("sunflower-14b:q4, translate@1"))
+        // The exhibits are untouched: the sealed originals are still the evidence.
+        assertTrue(engine.verify().intact)
+        assertTrue(file.json["exhibits"]!!.jsonArray.none { "EN(" in it.toString() })
+        // A second export reuses the translations, even offline.
+        val before = translator.sent.size
+        translator.online = false
+        val again = engine.export(case.caseId, RecipientType.SCHOOL)
+        assertEquals(before, translator.sent.size)
+        assertEquals(translations.size, again.json["translations"]!!.jsonArray.size)
+    }
+
+    @Test fun `offline export works without translations, English is never sent`() {
+        translator.online = false
+        play("luganda-insults")
+        val luganda = engine.export(engine.cases().single().caseId, RecipientType.POLICE)
+        assertEquals(0, luganda.json["translations"]!!.jsonArray.size)
+        translator.online = true
+        play("english-threat")
+        engine.cases().forEach { engine.export(it.caseId, RecipientType.POLICE) }
+        assertTrue(translator.sent.isNotEmpty())
+        assertTrue(translator.sent.all { it.from.wire == "lg" })
     }
 
     @Test fun `grooming is tracked by stage`() {

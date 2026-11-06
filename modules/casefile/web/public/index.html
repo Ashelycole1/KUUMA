@@ -4,93 +4,359 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
+    <meta name="color-scheme" content="light dark" />
     <title>Verify a Kuuma case file</title>
+    <!-- Design tokens: design-system/kuuma/MASTER.md. No web fonts: the page loads nothing but itself. -->
     <style>
       :root {
-        --fg: #1d2623;
-        --muted: #5b6b66;
-        --ok: #2f6f62;
-        --bad: #b4584b;
-        --bg: #f7f6f2;
-        --card: #fff;
+        --brand: #8b5cf6;
+        --primary: #7c3aed;
+        --on-primary: #ffffff;
+        --accent: #047857;
+        --bg: #faf5ff;
+        --card: #ffffff;
+        --muted-bg: #f3eefb;
+        --fg: #2e1065;
+        --muted: #5b5470;
+        --border: #e9e2f7;
+        --ok: #047857;
+        --bad: #a8433a;
+        --warn: #7f560b;
+        --radius: 16px;
+        --font: "Nunito Sans", ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --font-heading: "Varela Round", ui-rounded, var(--font);
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --fg: #e6ece9;
-          --muted: #9db0aa;
-          --bg: #121715;
-          --card: #1b2220;
+          --brand: #c4b5fd;
+          --primary: #c4b5fd;
+          --on-primary: #1e1038;
+          --accent: #6ee7b7;
+          --bg: #15121f;
+          --card: #1f1a2e;
+          --muted-bg: #2a2440;
+          --fg: #ede9fe;
+          --muted: #a9a3bd;
+          --border: #3a3354;
+          --ok: #6ee7b7;
+          --bad: #f09a8f;
+          --warn: #e3b866;
         }
+      }
+      * {
+        box-sizing: border-box;
       }
       body {
         margin: 0;
-        font:
-          16px/1.5 system-ui,
-          sans-serif;
+        font: 16px/1.5 var(--font);
         color: var(--fg);
         background: var(--bg);
       }
       main {
-        max-width: 44rem;
+        max-width: 42rem;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 1.5rem 1rem 3rem;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        font: 600 1.05rem var(--font-heading);
+      }
+      header svg {
+        color: var(--brand);
+      }
+      h1,
+      h2 {
+        font-family: var(--font-heading);
+        font-weight: 400;
+        line-height: 1.25;
       }
       h1 {
-        font-size: 1.6rem;
+        font-size: clamp(1.6rem, 5vw, 2rem);
         margin: 0 0 0.5rem;
+      }
+      h2 {
+        font-size: 1.35rem;
+        margin: 0;
       }
       p.lead {
         color: var(--muted);
-        margin-top: 0;
+        margin: 0 0 1.5rem;
       }
       .card {
         background: var(--card);
-        border-radius: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: 1.25rem;
         margin: 1rem 0;
       }
+      .checks {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.75rem;
+      }
+      .checks li {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+      }
+      .dot {
+        flex: none;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--muted-bg);
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+      #status {
+        color: var(--muted);
+        min-height: 1.5rem;
+      }
+      #result {
+        border-left-width: 6px;
+      }
       #result.ok {
-        border-left: 6px solid var(--ok);
+        border-left-color: var(--ok);
       }
       #result.bad {
-        border-left: 6px solid var(--bad);
+        border-left-color: var(--bad);
       }
-      #verdict {
-        margin: 0;
-        font-size: 1.3rem;
+      .verdict {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .verdict .icon {
+        flex: none;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+      }
+      #result.ok .icon {
+        background: color-mix(in srgb, var(--ok) 14%, transparent);
+        color: var(--ok);
+      }
+      #result.bad .icon {
+        background: color-mix(in srgb, var(--bad) 14%, transparent);
+        color: var(--bad);
+      }
+      #result.ok .icon-bad,
+      #result.bad .icon-ok {
+        display: none;
+      }
+      details {
+        margin-top: 1rem;
+        border-top: 1px solid var(--border);
+        padding-top: 0.75rem;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--primary);
+        font-weight: 700;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
       }
       #details {
         white-space: pre-wrap;
         color: var(--muted);
         font:
-          13px/1.5 ui-monospace,
+          13px/1.6 ui-monospace,
+          SFMono-Regular,
+          Consolas,
           monospace;
         word-break: break-all;
+        margin: 0.5rem 0 0;
       }
       a#pdf {
-        display: inline-block;
-        margin-top: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 48px;
+        margin-top: 1rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 999px;
+        background: var(--primary);
+        color: var(--on-primary);
+        text-decoration: none;
+        font-weight: 700;
+      }
+      a#pdf[hidden] {
+        display: none;
+      }
+      .drop {
+        display: block;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s ease-out,
+          background-color 0.2s ease-out;
+      }
+      .drop:hover,
+      .drop:focus-within {
+        border-color: var(--brand);
+        background: var(--muted-bg);
+      }
+      .drop strong {
+        color: var(--primary);
+      }
+      .drop input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+      }
+      :focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 2px;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 2rem;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
       }
     </style>
   </head>
   <body>
     <main>
+      <header>
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
+          <path d="M9 12l2 2 4-4" />
+        </svg>
+        <span>Kuuma</span>
+      </header>
+
       <h1>Verify a Kuuma case file</h1>
       <p class="lead">
-        Checks that every exhibit is exactly what was sealed on the victim's phone, that no item was added,
-        removed or reordered, and when the evidence was timestamped. Nothing you open here is uploaded.
+        Check that this evidence is exactly what was sealed on the victim's phone. Everything happens in your
+        browser: nothing you open here is uploaded.
       </p>
-      <p id="status"></p>
-      <section id="result" class="card" hidden>
-        <h2 id="verdict"></h2>
+
+      <p id="status" role="status" aria-live="polite"></p>
+
+      <section id="result" class="card" hidden aria-live="polite">
+        <div class="verdict">
+          <span class="icon" aria-hidden="true">
+            <svg
+              class="icon-ok"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12l5 5 9-10" />
+            </svg>
+            <svg
+              class="icon-bad"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 8v5M12 17h.01" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </span>
+          <h2 id="verdict"></h2>
+        </div>
         <p id="summary"></p>
-        <p id="details"></p>
-        <a id="pdf" hidden>Download the case file (PDF)</a>
+        <a id="pdf" hidden>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 4v11M7 10l5 5 5-5M5 20h14" />
+          </svg>
+          Download the case file (PDF)
+        </a>
+        <details>
+          <summary>Technical details</summary>
+          <p id="details"></p>
+        </details>
       </section>
+
       <section class="card">
-        <label for="file">Or choose an exported case file (<code>.json</code>):</label><br />
-        <input id="file" type="file" accept="application/json,.json" />
+        <label class="drop" for="file">
+          <strong>Choose an exported case file</strong><br />
+          <span>a <code>.json</code> file from Kuuma</span>
+          <input id="file" type="file" accept="application/json,.json" />
+        </label>
       </section>
+
+      <section class="card" aria-labelledby="checks-title">
+        <h2 id="checks-title">What this checks</h2>
+        <ol class="checks" style="margin-top: 1rem">
+          <li>
+            <span class="dot" aria-hidden="true">1</span
+            ><span>Every exhibit matches the hash sealed on the phone.</span>
+          </li>
+          <li>
+            <span class="dot" aria-hidden="true">2</span
+            ><span
+              >No item was added, removed or reordered: each link of the chain is signed by the same
+              device.</span
+            >
+          </li>
+          <li>
+            <span class="dot" aria-hidden="true">3</span
+            ><span>When the evidence was timestamped, if the phone was online.</span>
+          </li>
+          <li>
+            <span class="dot" aria-hidden="true">4</span
+            ><span
+              >Translations, where present, are machine-made and marked as such. The original messages are the
+              evidence.</span
+            >
+          </li>
+        </ol>
+      </section>
+
+      <footer>Kuuma keeps children safe online. This page reads only the file or link you give it.</footer>
     </main>
     <script type="module" src="/verify/assets/page.js"></script>
   </body>
