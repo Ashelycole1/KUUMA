@@ -229,6 +229,17 @@ class CloudQueueTest {
         assertEquals(9, g.analysed.size)
     }
 
+    @Test fun `a message still waiting for its first verdict is sent at once, even on mobile data`() {
+        val g = Gateway()
+        val q = CloudQueue(g, { _, _ -> })
+        q.enqueue(CloudJob.Analyse("u", AnalyseRequest("oli otya"), 0, urgent = true))
+        q.pump(1, DeviceState(unmetered = false))
+        assertEquals(1, g.analysed.size)
+        // Low battery still holds everything.
+        q.enqueue(CloudJob.Analyse("u2", AnalyseRequest("oli otya"), 2, urgent = true))
+        assertEquals(CloudQueue.HOLD_RECHECK, q.pump(3, DeviceState(batteryPercent = 10, charging = false)))
+    }
+
     @Test fun `backs off on failure and never grows without bound`() {
         val g = Gateway(fail = true)
         val q = CloudQueue(g, { _, _ -> }, maxJobs = 5)

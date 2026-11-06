@@ -72,7 +72,7 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.alerts.avoid': 'What to avoid',
     // Approvals
     'guardian.approvals.empty_title': 'No requests',
-    'guardian.approvals.empty_body': 'When your child wants to share a case, you approve it here.',
+    'guardian.approvals.empty_body': 'Reports you send to a school, the police or a lawyer appear here.',
     'guardian.approvals.share': 'Wants to share a case with: {recipient}',
     'guardian.approvals.approve': 'Approve',
     'guardian.approvals.decline': 'Decline',

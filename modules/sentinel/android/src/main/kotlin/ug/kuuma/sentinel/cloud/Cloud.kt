@@ -50,7 +50,13 @@ object BudgetPolicy {
 sealed class CloudJob {
     abstract val createdAt: Long
 
-    data class Analyse(val ticket: String, val request: AnalyseRequest, override val createdAt: Long) : CloudJob()
+    /** [urgent]: nothing is flagged until the cloud answers (the phone was unsure), so it never waits for a batch. */
+    data class Analyse(
+        val ticket: String,
+        val request: AnalyseRequest,
+        override val createdAt: Long,
+        val urgent: Boolean = false
+    ) : CloudJob()
     data class Feedback(val request: FeedbackRequest, override val createdAt: Long) : CloudJob()
 }
 
@@ -93,8 +99,10 @@ class CloudQueue(
             Budget.HOLD -> return HOLD_RECHECK
             Budget.BATCH -> {
                 // Send a batch once it is full, or once its oldest job has waited the interval.
+                // A message waiting for its first verdict is sent at once: a few hundred bytes.
                 val waited = now - jobs.first().createdAt
-                if (jobs.size < BudgetPolicy.BATCH_SIZE && waited < BudgetPolicy.BATCH_INTERVAL_MILLIS) {
+                val urgent = jobs.any { it is CloudJob.Analyse && it.urgent }
+                if (!urgent && jobs.size < BudgetPolicy.BATCH_SIZE && waited < BudgetPolicy.BATCH_INTERVAL_MILLIS) {
                     return BudgetPolicy.BATCH_INTERVAL_MILLIS - waited
                 }
                 BudgetPolicy.BATCH_SIZE

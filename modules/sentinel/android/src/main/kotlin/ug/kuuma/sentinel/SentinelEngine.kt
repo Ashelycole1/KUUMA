@@ -333,7 +333,8 @@ class SentinelEngine(
         }.filter { it.isNotBlank() }
         val ticket = UUID.randomUUID().toString()
         pending[ticket] = Pending(m, language, flagId)
-        queue.enqueue(CloudJob.Analyse(ticket, AnalyseRequest(text, language, m.appSource, context, onDevice), clock()))
+        val request = AnalyseRequest(text, language, m.appSource, context, onDevice)
+        queue.enqueue(CloudJob.Analyse(ticket, request, clock(), urgent = flagId == null))
     }
 
     private fun onCloudVerdict(ticket: String, response: AnalyseResponse) {
