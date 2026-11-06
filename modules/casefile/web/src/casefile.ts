@@ -1,5 +1,5 @@
 /**
- * Verifies a Kuuma case file (format kuuma-casefile/1) exactly as the phone's vault built it:
+ * Verifies a Nilinde case file (format kuuma-casefile/1) exactly as the phone's vault built it:
  *
  *   itemHash  = sha256("kuuma-vault/1\n" + kind + "\n" + content)
  *   chainHash = sha256(prevHash + "|" + itemHash + "|" + index), first prevHash = 64 zeros
@@ -215,7 +215,7 @@ export async function decryptShare(
   keyB64Url: string,
 ): Promise<{ case: CaseFileJson; pdf: Uint8Array }> {
   const magic = new TextDecoder().decode(blob.slice(0, 4));
-  if (magic !== "KCF1") throw new Error("not a Kuuma share");
+  if (magic !== "KCF1") throw new Error("not a Nilinde share");
   const key = await crypto.subtle.importKey(
     "raw",
     base64ToBytes(keyB64Url) as BufferSource,

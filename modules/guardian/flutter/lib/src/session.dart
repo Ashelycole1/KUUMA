@@ -116,12 +116,14 @@ class ParentSession extends ChangeNotifier {
 
   Future<void> _setPin(String pin) async {
     final salt = randomBytes(16);
-    await vault.write('pin', '${b64url(salt)}:${b64url(_hashPin(pin, salt))}');
+    await vault.write('pin', '${b64url(salt)}:${b64url(await _hashPin(pin, salt))}');
   }
 
-  Uint8List _hashPin(String pin, Uint8List salt) {
-    final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))..init(Pbkdf2Parameters(salt, pinIterations, 32));
-    return kdf.process(Uint8List.fromList(utf8.encode(pin)));
+  /// PBKDF2 in pure Dart takes seconds on a cheap phone, so real hashes run off the UI
+  /// thread (otherwise the keypad freezes and taps are lost). Test-sized ones stay inline.
+  Future<Uint8List> _hashPin(String pin, Uint8List salt) {
+    final job = (pin: pin, salt: salt, iterations: pinIterations);
+    return pinIterations < 1000 ? Future.value(_pbkdf2(job)) : compute(_pbkdf2, job);
   }
 
   Future<bool> verifyPin(String pin) async {
@@ -129,7 +131,7 @@ class ParentSession extends ChangeNotifier {
     if (stored == null) return false;
     final parts = stored.split(':');
     final expected = parts[1];
-    final actual = b64url(_hashPin(pin, b64urlDecode(parts[0])));
+    final actual = b64url(await _hashPin(pin, b64urlDecode(parts[0])));
     var diff = expected.length ^ actual.length;
     for (var i = 0; i < expected.length && i < actual.length; i++) {
       diff |= expected.codeUnitAt(i) ^ actual.codeUnitAt(i);
@@ -309,4 +311,9 @@ class ParentSession extends ChangeNotifier {
     await api.decide(_token, approval.approvalId, decision, signature);
     await refresh();
   }
+}
+
+Uint8List _pbkdf2(({String pin, Uint8List salt, int iterations}) job) {
+  final kdf = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))..init(Pbkdf2Parameters(job.salt, job.iterations, 32));
+  return kdf.process(Uint8List.fromList(utf8.encode(job.pin)));
 }

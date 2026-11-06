@@ -24,7 +24,7 @@ Envelope<SentinelMessageFlaggedPayload> flagged() => const Envelope(
     );
 
 void main() {
-  test('20 events', () => expect(Events.all, hasLength(20)));
+  test('22 events', () => expect(Events.all, hasLength(22)));
 
   test('valid event passes and round-trips', () {
     final json = flagged().toJson();

@@ -25,7 +25,7 @@ if (-not $ollama) {
 }
 $exe = if ($ollama.Source) { $ollama.Source } else { $ollama.FullName }
 & $exe --version
-# Keep the model loaded between requests while working (read by Ollama, not by Kuuma).
+# Keep the model loaded between requests while working (read by Ollama, not by Nilinde).
 [Environment]::SetEnvironmentVariable("OLLAMA_KEEP_ALIVE", "30m", "User")
 
 Write-Host "2/4 Download $file (resumes if stopped)"

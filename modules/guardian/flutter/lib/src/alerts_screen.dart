@@ -133,20 +133,29 @@ class SeverityTrend extends StatelessWidget {
             Text(context.t('guardian.alerts.trend'), style: theme.textTheme.titleSmall),
             const SizedBox(height: 12),
             SizedBox(
-              height: 88,
-              child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              height: 96,
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 for (var i = 0; i < days.length; i++)
                   Expanded(
-                    child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                      for (final s in Severity.values.reversed)
-                        if ((counts[i][s] ?? 0) > 0)
-                          Container(
-                            height: 64 * counts[i][s]! / most,
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            color: KuumaColors.of(context).severity(s),
-                          ),
+                    child: Column(children: [
+                      // The bars get whatever height the day label leaves, so large system
+                      // font sizes shrink the bars instead of overflowing the card.
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, box) => Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                            for (final s in Severity.values.reversed)
+                              if ((counts[i][s] ?? 0) > 0)
+                                Container(
+                                  height: (box.maxHeight * counts[i][s]! / most).floorToDouble(),
+                                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                                  color: KuumaColors.of(context).severity(s),
+                                ),
+                          ]),
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(weekday[days[i].weekday % 7], style: theme.textTheme.labelSmall),
+                      Text(weekday[days[i].weekday % 7],
+                          style: theme.textTheme.labelSmall, maxLines: 1, overflow: TextOverflow.clip),
                     ]),
                   ),
               ]),

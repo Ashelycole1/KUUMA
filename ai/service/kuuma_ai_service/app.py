@@ -19,6 +19,7 @@ from kuuma_ai_service.gate import HIGH, LOW, BudgetExceededError, ModelGate, Que
 from kuuma_contracts.testing import ContractViolation, validate_body
 from kuuma_llm.cache import ResultCache
 from kuuma_llm.config import AiConfig
+from kuuma_llm.judge import judge
 from kuuma_llm.language_gate import needs_sunflower
 from kuuma_llm.ollama import ModelTimeoutError, ModelUnavailableError, OpenAICompatibleClient
 from kuuma_llm.scrub import UnsafeInputError, check_safe
@@ -176,7 +177,10 @@ def install_sunflower(app: FastAPI, sunflower: SunflowerClient, config: AiConfig
             "verdictSource": "on_device",
         }
         interpreted = False
-        if needs_sunflower(text, language):
+        # The phone was unsure (it asks before flagging) unless it is confident the message is
+        # harmful; then its verdict stands and Sunflower only explains the message.
+        sure = bool(on_device.get("harmful")) and float(on_device.get("confidence", 0)) >= SURE_HARMFUL
+        if needs_sunflower(text, language) or not sure:
             try:
                 r = await gate.run(HIGH, lambda: sunflower.interpret(text, context), config.analyse_budget)
                 out["interpretation"] = {
@@ -185,6 +189,10 @@ def install_sunflower(app: FastAPI, sunflower: SunflowerClient, config: AiConfig
                     "promptVersion": r.prompt_version,
                 }
                 interpreted = True
+                if not sure:
+                    # Decide from what the message means (judge.py), in any language.
+                    out["verdict"] = judge(r.english_meaning)
+                    out["verdictSource"] = "reasoning_model"
             except MODEL_ERRORS as e:
                 # The phone's verdict already stands; the interpretation is a bonus.
                 log.warning(
@@ -195,6 +203,10 @@ def install_sunflower(app: FastAPI, sunflower: SunflowerClient, config: AiConfig
             "ai.analyse.done", model=sunflower.model, interpreted=interpreted, latency_ms=out["latencyMs"]
         )
         return _checked("api/analyse-response.json", out)
+
+
+# An on-device verdict this sure that a message is harmful is kept as it is.
+SURE_HARMFUL = 0.9
 
 
 def build_app(config: AiConfig | None = None, sunflower: SunflowerClient | None = None) -> FastAPI:

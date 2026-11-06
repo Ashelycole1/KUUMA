@@ -19,7 +19,8 @@ class KuumaParentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Kuuma Parent',
+        title: 'Nilinde Parent',
+        debugShowCheckedModeBanner: false,
         theme: KuumaTheme.light(),
         darkTheme: KuumaTheme.dark(),
         supportedLocales: kuumaLocales,

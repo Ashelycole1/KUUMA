@@ -1,8 +1,8 @@
-# Kuuma — Sunflower Integration Design
+# Nilinde — Sunflower Integration Design
 
 Nov 6, 2026 · @Niwasiima Ashelycole · revised the same day to match the contracts and the code
 
-This document is how Sunbird AI's Sunflower model is wired into Kuuma's code. Sunflower runs locally on SURFACE-02 through Ollama, and only the AI build talks to it: modules call the AI service, the AI service calls `kuuma-llm`, and `kuuma-llm` calls Sunflower.
+This document is how Sunbird AI's Sunflower model is wired into Nilinde's code. Sunflower runs locally on SURFACE-02 through Ollama, and only the AI build talks to it: modules call the AI service, the AI service calls `kuuma-llm`, and `kuuma-llm` calls Sunflower.
 
 ## At a glance
 
@@ -12,7 +12,7 @@ Every request goes through the AI service and `kuuma-llm`, which redact-check, f
 
 ## Scope and goals
 
-Sunflower is Kuuma's language specialist: it turns Luganda, Runyankole, Swahili and mixed-language messages into clear English meaning, and produces translations. It never decides on its own whether a message is harmful.
+Sunflower is Nilinde's language specialist: it turns Luganda, Runyankole, Swahili and mixed-language messages into clear English meaning, and produces translations. It never decides on its own whether a message is harmful.
 
 **Sunflower does:**
 
@@ -119,7 +119,7 @@ uv run python ai\local\sunflower\smoke_test.py    # real model; prints answers a
 
 Record the smoke test's timings. They set the budgets in the Reliability section.
 
-### Step 4 — Configure Kuuma
+### Step 4 — Configure Nilinde
 
 In `.env` at the repo root (git-ignored; `.env.example` lists the variables):
 
@@ -271,7 +271,7 @@ Measured on SURFACE-02 on Nov 6: Sunflower is a translation model first. Given a
 - **Temperature 0** for translation; **0.2** for interpretation. Small `max_tokens` (200 and 120): at about 2 tokens a second, long answers are slow.
 - **Keep Sunbird's system message** from the Modelfile. Task instructions go in the user turn.
 - **One line per message:** each message is flattened to a single line, so it cannot add lines that look like more of the prompt. No fence markers: Sunflower would translate them too.
-- **Placeholders in Sunflower's own tags:** the phone writes `[CONTACT_n]`, `[PHONE_n]`, `[EMAIL_n]`, `[HANDLE_n]`, but Sunflower rewrites them to the tags it was trained on (`[NAME_n]`, `[NUMBER_n]`). Kuuma sends `[NAME_n]` and `[NUMBER_n]` and maps them back; the placeholder check then runs on Kuuma's tags.
+- **Placeholders in Sunflower's own tags:** the phone writes `[CONTACT_n]`, `[PHONE_n]`, `[EMAIL_n]`, `[HANDLE_n]`, but Sunflower rewrites them to the tags it was trained on (`[NAME_n]`, `[NUMBER_n]`). Nilinde sends `[NAME_n]` and `[NUMBER_n]` and maps them back; the placeholder check then runs on Nilinde's tags.
 
 ### Registry
 
@@ -317,7 +317,7 @@ Tests make this concrete: the scrub suite refuses real-looking Ugandan numbers a
 
 ## Reliability on SURFACE-02
 
-Sunflower-14B on one Surface handles one request at a time and takes seconds per answer, so the design queues work, caches results and always has a fallback. Kuuma never waits on Sunflower to protect a child: the on-device verdict and alerts work without it.
+Sunflower-14B on one Surface handles one request at a time and takes seconds per answer, so the design queues work, caches results and always has a fallback. Nilinde never waits on Sunflower to protect a child: the on-device verdict and alerts work without it.
 
 ### Concurrency and queueing
 
@@ -371,7 +371,7 @@ All settings come from environment variables in the git-ignored `.env` (listed i
 | `KUUMA_AI_TRANSLATE_BUDGET` | `180` | Seconds a translation may wait and run |
 | `KUUMA_AI_QUEUE_LIMIT` | `20` | Max waiting analyses |
 | `KUUMA_AI_CACHE_TTL_DAYS` | `7` | Cache lifetime |
-| `OLLAMA_KEEP_ALIVE` | `30m` | Set on SURFACE-02, read by Ollama, not by Kuuma |
+| `OLLAMA_KEEP_ALIVE` | `30m` | Set on SURFACE-02, read by Ollama, not by Nilinde |
 
 | Where | `KUUMA_AI_MODE` | Sunflower runs on |
 | --- | --- | --- |
@@ -384,14 +384,14 @@ All settings come from environment variables in the git-ignored `.env` (listed i
 
 ## Testing and evaluation
 
-Three levels: unit tests prove the code is safe, the smoke test proves the model runs, and the evaluation set proves Sunflower is good enough for Kuuma's messages.
+Three levels: unit tests prove the code is safe, the smoke test proves the model runs, and the evaluation set proves Sunflower is good enough for Nilinde's messages.
 
 | Level | What | Runs where | Status |
 | --- | --- | --- | --- |
 | Unit | `packages/kuuma-llm/tests`: guard, placeholders and tag mapping, prompts, one-line messages, `<think>` stripping, cache, errors, health, language gate (mocked HTTP) | CI and any laptop | Passing |
 | Service | `ai/service/tests`: endpoints in sunflower mode with a fake model, fallbacks, queue order and limits, budgets, no text in logs; stub mode answers contract-valid samples | CI and any laptop | Passing |
 | Smoke | `ai/local/sunflower/smoke_test.py`: real translations and interpretations with timings | SURFACE-02 | Passing (Nov 6) |
-| Evaluation | Labelled Kuuma test set, scored per language | SURFACE-02 | Waits for the dataset |
+| Evaluation | Labelled Nilinde test set, scored per language | SURFACE-02 | Waits for the dataset |
 
 ### Evaluation set for Sunflower
 

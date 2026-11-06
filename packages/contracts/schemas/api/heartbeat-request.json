@@ -31,7 +31,7 @@
         "$ref": "../types/permission-name.json"
       },
       "maxItems": 20,
-      "description": "Permissions Kuuma needs that are currently off."
+      "description": "Permissions Nilinde needs that are currently off."
     }
   }
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kuuma_contracts/kuuma_contracts.dart';
 import 'package:kuuma_ui/kuuma_ui.dart';
@@ -181,10 +180,9 @@ class _GuardianSetupScreenState extends State<GuardianSetupScreen> with WidgetsB
               textAlign: TextAlign.center),
         ),
       const SizedBox(height: 12),
-      // Debug builds only (emulators have no camera): paste the text the parent app copied.
-      if (kDebugMode)
-        TextButton(
-            key: const Key('wizard-manual'), onPressed: _manualCode, child: Text(context.t('guardian.wizard.paste'))),
+      // No camera (or both apps on one phone): paste the text the parent app copied.
+      TextButton(
+          key: const Key('wizard-manual'), onPressed: _manualCode, child: Text(context.t('guardian.wizard.paste'))),
     ]);
   }
 

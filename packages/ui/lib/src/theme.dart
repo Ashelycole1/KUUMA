@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kuuma_contracts/kuuma_contracts.dart';
 
-/// Kuuma's design tokens. Source of truth: design-system/kuuma/MASTER.md.
+/// Nilinde's design tokens. Source of truth: design-system/kuuma/MASTER.md.
 ///
 /// Soft lavender and wellness green, calm and never alarming. Severity colours stay muted so a
 /// glance at the screen by someone else does not reveal much, and always come with a text label.

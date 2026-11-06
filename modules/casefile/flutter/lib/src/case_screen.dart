@@ -23,6 +23,8 @@ class _CaseScreenState extends State<CaseScreen> {
   List<Map<Object?, Object?>> _shares = const [];
   final Set<int> _revealed = {};
   String? _notice;
+  String? _link; // share link, after a report
+  String? _download; // content URI in Downloads, after Save as PDF
   bool? _intact;
   bool _busy = false;
 
@@ -65,11 +67,28 @@ class _CaseScreenState extends State<CaseScreen> {
         final r = await widget.vault
             .call<Map<Object?, Object?>>('export', {'caseId': widget.caseId, 'recipientType': 'lawyer'});
         if (!mounted || r == null) return;
+        final download = r['downloadUri'] as String?;
         setState(() {
           _intact = null;
-          _notice = context.t('casefile.export.done');
+          _link = null;
+          _download = download;
+          _notice = context.t(download == null ? 'casefile.export.done' : 'casefile.export.downloaded');
         });
         await _load(); // translations made for the file now show in the timeline
+        if (download != null) await _open();
+      });
+
+  Future<void> _open() async {
+    final ok = await widget.vault.call<bool>('openFile', {'uri': _download});
+    if (ok != true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.t('casefile.export.no_viewer'))));
+    }
+  }
+
+  /// The phone's share menu with the link, so the report goes straight to the recipient.
+  Future<void> _send() => widget.vault.call<bool>('sendLink', {
+        'text': context.t('casefile.share.message', {'link': _link!}),
+        'title': context.t('casefile.share.send'),
       });
 
   Future<void> _share() async {
@@ -102,14 +121,20 @@ class _CaseScreenState extends State<CaseScreen> {
       final shares = await widget.vault.call<List<Object?>>('shares', {'caseId': widget.caseId}) ?? const [];
       if (!mounted) return;
       final share = shares.cast<Map<Object?, Object?>>().where((s) => s['requestId'] == requestId).firstOrNull;
+      final link = share?['status'] == 'completed' ? (share?['link'] as String?) : null;
       setState(() {
         _intact = null;
+        _download = null;
+        _link = link;
         _notice = switch (share?['status']) {
           'pending_approval' => context.t('casefile.share.waiting'),
           'built_offline' => context.t('casefile.share.offline'),
-          _ => '${context.t('casefile.share.ready')}\n${share?['link'] ?? ''}',
+          _ => context.t('casefile.share.ready'),
         };
       });
+      await _load();
+      // Report directly: open the share menu straight away (WhatsApp, SMS, email...).
+      if (link != null) await _send();
     });
   }
 
@@ -134,6 +159,26 @@ class _CaseScreenState extends State<CaseScreen> {
               _intact == false ? Icons.gpp_maybe_outlined : Icons.verified_outlined,
               color: _intact == false ? p.high : p.accent,
             ),
+            child: _link == null && _download == null
+                ? null
+                : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    if (_link != null) ...[
+                      SelectableText(_link!, style: Theme.of(context).textTheme.bodySmall),
+                      const SizedBox(height: KuumaSpace.sm),
+                      KuumaButton(
+                          key: const Key('send-link'),
+                          label: context.t('casefile.share.send'),
+                          icon: Icons.send_outlined,
+                          onPressed: _send),
+                    ],
+                    if (_download != null)
+                      KuumaButton(
+                          key: const Key('open-pdf'),
+                          label: context.t('casefile.export.open'),
+                          icon: Icons.open_in_new,
+                          kind: KuumaButtonKind.secondary,
+                          onPressed: _open),
+                  ]),
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(KuumaSpace.lg, KuumaSpace.sm, KuumaSpace.lg, 0),

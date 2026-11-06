@@ -1,0 +1,33 @@
+# Starter list for the keyboard's kindness check (KindReplyChecker): words and phrases a child
+# might type that can hurt the person they are writing to. PLACEHOLDER for the AI owner's lexicon
+# (packages/lang/lexicon); have a native speaker review the Luganda and Swahili before a pilot.
+# One term per line, lowercase. Whole words only. Never slurs: the check is about kindness.
+
+# English
+stupid
+idiot
+dumb
+ugly
+loser
+fat pig
+shut up
+i hate you
+nobody likes you
+everyone hates you
+you are worthless
+kill yourself
+kys
+go die
+freak
+
+# Luganda
+musiru
+kasiru
+omusiru
+ggwe embwa
+
+# Swahili
+mjinga
+mpumbavu
+nakuchukia
+wewe mbwa

@@ -106,9 +106,12 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
     ) {
         when (method) {
             "listCases" -> engine.cases().map { c ->
+                val sender = engine.senderOf(c)
                 mapOf(
                     "caseId" to c.caseId,
                     "offenderLabel" to c.offenderLabel,
+                    "senderNames" to sender.displayNames,
+                    "senderNumbers" to sender.phoneNumbers,
                     "incidentCount" to c.incidentCount.toInt(),
                     "messageCount" to c.messageCount,
                     "topSeverity" to c.topSeverity.wire,
@@ -147,12 +150,22 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
                     RecipientType.fromWire(args["recipientType"] as String)
                 )
                 val dir = File(config.androidContext!!.filesDir, "casefile/exports").apply { mkdirs() }
-                val pdf = File(dir, "kuuma-case-${(args["caseId"] as String).take(8)}.pdf").apply {
+                val pdf = File(dir, "nilinde-case-${(args["caseId"] as String).take(8)}.pdf").apply {
                     writeBytes(file.pdf)
                 }
                 File(dir, pdf.nameWithoutExtension + ".json").writeText(file.json.toString())
-                mapOf("pdfPath" to pdf.absolutePath, "root" to file.root)
+                // The child asked for the file: a copy goes to Downloads/Nilinde, where they can find it.
+                val download = runCatching { DeviceFiles.saveToDownloads(config.androidContext!!, pdf) }
+                    .onFailure { SafeLog.w("casefile.export.download_failed") }
+                    .getOrNull()
+                mapOf("pdfPath" to pdf.absolutePath, "root" to file.root, "downloadUri" to download)
             }
+            "openFile" -> DeviceFiles.open(config.androidContext!!, args["uri"] as String)
+            "sendLink" -> DeviceFiles.sendText(
+                config.androidContext!!,
+                args["text"] as String,
+                args["title"] as? String ?: ""
+            )
             "requestShare" -> engine.requestShare(
                 args["caseId"] as String,
                 RecipientType.fromWire(args["recipientType"] as String)

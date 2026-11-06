@@ -324,3 +324,52 @@ def test_reports_are_per_family(env):
         client.post(f"/v1/guardian/children/{child}/reports", json=req, headers=other_auth).status_code == 404
     )
     assert client.get("/v1/guardian/reports", headers=other_auth).json() == {"reports": []}
+
+
+def test_evidence_needs_the_child_and_comes_back_sealed(env):
+    client, *_, auth = env
+    phone, child = pair(client, auth)
+    rid = str(uuid.uuid4())
+    req = {"requestId": rid, "caseId": CASE, "signature": SIG}
+    r = client.post(f"/v1/guardian/children/{child}/evidence", json=req, headers=auth)
+    assert r.status_code == 201, r.text
+    validate_body("api/evidence.json", r.json())
+    assert r.json()["status"] == "requested"
+    assert client.post(f"/v1/guardian/children/{child}/evidence", json=req, headers=auth).status_code == 409
+    # Delivered to the phone once, at its heartbeat, with the parent's signature.
+    hb = {"deviceId": phone.device_id, "appVersion": "0.1.0", "policyVersion": 1}
+    first = phone.post("/v1/guardian/heartbeat", hb).json()
+    validate_body("api/heartbeat-response.json", first)
+    assert [(o["requestId"], o["signature"]) for o in first["evidenceRequests"]] == [(rid, SIG)]
+    assert phone.post("/v1/guardian/heartbeat", hb).json()["evidenceRequests"] == []
+    # Allowed needs the sealed messages.
+    assert phone.post(f"/v1/guardian/evidence/{rid}/result", {"status": "ready"}).status_code == 422
+    done = phone.post(f"/v1/guardian/evidence/{rid}/result", {"status": "ready", "sealedEvidence": EXCERPT})
+    assert done.status_code == 200, done.text
+    listed = client.get("/v1/guardian/evidence", headers=auth).json()
+    validate_body("api/evidence-list.json", listed)
+    assert listed["evidence"][0]["status"] == "ready" and listed["evidence"][0]["sealedEvidence"] == EXCERPT
+
+
+def test_the_child_can_decline_and_other_families_see_nothing(env):
+    client, *_, auth = env
+    phone, child = pair(client, auth)
+    rid = str(uuid.uuid4())
+    client.post(
+        f"/v1/guardian/children/{child}/evidence",
+        json={"requestId": rid, "caseId": CASE, "signature": SIG},
+        headers=auth,
+    )
+    assert phone.post(f"/v1/guardian/evidence/{rid}/result", {"status": "declined"}).status_code == 200
+    got = client.get("/v1/guardian/evidence", headers=auth).json()["evidence"][0]
+    assert got["status"] == "declined" and "sealedEvidence" not in got
+    other = client.post(
+        "/v1/guardian/parents", json={"devicePublicKey": public_der(ec.generate_private_key(ec.SECP256R1()))}
+    ).json()
+    other_auth = {"Authorization": f"Bearer {other['sessionToken']}"}
+    assert client.get("/v1/guardian/evidence", headers=other_auth).json() == {"evidence": []}
+    req = {"requestId": str(uuid.uuid4()), "caseId": CASE, "signature": SIG}
+    assert (
+        client.post(f"/v1/guardian/children/{child}/evidence", json=req, headers=other_auth).status_code
+        == 404
+    )

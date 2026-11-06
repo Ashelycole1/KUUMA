@@ -1,18 +1,18 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kuuma_ui/kuuma_ui.dart';
 
 import 'debug_console.dart';
 import 'native_registry.dart';
 
-/// The child app shell: bottom navigation built from registered module screens, a modules
-/// overview, settings (module settings + debug fake switches) and, in debug builds, the
+/// The child app shell: bottom navigation built from registered module screens and settings.
+/// With developer tools on (KUUMA_DEV_TOOLS), also a modules overview, fake switches and the
 /// live event console.
 class ChildShell extends StatefulWidget {
-  const ChildShell({super.key, required this.slots, required this.registry});
+  const ChildShell({super.key, required this.slots, required this.registry, this.devTools = kuumaDevTools});
 
   final SlotRegistry slots;
   final NativeRegistry registry;
+  final bool devTools;
 
   @override
   State<ChildShell> createState() => _ChildShellState();
@@ -57,10 +57,19 @@ class _ChildShellState extends State<ChildShell> {
     for (final e in widget.slots.entries(KuumaSlot.childTab).where((e) => !ids.contains(e.id))) {
       tabs.add(_Tab(context.t(e.titleKey), e.icon, e.builder));
     }
-    tabs.add(_Tab(context.t('core.nav.modules'), Icons.widgets_outlined, (_) => _ModulesPage(modules: _modules)));
-    tabs.add(_Tab(context.t('core.nav.settings'), Icons.settings_outlined,
-        (_) => _SettingsPage(slots: widget.slots, modules: _modules, registry: widget.registry, onChanged: _reload)));
-    if (kDebugMode) {
+    if (widget.devTools) {
+      tabs.add(_Tab(context.t('core.nav.modules'), Icons.widgets_outlined, (_) => _ModulesPage(modules: _modules)));
+    }
+    tabs.add(_Tab(
+        context.t('core.nav.settings'),
+        Icons.settings_outlined,
+        (_) => _SettingsPage(
+            slots: widget.slots,
+            modules: _modules,
+            registry: widget.registry,
+            onChanged: _reload,
+            devTools: widget.devTools)));
+    if (widget.devTools) {
       tabs.add(_Tab(context.t('core.nav.debug'), Icons.terminal, (_) => DebugConsole(registry: widget.registry)));
     }
     return tabs;
@@ -125,12 +134,18 @@ class _ModulesPage extends StatelessWidget {
 }
 
 class _SettingsPage extends StatelessWidget {
-  const _SettingsPage({required this.slots, required this.modules, required this.registry, required this.onChanged});
+  const _SettingsPage(
+      {required this.slots,
+      required this.modules,
+      required this.registry,
+      required this.onChanged,
+      required this.devTools});
 
   final SlotRegistry slots;
   final List<NativeModule> modules;
   final NativeRegistry registry;
   final VoidCallback onChanged;
+  final bool devTools;
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +159,7 @@ class _SettingsPage extends StatelessWidget {
             builder: (c) => Scaffold(appBar: AppBar(title: Text(c.t(e.titleKey))), body: e.builder(c)),
           )),
         ),
-      if (kDebugMode && fakes.isNotEmpty) ...[
+      if (devTools && fakes.isNotEmpty) ...[
         const Divider(),
         const ListTile(title: Text('Fakes (debug)'), subtitle: Text('Switch each module\'s fake on or off')),
         for (final f in fakes)

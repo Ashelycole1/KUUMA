@@ -1,4 +1,4 @@
-# Contributing to Kuuma
+# Contributing to Nilinde
 
 These rules keep six builds from colliding. Each one is backed by code, CI or `CODEOWNERS`,
 so breaking one fails the build rather than relying on memory.

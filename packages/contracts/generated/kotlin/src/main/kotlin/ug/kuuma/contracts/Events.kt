@@ -72,6 +72,17 @@ data class CasefileCaseUpdatedPayload(
 ) : CloudSendablePayload
 
 /**
+ * PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.
+ */
+@Serializable
+data class CasefileEvidenceReadyPayload(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val status: EvidenceOutcome,
+    val evidence: EvidenceBundle? = null,
+) : PhoneOnlyPayload
+
+/**
  * An evidence item was hashed into the vault's chain.
  */
 @Serializable
@@ -160,6 +171,15 @@ data class GuardianAlertSentPayload(
     val caseId: Uuid,
     val severity: Severity,
 ) : CloudSendablePayload
+
+/**
+ * PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.
+ */
+@Serializable
+data class GuardianEvidenceRequestedPayload(
+    val requestId: Uuid,
+    val caseId: Uuid,
+) : PhoneOnlyPayload
 
 /**
  * A child device was paired with a parent.
@@ -299,6 +319,11 @@ object Events {
         "casefile.case.updated", 1, Namespace.CASEFILE, Where.PHONE_TO_CLOUD,
         phoneOnly = false, serializer = CasefileCaseUpdatedPayload.serializer(),
     )
+    /** PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent. */
+    val CASEFILE_EVIDENCE_READY: EventType<CasefileEvidenceReadyPayload> = EventType(
+        "casefile.evidence.ready", 1, Namespace.CASEFILE, Where.PHONE,
+        phoneOnly = true, serializer = CasefileEvidenceReadyPayload.serializer(),
+    )
     /** An evidence item was hashed into the vault's chain. */
     val CASEFILE_EVIDENCE_SEALED: EventType<CasefileEvidenceSealedPayload> = EventType(
         "casefile.evidence.sealed", 1, Namespace.CASEFILE, Where.PHONE,
@@ -343,6 +368,11 @@ object Events {
     val GUARDIAN_ALERT_SENT: EventType<GuardianAlertSentPayload> = EventType(
         "guardian.alert.sent", 1, Namespace.GUARDIAN, Where.CLOUD,
         phoneOnly = false, serializer = GuardianAlertSentPayload.serializer(),
+    )
+    /** PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child. */
+    val GUARDIAN_EVIDENCE_REQUESTED: EventType<GuardianEvidenceRequestedPayload> = EventType(
+        "guardian.evidence.requested", 1, Namespace.GUARDIAN, Where.PHONE,
+        phoneOnly = true, serializer = GuardianEvidenceRequestedPayload.serializer(),
     )
     /** A child device was paired with a parent. */
     val GUARDIAN_PAIRING_COMPLETED: EventType<GuardianPairingCompletedPayload> = EventType(
@@ -393,6 +423,7 @@ object Events {
     val all: List<EventType<out EventPayload>> = listOf(
         CASEFILE_CASE_ESCALATED,
         CASEFILE_CASE_UPDATED,
+        CASEFILE_EVIDENCE_READY,
         CASEFILE_EVIDENCE_SEALED,
         CASEFILE_REPORT_READY,
         CASEFILE_SHARE_COMPLETED,
@@ -402,6 +433,7 @@ object Events {
         COMPANION_FEEDBACK_SUBMITTED,
         COMPANION_SOS_TRIGGERED,
         GUARDIAN_ALERT_SENT,
+        GUARDIAN_EVIDENCE_REQUESTED,
         GUARDIAN_PAIRING_COMPLETED,
         GUARDIAN_POLICY_UPDATED,
         GUARDIAN_REPORT_REQUESTED,

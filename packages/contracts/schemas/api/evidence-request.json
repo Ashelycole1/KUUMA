@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/evidence-request.json",
+  "title": "EvidenceRequest",
+  "description": "POST /v1/guardian/children/{childId}/evidence. The parent asks to see a case's messages; the child decides. Signed with the family key over evidence|requestId|caseId.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "caseId",
+    "signature"
+  ],
+  "properties": {
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
+    }
+  }
+}

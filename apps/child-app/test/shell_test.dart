@@ -55,6 +55,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Help'), findsWidgets); // Companion tab
     expect(find.text('My cases'), findsOneWidget); // Casefile tab
+    expect(find.text('Settings'), findsOneWidget);
+    // Developer tabs stay out of a normal build.
+    expect(find.text('Modules'), findsNothing);
+    expect(find.text('Debug'), findsNothing);
+  });
+
+  testWidgets('developer tools add the modules overview and the console', (tester) async {
+    final slots = SlotRegistry();
+    for (final m in flutterModules) {
+      m.register(slots, KuumaL10n.instance);
+    }
+    await tester.pumpWidget(KuumaChildApp(slots: slots, registry: NativeRegistry(), devTools: true));
+    await tester.pumpAndSettle();
+    expect(find.text('Debug'), findsOneWidget);
     expect(find.text('Modules'), findsOneWidget);
     await tester.tap(find.text('Modules'));
     await tester.pumpAndSettle();

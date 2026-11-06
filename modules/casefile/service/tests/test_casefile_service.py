@@ -87,7 +87,7 @@ def test_adult_share_completes_and_downloads(env):
     assert client.get(f"/v1/verify/shares/{rid}").status_code == 410
 
 
-def test_child_share_waits_for_parent(env):
+def test_child_share_needs_no_parent(env):
     client, app, store, redis, _ = env
     app.state.handle_event(
         {
@@ -102,15 +102,7 @@ def test_child_share_waits_for_parent(env):
         json={"requestId": rid, "recipientType": "police"},
         headers={"X-Kuuma-Device-Id": CHILD},
     )
-    assert r.json()["status"] == "pending_approval"
-    assert client.get(f"/v1/verify/shares/{rid}").status_code == 403
-    assert not redis.events("casefile.share.completed")
-    app.state.handle_event(
-        {
-            "type": "guardian.share.approved",
-            "payload": {"requestId": rid, "caseId": CASE, "decidedAt": "2026-11-05T09:40:00Z"},
-        }
-    )
+    assert r.json()["status"] == "completed"
     assert client.get(f"/v1/verify/shares/{rid}").status_code == 200
     assert len(redis.events("casefile.share.completed")) == 1
 

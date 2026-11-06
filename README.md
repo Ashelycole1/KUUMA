@@ -1,4 +1,4 @@
-# Kuuma
+# Nilinde
 
 Cyberbullying and harassment detection for Android, built as six parts with one owner each:
 
@@ -47,7 +47,7 @@ already has a running hello-world: an Android library registered with the child 
 package with a placeholder screen (Companion, Casefile, Guardian), and a service answering your
 API prefix with sample data (AI, Companion, Casefile, Guardian).
 
-**How do I talk to other builds?** Only through `packages/contracts`: the 20 events on the event
+**How do I talk to other builds?** Only through `packages/contracts`: the 22 events on the event
 bus and the five OpenAPI files. Never import another module. To change a contract, open a pull
 request on `packages/contracts/` (see [CONTRIBUTING.md](CONTRIBUTING.md) rule 5), then run `make gen`.
 
@@ -94,7 +94,7 @@ code owners, parent login, PIN storage, Luganda/Runyankole translations, rate li
 ## Layout
 
 ```
-packages/contracts/   schemas/ (envelope, 20 events, types, API bodies) · openapi/ · codegen/ · generated/ (never hand-edit)
+packages/contracts/   schemas/ (envelope, 22 events, types, API bodies) · openapi/ · codegen/ · generated/ (never hand-edit)
 packages/core-android event bus · encrypted storage · crypto · redactor · permissions · SafeLog (+ lint rule)
 packages/ui           kuuma_ui: theme, components, translations, lock screen, discreet mode, navigation slots
 packages/lang         shared vocabulary (YAML) + loaders for Kotlin, Dart, Python · lexicon/ (AI owner)

@@ -11,6 +11,7 @@ import ug.kuuma.companion.content.CrisisPart
 import ug.kuuma.companion.content.PlatformAction
 import ug.kuuma.companion.keyboard.KeyKind
 import ug.kuuma.companion.keyboard.KeyboardLayouts
+import ug.kuuma.companion.keyboard.KindReplyChecker
 import ug.kuuma.companion.keyboard.ReplyCheckRunner
 import ug.kuuma.companion.keyboard.WordList
 import ug.kuuma.companion.keyboard.currentWord
@@ -81,6 +82,24 @@ class KeyboardLogicTest {
         val risk = result!!
         assertTrue(risk.risky)
         assertEquals("text me on later", ReplyCheckRunner.saferWording(draft, risk.spans))
+    }
+
+    @Test fun `hurtful words are marked kindly, in any language, whole words only`() {
+        val checker = KindReplyChecker(DummyReplyRiskChecker())
+        val draft = "you are so Stupid, shut   up"
+        val risk = checker.check(draft, Language.EN)
+        assertTrue(risk.risky)
+        assertEquals(KindReplyChecker.BE_KIND, risk.spans.first().reasonKey)
+        assertEquals("you are so,", ReplyCheckRunner.saferWording(draft, risk.spans))
+        assertTrue(checker.check("ggwe musiru", Language.EN).risky) // Luganda, on the English keyboard
+        assertFalse(checker.check("a classic study of dumbbells", Language.EN).risky)
+        assertFalse(checker.check("see you tomorrow", Language.EN).risky)
+        // The phone number check still works alongside it.
+        val both = checker.check("idiot call 0772 123 456", Language.EN)
+        assertEquals(2, both.spans.size)
+        assertEquals("advice.reply.be_kind", both.suggestionKeys.first())
+        // The advice text exists in the bundled pack.
+        assertTrue(pack.adviceText(KindReplyChecker.BE_KIND, Language.EN, null).orEmpty().contains("hurtful"))
     }
 
     @Test fun `only the newest reply check is delivered`() {

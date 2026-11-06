@@ -18,6 +18,7 @@ import ug.kuuma.casefile.export.CaseFileBuilder
 import ug.kuuma.casefile.export.CaseTranslator
 import ug.kuuma.casefile.export.ParentReport
 import ug.kuuma.casefile.export.RootTimestamp
+import ug.kuuma.casefile.export.SenderDetails
 import ug.kuuma.casefile.export.ShareCrypto
 import ug.kuuma.casefile.export.Translator
 import ug.kuuma.casefile.vault.ChainEntry
@@ -31,7 +32,6 @@ import ug.kuuma.contracts.CasefileCaseEscalatedPayload
 import ug.kuuma.contracts.CasefileCaseUpdatedPayload
 import ug.kuuma.contracts.CasefileEvidenceSealedPayload
 import ug.kuuma.contracts.CasefileReportReadyPayload
-import ug.kuuma.contracts.CasefileShareRequestedPayload
 import ug.kuuma.contracts.EscalationReason
 import ug.kuuma.contracts.Events
 import ug.kuuma.contracts.GuardianReportRequestedPayload
@@ -191,6 +191,10 @@ class CasefileEngine(
 
     fun case(caseId: String) = cases().firstOrNull { it.caseId == caseId }
 
+    /** Who sent it, as the child's phone showed them. Shown on this phone and in the case file only. */
+    fun senderOf(case: CaseState): SenderDetails =
+        SenderDetails.of(case, store.items().filter { it.caseId == case.caseId })
+
     /** A machine translation made earlier for an export, if any. */
     fun translationOf(itemId: String) = translations.cached(itemId)
 
@@ -236,17 +240,9 @@ class CasefileEngine(
         val requestId = UUID.randomUUID().toString()
         saveShare(ShareRecord(requestId, caseId, recipient, ShareStatus.PENDING_APPROVAL.wire, null))
         custody(actor, "share_requested", caseId, emptyList(), recipient, requestId)
-        publisher.publish(
-            Events.CASEFILE_SHARE_REQUESTED,
-            CasefileShareRequestedPayload(requestId, caseId, recipient),
-            caseId
-        )
-        // An adult's share needs nobody's approval. (Approvals only count for child accounts.)
-        if (!isChild &&
-            share(requestId)?.status == ShareStatus.PENDING_APPROVAL.wire
-        ) {
-            completeShare(requestId, Actor.ADULT_USER)
-        }
+        // The child decides who sees their evidence: a share needs nobody's approval, and the
+        // parent is not told (reporting must be safe even when the problem is at home).
+        completeShare(requestId, if (isChild) Actor.CHILD else Actor.ADULT_USER)
         return requestId
     }
 

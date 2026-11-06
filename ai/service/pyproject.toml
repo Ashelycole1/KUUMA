@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-ai-service"
 version = "0.1.0"
-description = "Kuuma AI service: /v1/ai, with Sunflower on a local Ollama behind KUUMA_AI_MODE."
+description = "Nilinde AI service: /v1/ai, with Sunflower on a local Ollama behind KUUMA_AI_MODE."
 requires-python = ">=3.12"
 dependencies = ["kuuma-server-common", "kuuma-contracts", "kuuma-llm"]
 

@@ -24,18 +24,20 @@ void main() {
 }
 
 class KuumaChildApp extends StatelessWidget {
-  const KuumaChildApp({super.key, required this.slots, required this.registry});
+  const KuumaChildApp({super.key, required this.slots, required this.registry, this.devTools = kuumaDevTools});
 
   final SlotRegistry slots;
   final NativeRegistry registry;
+  final bool devTools;
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Kuuma',
+        title: 'Nilinde',
+        debugShowCheckedModeBanner: false,
         theme: KuumaTheme.light(),
         darkTheme: KuumaTheme.dark(),
         supportedLocales: kuumaLocales,
         localizationsDelegates: kuumaLocalizationsDelegates,
-        home: ChildShell(slots: slots, registry: registry),
+        home: ChildShell(slots: slots, registry: registry, devTools: devTools),
       );
 }

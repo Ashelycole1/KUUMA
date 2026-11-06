@@ -1,4 +1,4 @@
-# Kuuma local stack: `make dev`. Everything runs on this laptop with stubs and fakes.
+# Nilinde local stack: `make dev`. Everything runs on this laptop with stubs and fakes.
 # Secrets come from the git-ignored .env at the repo root (copy .env.example).
 name: kuuma
 

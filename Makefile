@@ -1,4 +1,4 @@
-# Kuuma: one set of commands for every language. Run from the repo root, or from your
+# Nilinde: one set of commands for every language. Run from the repo root, or from your
 # own folder (modules/<build>/, ai/, packages/<pkg>/, apps/<app>/, fakes/) for `make test`.
 #
 # Windows: run from Git Bash. If `make` is missing: winget install ezwinports.make

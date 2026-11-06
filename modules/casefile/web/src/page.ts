@@ -26,7 +26,7 @@ function show(report: Report, file: CaseFileJson, pdf?: Uint8Array): void {
   if (pdf) {
     const link = $("pdf") as HTMLAnchorElement;
     link.href = URL.createObjectURL(new Blob([pdf as BlobPart], { type: "application/pdf" }));
-    link.download = `kuuma-case-${file.caseId.slice(0, 8)}.pdf`;
+    link.download = `nilinde-case-${file.caseId.slice(0, 8)}.pdf`;
     link.hidden = false;
   }
 }
@@ -39,19 +39,29 @@ function fail(message: string): void {
 }
 
 async function openShare(requestId: string, key: string): Promise<void> {
+  // Browsers only offer WebCrypto on https:// pages (and localhost): say so instead of hanging.
+  if (!globalThis.crypto?.subtle)
+    return fail("This page must be opened over a secure (https://) link to check the evidence.");
   $("status").textContent = "Fetching the shared case…";
-  const res = await fetch(`/v1/verify/shares/${requestId}`);
-  if (res.status === 403) return fail("This share is waiting for a parent's approval.");
-  if (!res.ok) return fail("This share link has expired, was declined, or does not exist.");
-  const meta = (await res.json()) as { bundleHash: string; downloadUrl: string };
-  const blob = new Uint8Array(await (await fetch(meta.downloadUrl)).arrayBuffer());
-  if ((await sha256Hex(blob)) !== meta.bundleHash)
-    return fail("The download does not match its recorded hash.");
   try {
-    const share = await decryptShare(blob, key);
+    const res = await fetch(`/v1/verify/shares/${requestId}`);
+    if (res.status === 403) return fail("This share is waiting for a parent's approval.");
+    if (!res.ok) return fail("This share link has expired, was declined, or does not exist.");
+    const meta = (await res.json()) as { bundleHash: string; downloadUrl: string };
+    const download = await fetch(meta.downloadUrl);
+    if (!download.ok) return fail("The case file could not be downloaded. Try again later.");
+    const blob = new Uint8Array(await download.arrayBuffer());
+    if ((await sha256Hex(blob)) !== meta.bundleHash)
+      return fail("The download does not match its recorded hash.");
+    let share;
+    try {
+      share = await decryptShare(blob, key);
+    } catch {
+      return fail("The link's key does not open this case. Check that you copied the whole link.");
+    }
     show(await verifyCaseFile(share.case, confirm), share.case, share.pdf);
   } catch {
-    fail("The link's key does not open this case. Check that you copied the whole link.");
+    fail("The case file could not be fetched. Check your connection and try again.");
   } finally {
     $("status").textContent = "";
   }
@@ -62,7 +72,7 @@ async function openFile(file: File): Promise<void> {
     const json = JSON.parse(await file.text()) as CaseFileJson;
     show(await verifyCaseFile(json, confirm), json);
   } catch {
-    fail("That file is not a Kuuma case file.");
+    fail("That file is not a Nilinde case file.");
   }
 }
 

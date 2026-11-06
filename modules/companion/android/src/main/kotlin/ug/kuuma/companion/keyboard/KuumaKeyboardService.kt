@@ -33,7 +33,7 @@ import ug.kuuma.core.log.LogField
 import ug.kuuma.core.log.SafeLog
 
 /**
- * The Kuuma Keyboard: an everyday keyboard (English and Luganda first) that also
+ * The Nilinde Keyboard: an everyday keyboard (English and Luganda first) that also
  *  - shows a banner above the keys while the open chat has flags (sentinel.conversation.active),
  *  - checks the draft with the AI build's ReplyRiskChecker and offers a safer wording,
  *  - offers calm one-tap replies, or a nudge not to reply,
@@ -41,7 +41,7 @@ import ug.kuuma.core.log.SafeLog
  *
  * Privacy: the draft is read only to check it and suggest words, held in memory for that moment,
  * never stored or logged. Password fields get no suggestions and no checks at all.
- * Nothing Kuuma shows here is visible to the other person in the chat.
+ * Nothing Nilinde shows here is visible to the other person in the chat.
  */
 class KuumaKeyboardService :
     InputMethodService(),
@@ -54,7 +54,7 @@ class KuumaKeyboardService :
                 true
         }
     }
-    private val fallbackChecker = DummyReplyRiskChecker()
+    private val fallbackChecker = KindReplyChecker(DummyReplyRiskChecker())
     private val replyCheck = ReplyCheckRunner(
         checker = { CompanionModule.current?.replyChecker ?: fallbackChecker },
         background = background,
@@ -64,6 +64,7 @@ class KuumaKeyboardService :
     private lateinit var keys: KuumaKeyboardView
     private lateinit var banner: TextView
     private lateinit var strip: LinearLayout
+    private val theme by lazy { KeyboardTheme.of(this) }
 
     private var language = Language.EN
     private var shift = Shift.OFF
@@ -90,9 +91,8 @@ class KuumaKeyboardService :
     }
 
     override fun onCreateInputView(): View {
-        val dp = resources.displayMetrics.density
         banner = TextView(this).apply {
-            setPadding((12 * dp).toInt(), (8 * dp).toInt(), (12 * dp).toInt(), (8 * dp).toInt())
+            setPadding(dp(14), dp(9), dp(14), dp(9))
             setTextColor(Color.WHITE)
             textSize = 14f
             maxLines = 2
@@ -103,22 +103,39 @@ class KuumaKeyboardService :
         strip = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            minimumHeight = (44 * dp).toInt()
+            minimumHeight = dp(50)
+            setPadding(dp(6), dp(4), dp(6), dp(2))
         }
         keys = KuumaKeyboardView(this).also { it.listener = this }
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            addView(banner, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setBackgroundColor(theme.background)
+            addView(
+                banner,
+                LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    .apply { setMargins(dp(8), dp(6), dp(8), 0) }
+            )
             addView(
                 HorizontalScrollView(this@KuumaKeyboardService).apply {
                     isHorizontalScrollBarEnabled = false
-                    addView(strip)
+                    setBackgroundColor(theme.background)
+                    // Lets the word slots share the full width; long reply chips still scroll.
+                    isFillViewport = true
+                    addView(strip, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
                 },
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
             addView(keys, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
+    }
+
+    private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    private fun rounded(color: Int, radius: Int = 12, stroke: Int? = null) = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = dp(radius).toFloat()
+        if (stroke != null) setStroke(dp(1), stroke)
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
@@ -323,7 +340,7 @@ class KuumaKeyboardService :
             return
         }
         banner.text = "🛡  ${ctx.tip}"
-        banner.background = GradientDrawable().apply { setColor(severityColor(ctx.severity)) }
+        banner.background = rounded(severityColor(ctx.severity))
         banner.visibility = View.VISIBLE
     }
 
@@ -335,29 +352,86 @@ class KuumaKeyboardService :
         val f = flash
         val ctx = context
         when {
-            f != null -> strip.addView(chip(f, bold = true))
+            f != null -> strip.addView(slot(f, bold = true, color = theme.primary), slotParams())
             risk.risky && pack != null -> {
                 val reason = risk.spans.firstOrNull()?.reasonKey ?: risk.suggestionKeys.firstOrNull()
-                val text = reason?.let { pack.adviceText(it, language, bracket) }.orEmpty()
-                strip.addView(chip("⚠ $text", tint = WARN))
-                strip.addView(chip(pack.ui("saferWording", language, bracket), bold = true) { applySaferWording() })
+                val why = reason?.let { pack.adviceText(it, language, bracket) }.orEmpty()
+                val spans = ReplyCheckRunner.validSpans(risk.spans, draft.length)
+                val action = pack.ui("saferWording", language, bracket)
+                // Hurtful words: say which words would go ("you are so" alone reads oddly).
+                // Personal details: show the draft without them.
+                val hurtful = spans.filter { it.reasonKey == KindReplyChecker.BE_KIND }
+                    .map { draft.substring(it.start.toInt(), it.end.toInt()) }
+                val line = when {
+                    spans.isEmpty() -> action
+                    hurtful.isNotEmpty() -> getString(
+                        R.string.companion_take_out,
+                        hurtful.joinToString(", ") { "\u201C$it\u201D" }
+                    )
+                    else -> getString(R.string.companion_try_instead, ReplyCheckRunner.saferWording(draft, spans))
+                }
+                strip.addView(saferCard(why, line, action), slotParams())
             }
             ctx != null && draft.isBlank() && pack != null && !sensitiveField -> {
                 if (ctx.noReply) {
-                    strip.addView(chip(pack.nudge(language, bracket)))
+                    strip.addView(slot(pack.nudge(language, bracket), color = theme.muted), slotParams())
                 } else {
                     pack.safeReplies(language).forEach { reply ->
-                        strip.addView(chip(reply) { currentInputConnection?.commitText(reply, 1) })
+                        strip.addView(pill(reply) { currentInputConnection?.commitText(reply, 1) })
                     }
                 }
             }
             !sensitiveField -> {
                 val word = currentWord(draft)
-                WordList.forLanguage(language).complete(word).forEach { s ->
-                    strip.addView(chip(s) { replaceCurrentWord(word, s) })
+                WordList.forLanguage(language).complete(word).forEachIndexed { i, s ->
+                    if (i > 0) strip.addView(divider())
+                    strip.addView(slot(s, bold = i == 0) { replaceCurrentWord(word, s) }, slotParams())
                 }
             }
         }
+    }
+
+    /**
+     * The kinder wording, shown inside the keyboard: why (one short line) and the reworded draft.
+     * One tap puts it in place of what was typed.
+     */
+    private fun saferCard(why: String, line: String, action: String): View = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        gravity = Gravity.CENTER_VERTICAL
+        background = rounded(theme.tipBackground)
+        setPadding(dp(12), dp(5), dp(12), dp(5))
+        isClickable = true
+        setOnClickListener {
+            applySaferWording()
+            renderStrip()
+        }
+        contentDescription = "$why. $action"
+        addView(
+            TextView(this@KuumaKeyboardService).apply {
+                text = if (why.isBlank()) action else "💡 $why"
+                textSize = 12f
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.END
+                setTextColor(theme.tipText)
+                setTypeface(typeface, Typeface.BOLD)
+            }
+        )
+        addView(
+            TextView(this@KuumaKeyboardService).apply {
+                text = line
+                textSize = 14f
+                maxLines = 1
+                ellipsize = TextUtils.TruncateAt.START
+                setTextColor(theme.text)
+            }
+        )
+    }
+
+    private fun slotParams() = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+
+    private fun divider() = View(this).apply {
+        setBackgroundColor(theme.divider)
+        layoutParams = LinearLayout.LayoutParams(dp(1), dp(22))
     }
 
     private fun replaceCurrentWord(typed: String, word: String) {
@@ -368,20 +442,40 @@ class KuumaKeyboardService :
         ic.endBatchEdit()
     }
 
-    private fun chip(text: String, bold: Boolean = false, tint: Int? = null, onTap: (() -> Unit)? = null): TextView {
-        val dp = resources.displayMetrics.density
-        return TextView(this).apply {
-            this.text = text
-            textSize = 15f
-            maxLines = 1
-            setPadding((14 * dp).toInt(), (10 * dp).toInt(), (14 * dp).toInt(), (10 * dp).toInt())
-            if (bold) setTypeface(typeface, Typeface.BOLD)
-            if (tint != null) setTextColor(tint)
-            if (onTap != null) {
-                isClickable = true
-                setOnClickListener { onTap() }
-            }
+    /** A word suggestion (or a short message) sharing the row equally with the others. */
+    private fun slot(
+        text: String,
+        bold: Boolean = false,
+        color: Int = theme.text,
+        onTap: (() -> Unit)? = null
+    ): TextView = TextView(this).apply {
+        this.text = text
+        textSize = 16f
+        maxLines = 1
+        ellipsize = TextUtils.TruncateAt.END
+        gravity = Gravity.CENTER
+        setTextColor(if (bold) theme.primary else color)
+        if (bold) setTypeface(typeface, Typeface.BOLD)
+        setPadding(dp(6), dp(8), dp(6), dp(8))
+        if (onTap != null) {
+            isClickable = true
+            setOnClickListener { onTap() }
         }
+    }
+
+    /** A one-tap calm reply. */
+    private fun pill(text: String, onTap: () -> Unit): TextView = TextView(this).apply {
+        this.text = text
+        textSize = 14f
+        maxLines = 1
+        setTextColor(theme.text)
+        background = rounded(theme.key, radius = 18, stroke = theme.divider)
+        setPadding(dp(14), dp(8), dp(14), dp(8))
+        layoutParams =
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                .apply { setMargins(dp(4), 0, dp(4), 0) }
+        isClickable = true
+        setOnClickListener { onTap() }
     }
 
     private fun openKuuma() {
@@ -398,7 +492,6 @@ class KuumaKeyboardService :
         private const val CHECK_DEBOUNCE_MS = 350L
         private const val FLASH_MS = 2500L
         private const val MAX_DRAFT = 1000
-        private val WARN = Color.rgb(0xB2, 0x6A, 0x00)
 
         /** Calm colours: the banner informs, it doesn't alarm. */
         fun severityColor(severity: Severity): Int = when (severity) {

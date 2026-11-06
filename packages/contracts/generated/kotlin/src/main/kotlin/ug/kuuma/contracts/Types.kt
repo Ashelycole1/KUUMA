@@ -42,6 +42,13 @@ typealias OpaqueRef = String
 typealias PermissionName = String
 
 /**
+ * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of an EvidenceBundle as JSON. Only the parent's phone can open it; the server stores ciphertext only.
+ *
+ * Pattern: `^[A-Za-z0-9_-]+$`
+ */
+typealias SealedEvidence = String
+
+/**
  * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.
  *
  * Pattern: `^[A-Za-z0-9_-]{24,10000}$`
@@ -87,7 +94,7 @@ enum class AgeBracket(val wire: String) {
 }
 
 /**
- * What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+ * What raised an alert. tamper: Nilinde's permissions were turned off or the phone stopped checking in.
  */
 @Serializable
 enum class AlertKind(val wire: String) {
@@ -187,6 +194,41 @@ enum class EscalationReason(val wire: String) {
         fun fromWire(wire: String): EscalationReason =
             entries.firstOrNull { it.wire == wire }
                 ?: throw IllegalArgumentException("Unknown EscalationReason: $wire")
+    }
+}
+
+/**
+ * What the child decided about a parent's request to see a case's messages.
+ */
+@Serializable
+enum class EvidenceOutcome(val wire: String) {
+    @SerialName("ready") READY("ready"),
+    @SerialName("declined") DECLINED("declined"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): EvidenceOutcome =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown EvidenceOutcome: $wire")
+    }
+}
+
+/**
+ * A parent's request to see a case's messages. requested: waiting for the child. ready: the child allowed it and the messages are sealed for the parent. declined: the child said no. failed: the phone could not build it.
+ */
+@Serializable
+enum class EvidenceStatus(val wire: String) {
+    @SerialName("requested") REQUESTED("requested"),
+    @SerialName("ready") READY("ready"),
+    @SerialName("declined") DECLINED("declined"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): EvidenceStatus =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown EvidenceStatus: $wire")
     }
 }
 
@@ -379,6 +421,7 @@ object ContractPatterns {
     val OFFENDER_LABEL = Regex("^Person [A-Z]{1,2}\$")
     val OPAQUE_REF = Regex("^or1_[A-Za-z0-9_-]{43}\$")
     val PERMISSION_NAME = Regex("^[A-Za-z][A-Za-z0-9_.]{2,120}\$")
+    val SEALED_EVIDENCE = Regex("^[A-Za-z0-9_-]+\$")
     val SEALED_EXCERPT = Regex("^[A-Za-z0-9_-]{24,10000}\$")
     val SHA256 = Regex("^[0-9a-f]{64}\$")
     val TIMESTAMP = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z\$")

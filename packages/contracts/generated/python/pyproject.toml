@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-contracts"
 version = "1.0.0"
-description = "Kuuma contract types and contract-test harness (generated)."
+description = "Nilinde contract types and contract-test harness (generated)."
 requires-python = ">=3.12"
 dependencies = ["pydantic==2.11.4", "jsonschema==4.23.0"]
 

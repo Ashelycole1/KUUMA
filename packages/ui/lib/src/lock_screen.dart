@@ -53,6 +53,7 @@ class _LockScreenState extends State<LockScreen> {
   String _entered = '';
   bool _wrong = false;
   bool _bioAvailable = false;
+  bool _checking = false;
 
   @override
   void initState() {
@@ -63,13 +64,20 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   Future<void> _press(String digit) async {
-    if (_entered.length >= widget.pinLength) return;
+    if (_checking || _entered.length >= widget.pinLength) return;
     setState(() {
       _entered += digit;
       _wrong = false;
     });
     if (_entered.length == widget.pinLength) {
-      final ok = await widget.verifyPin(_entered);
+      // Ignore taps until the check is done, so they don't spill into the next attempt.
+      _checking = true;
+      final bool ok;
+      try {
+        ok = await widget.verifyPin(_entered);
+      } finally {
+        _checking = false;
+      }
       if (!mounted) return;
       if (ok) {
         widget.onUnlocked();
@@ -171,8 +179,9 @@ class _LockScreenState extends State<LockScreen> {
                   side(IconButton(
                     tooltip: context.t('core.lock.delete'),
                     icon: const Icon(Icons.backspace_outlined),
-                    onPressed: () =>
-                        setState(() => _entered = _entered.isEmpty ? '' : _entered.substring(0, _entered.length - 1)),
+                    onPressed: () => _checking
+                        ? null
+                        : setState(() => _entered = _entered.isEmpty ? '' : _entered.substring(0, _entered.length - 1)),
                   )),
                 ]),
               ],

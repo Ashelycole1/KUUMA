@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/evidence-message.json",
+  "title": "EvidenceMessage",
+  "description": "One message in an EvidenceBundle (phone only, travels sealed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sentAt",
+    "fromChild",
+    "text"
+  ],
+  "properties": {
+    "sentAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "appSource": {
+      "$ref": "../types/app-source.json"
+    },
+    "sender": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "As the messaging app showed them; absent for the child's own messages."
+    },
+    "fromChild": {
+      "type": "boolean"
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 10000
+    }
+  }
+}

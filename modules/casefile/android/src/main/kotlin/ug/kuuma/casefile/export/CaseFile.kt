@@ -284,7 +284,7 @@ object CaseFileBuilder {
     ): ByteArray {
         val mask: (String) -> String = { parentReport?.mask(it) ?: it }
         val doc = PdfText()
-        doc.heading("Kuuma case file")
+        doc.heading("Nilinde case file")
         doc.line("Case ${case.caseId}  ·  prepared for: ${recipient.wire}  ·  generated ${CaseIndex.iso(generatedAt)}")
         doc.gap()
         if (parentReport != null) {
@@ -331,7 +331,7 @@ object CaseFileBuilder {
             }
             if (sender.emails.isNotEmpty()) doc.para("Emails in their messages: ${sender.emails.joinToString(", ")}")
             if (sender.handles.isNotEmpty()) doc.para("Handles in their messages: ${sender.handles.joinToString(", ")}")
-            doc.para("Taken from the sealed messages below; not verified by Kuuma.")
+            doc.para("Taken from the sealed messages below; not verified by Nilinde.")
         }
         doc.gap()
         doc.heading("Timeline")
@@ -400,7 +400,7 @@ object ShareCrypto {
     }
 
     fun decrypt(blob: ByteArray, key: ByteArray): ByteArray {
-        require(blob.size > 16 && blob.copyOfRange(0, 4).contentEquals(MAGIC)) { "not a Kuuma share" }
+        require(blob.size > 16 && blob.copyOfRange(0, 4).contentEquals(MAGIC)) { "not a Nilinde share" }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.DECRYPT_MODE, SecretKeySpec(key, "AES"), GCMParameterSpec(128, blob.copyOfRange(4, 16)))
         return cipher.doFinal(blob.copyOfRange(16, blob.size))

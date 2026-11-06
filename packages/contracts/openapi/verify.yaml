@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Kuuma Verify API
+  title: Nilinde Verify API
   version: 1.0.0
   description: |
     Owned by the Casefile build. Public: a school, police officer or lawyer checks that

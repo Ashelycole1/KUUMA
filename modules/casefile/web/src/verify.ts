@@ -13,7 +13,7 @@ export async function verifyHash(baseUrl: string, hash: string, fetchFn = fetch)
 }
 
 export function describe(result: VerifyResponse): string {
-  if (!result.found) return "This evidence hash is not known to Kuuma.";
+  if (!result.found) return "This evidence hash is not known to Nilinde.";
   return result.chainValid
     ? `Timestamped at ${result.timestamp}; the evidence chain is intact.`
     : `Timestamped at ${result.timestamp}; the evidence chain could NOT be verified.`;

@@ -1,9 +1,9 @@
-# Kuuma design system (MASTER)
+# Nilinde design system (MASTER)
 
-Global source of truth for how Kuuma looks and behaves. Page-specific overrides go in
+Global source of truth for how Nilinde looks and behaves. Page-specific overrides go in
 `design-system/kuuma/pages/<page>.md`; without one, these rules apply. Built with the
 [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) skill (Nov 6, 2026),
-then adjusted for contrast and for Kuuma's safety rules. Code: `packages/ui/lib/src/theme.dart`.
+then adjusted for contrast and for Nilinde's safety rules. Code: `packages/ui/lib/src/theme.dart`.
 
 ## Who it is for
 
@@ -15,22 +15,22 @@ low-end Android phones, sometimes shared, sometimes looked at over a shoulder. T
 
 - **Style:** Minimalism, soft and rounded (skill: "Minimalism & Swiss Style", low variance 3/10,
   subtle motion 3/10, standard density 4/10). Generous white space, one idea per card.
-- **Palette:** Kuuma Violet, Warm Peach and Cloud White, sampled from the current pitch deck.
+- **Palette:** Nilinde Violet, Warm Peach and Cloud White, sampled from the current pitch deck.
 - **Typography:** "Soft Rounded" pairing: **Varela Round** for headings, **Nunito Sans** for text
   (skill: best for children's products, friendly, wellness). Bundled in `packages/ui/fonts` (SIL OFL),
   never fetched at runtime (offline phones; no requests to third parties).
 
 ## Colour tokens
 
-The three core brand colours are Kuuma Violet, Warm Peach and Cloud White. Light and dark UI tokens are defined in packages/ui/lib/src/theme.dart. Use these tokens in screens rather than raw hex values.
+The three core brand colours are Nilinde Violet, Warm Peach and Cloud White. Light and dark UI tokens are defined in packages/ui/lib/src/theme.dart. Use these tokens in screens rather than raw hex values.
 
 | Name | Hex | Role |
 | --- | --- | --- |
-| Kuuma Violet | #5D40A4 | Primary brand colour, headings, and primary actions |
+| Nilinde Violet | #5D40A4 | Primary brand colour, headings, and primary actions |
 | Warm Peach | #EDB390 | Accent and highlights |
 | Cloud White | #F8FAFD | Main light background and text on violet |
 
-Text on Kuuma Violet uses Cloud White for contrast. Use dark foreground text on Warm Peach. Secondary and severity colours remain separate semantic tokens.
+Text on Nilinde Violet uses Cloud White for contrast. Use dark foreground text on Warm Peach. Secondary and severity colours remain separate semantic tokens.
 
 ### Severity (kept muted on purpose)
 
@@ -63,7 +63,7 @@ Sizes scale with the phone's text-size setting; never fix heights around text.
 - Elevation: none; cards are separated by a 1px border and white space (cheap to draw on low-end phones).
 - Motion: 200 ms, ease-out, fades and small slides only; none when the phone asks for reduced motion.
 
-## Rules (from the skill's priority list, applied to Kuuma)
+## Rules (from the skill's priority list, applied to Nilinde)
 
 1. **Accessibility:** 4.5:1 text contrast; every icon-only button has a tooltip/label; `Semantics` on
    custom widgets; respect large text.
@@ -73,7 +73,7 @@ Sizes scale with the phone's text-size setting; never fix heights around text.
 5. **Colour:** tokens only, never raw hex in screens; severity always has a text label.
 6. **Navigation:** bottom bar with at most 5 tabs; back always goes back.
 7. **Forms:** visible labels (not placeholders), errors next to the field, helper text.
-8. **Kuuma safety:** calm wording, no red full-screen alarms; message text hidden until tapped;
+8. **Nilinde safety:** calm wording, no red full-screen alarms; message text hidden until tapped;
    quick-hide and lock screen look plain.
 
 ## Pre-delivery checklist

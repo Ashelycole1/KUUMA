@@ -18,7 +18,7 @@ import org.jetbrains.uast.UCallExpression
 class KuumaIssueRegistry : IssueRegistry() {
     override val issues = listOf(SafeLogDetector.NON_CONSTANT, SafeLogDetector.RAW_LOG)
     override val api = CURRENT_API
-    override val vendor = Vendor(vendorName = "Kuuma Core", identifier = "ug.kuuma.core")
+    override val vendor = Vendor(vendorName = "Nilinde Core", identifier = "ug.kuuma.core")
 }
 
 /** Rule 7: never log message content. */
@@ -70,7 +70,7 @@ class SafeLogDetector :
         val NON_CONSTANT = Issue.create(
             id = "KuumaSafeLogNonConstant",
             briefDescription = "Non-constant string passed to SafeLog",
-            explanation = "Kuuma logs may hold only IDs, enums, numbers and timings. Event and field names must be " +
+            explanation = "Nilinde logs may hold only IDs, enums, numbers and timings. Event and field names must be " +
                 "string constants; values must use the typed LogField factories.",
             category = Category.SECURITY,
             priority = 9,

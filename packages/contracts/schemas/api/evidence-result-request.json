@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/evidence-result-request.json",
+  "title": "EvidenceResultRequest",
+  "description": "POST /v1/guardian/evidence/{requestId}/result, from the child's phone (device-signed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status"
+  ],
+  "properties": {
+    "status": {
+      "$ref": "../types/evidence-outcome.json"
+    },
+    "sealedEvidence": {
+      "$ref": "../types/sealed-evidence.json"
+    }
+  }
+}

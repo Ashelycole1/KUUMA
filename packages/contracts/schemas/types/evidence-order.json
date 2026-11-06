@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/evidence-order.json",
+  "title": "EvidenceOrder",
+  "description": "A parent's request to see a case's messages, delivered to the child's phone at its heartbeat. The phone asks the child only if the family-key signature verifies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "requestId",
+    "caseId",
+    "signature",
+    "requestedAt"
+  ],
+  "properties": {
+    "requestId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
+    },
+    "requestedAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

@@ -9,14 +9,14 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.parent.children.title': 'Children',
     'guardian.parent.approvals.title': 'Requests',
     // Account
-    'guardian.account.welcome_title': 'Kuuma for parents',
+    'guardian.account.welcome_title': 'Nilinde for parents',
     'guardian.account.welcome_body':
         'Your account is tied to this phone only: no name, email or phone number. Choose a PIN to protect it.',
     'guardian.account.choose_pin': 'Choose a 4-digit PIN',
     'guardian.account.confirm_pin': 'Enter the PIN again',
     'guardian.account.pin_mismatch': 'The PINs did not match. Try again.',
     'guardian.account.create': 'Create account',
-    'guardian.account.offline': 'Could not reach Kuuma. Check your internet connection and try again.',
+    'guardian.account.offline': 'Could not reach Nilinde. Check your internet connection and try again.',
     'guardian.account.lock': 'Lock',
     // Common
     'guardian.common.offline_banner': 'Offline: showing what was last loaded.',
@@ -27,7 +27,7 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.common.unnamed': 'Child',
     // Children
     'guardian.children.empty_title': 'No children yet',
-    'guardian.children.empty_body': "Add a child, then scan the code with Kuuma on the child's phone.",
+    'guardian.children.empty_body': "Add a child, then scan the code with Nilinde on the child's phone.",
     'guardian.children.add': 'Add a child',
     'guardian.status.active': 'Protected',
     'guardian.status.waiting': 'Waiting to pair',
@@ -49,14 +49,14 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.child.policy_version': 'Settings version {n}',
     'guardian.qr.title': 'Scan with the child\'s phone',
     'guardian.qr.steps':
-        "1. Install Kuuma on the child's phone.\n2. Open Settings, then Parent and pairing.\n3. Scan this code.",
+        "1. Install Nilinde on the child's phone.\n2. Open Settings, then Parent and pairing.\n3. Scan this code.",
     'guardian.qr.code': 'Code {code}',
     'guardian.qr.expires': 'This code works once, until {time}.',
     'guardian.qr.private': 'Do not share or photograph this code: it holds the key to your alerts.',
     'guardian.qr.done': 'Done',
     // Alerts
     'guardian.alerts.empty_title': 'No alerts',
-    'guardian.alerts.empty_body': 'When Kuuma sees something you should know about, it shows up here.',
+    'guardian.alerts.empty_body': 'When Nilinde sees something you should know about, it shows up here.',
     'guardian.alerts.trend': 'Last 7 days',
     'guardian.alerts.trend_label': '{n} alerts in the last 7 days',
     'guardian.alerts.kind_flag': 'Harmful message',
@@ -84,11 +84,13 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.recipient.platform': 'The app or website',
     'guardian.recipient.lawyer': 'Lawyer',
     // Parent reports
+    'guardian.qr.copy': 'Copy pairing code',
+    'guardian.qr.copied': 'Copied. On the child\'s phone, choose "Paste a pairing code instead".',
     'guardian.report.button': 'Report this case',
     'guardian.report.title': 'Report this case',
     'guardian.report.hero_title': 'Send the evidence safely',
     'guardian.report.hero_body':
-        "Kuuma builds a sealed case file on your child's phone and gives you a private link to send.",
+        "Nilinde builds a sealed case file on your child's phone and gives you a private link to send.",
     'guardian.report.to': 'Send to',
     'guardian.report.privacy': "Your child's privacy",
     'guardian.report.anonymous': 'Keep my child anonymous',
@@ -113,38 +115,38 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.report.copied': 'Link copied. Paste it into a message or email to the recipient.',
     'guardian.report.cannot_open': 'This link could not be opened on this phone.',
     // Child's phone: setup wizard
-    'guardian.wizard.intro_title': 'Set up Kuuma with a parent',
+    'guardian.wizard.intro_title': 'Set up Nilinde with a parent',
     'guardian.wizard.intro_body': 'A parent or guardian does this together with the child. It takes a few minutes.',
     'guardian.wizard.start': 'Start',
-    'guardian.wizard.consent_title': 'What Kuuma does',
+    'guardian.wizard.consent_title': 'What Nilinde does',
     'guardian.wizard.consent_body':
-        'Kuuma reads incoming messages on this phone to spot bullying, threats and grooming. '
+        'Nilinde reads incoming messages on this phone to spot bullying, threats and grooming. '
             'Messages are checked on the phone. Your parent is told when something harmful arrives, '
             'and can read only that message. Nothing else is shared.',
     'guardian.wizard.consent_agree': 'We agree',
     'guardian.wizard.scan_title': 'Scan the pairing code',
     'guardian.wizard.scan_body': 'On the parent\'s phone: Children, then Add a child.',
-    'guardian.wizard.bad_code': 'That is not a Kuuma pairing code.',
+    'guardian.wizard.bad_code': 'That is not a Nilinde pairing code.',
     'guardian.wizard.expired_code': 'That code has expired or was used. Make a new one.',
     'guardian.wizard.bad_policy': 'The settings could not be checked. Make a new code.',
-    'guardian.wizard.offline': 'Could not reach Kuuma. Check the internet connection and scan again.',
+    'guardian.wizard.offline': 'Could not reach Nilinde. Check the internet connection and scan again.',
     'guardian.wizard.permissions_title': 'Turn on protection',
-    'guardian.wizard.permissions_body': 'Kuuma needs these to work. Tap each one to turn it on.',
+    'guardian.wizard.permissions_body': 'Nilinde needs these to work. Tap each one to turn it on.',
     'guardian.wizard.granted': 'On',
     'guardian.wizard.turn_on': 'Turn on',
     'guardian.wizard.optional': 'Optional',
     'guardian.wizard.finish': 'Finish',
     'guardian.wizard.done_title': 'All set',
-    'guardian.wizard.done_body': 'Kuuma is protecting this phone.',
+    'guardian.wizard.done_body': 'Nilinde is protecting this phone.',
     'guardian.wizard.managed_title': 'Managed by your parent',
     'guardian.wizard.managed_body': 'Your parent chooses these settings. Ask them if something should change.',
     'guardian.wizard.watching': 'Watching: {apps}',
     'guardian.wizard.check_permissions': 'Check protection',
     'guardian.wizard.pending': '{n} alerts waiting to be sent',
-    'guardian.wizard.paste': 'Enter code',
+    'guardian.wizard.paste': 'Paste a pairing code instead',
     'guardian.wizard.paste_hint': 'Pairing code text',
     // Permission reasons, for the permissions this module declares
-    'guardian.permission.notifications.reason': 'So Kuuma can tell you about what it finds.',
+    'guardian.permission.notifications.reason': 'So Nilinde can tell you about what it finds.',
     'guardian.permission.camera.reason': 'To scan the pairing code from the parent\'s phone.',
     // Guidance: what to do after an alert, per kind of harm
     'guardian.guide.insult.talk':
@@ -154,7 +156,7 @@ const guardianStrings = <String, Map<String, String>>{
         'Taking the phone away: it teaches them not to tell you.\nTelling them to ignore it if it hurts.\n'
             'Contacting the sender yourself in anger.',
     'guardian.guide.harassment.talk': 'Tell them it is not their fault.\nAsk how long it has been going on.\n'
-        'Keep the evidence: Kuuma already saves it.\nIf it involves classmates, plan together before telling the school.',
+        'Keep the evidence: Nilinde already saves it.\nIf it involves classmates, plan together before telling the school.',
     'guardian.guide.harassment.avoid':
         'Blaming them for what they posted or who they talk to.\nActing without telling them first.',
     'guardian.guide.threat.talk': 'Talk today. Ask if they feel safe at school and on the way home.\n'
@@ -191,7 +193,7 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.guide.sos.talk': 'Call or find your child now.\nAsk where they are and if they are safe.\n'
         'If they are in danger, call the police.',
     'guardian.guide.sos.avoid': 'Waiting for a reply before acting.',
-    'guardian.guide.tamper.talk': "Kuuma's protection was turned off, or the phone stopped checking in.\n"
+    'guardian.guide.tamper.talk': "Nilinde's protection was turned off, or the phone stopped checking in.\n"
         'It may just be a flat battery or no data.\n'
         'Ask your child about it calmly and turn protection back on together.',
     'guardian.guide.tamper.avoid': 'Assuming the worst before you talk.',

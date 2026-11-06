@@ -1,4 +1,4 @@
-// Companion-owned Android library: the Kuuma Keyboard and the module that drives the victim screens.
+// Companion-owned Android library: the Nilinde Keyboard and the module that drives the victim screens.
 // Rule 1: depend on shared packages only (core-android, contracts, ai-runtime-android), never on another module.
 plugins {
     alias(libs.plugins.android.library)

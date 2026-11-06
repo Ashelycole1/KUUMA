@@ -26,6 +26,11 @@ export type OpaqueRef = string;
 export type PermissionName = string;
 
 /**
+ * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of an EvidenceBundle as JSON. Only the parent's phone can open it; the server stores ciphertext only.
+ */
+export type SealedEvidence = string;
+
+/**
  * base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of the offending message. Only the parent's phone can open it; the server stores ciphertext only.
  */
 export type SealedExcerpt = string;
@@ -51,6 +56,7 @@ export const PATTERNS = {
   OffenderLabel: "^Person [A-Z]{1,2}$",
   OpaqueRef: "^or1_[A-Za-z0-9_-]{43}$",
   PermissionName: "^[A-Za-z][A-Za-z0-9_.]{2,120}$",
+  SealedEvidence: "^[A-Za-z0-9_-]+$",
   SealedExcerpt: "^[A-Za-z0-9_-]{24,10000}$",
   Sha256: "^[0-9a-f]{64}$",
   Timestamp: "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?Z$",
@@ -64,7 +70,7 @@ export const ageBracketValues = ["age_12_under", "age_13_15", "age_16_18"] as co
 export type AgeBracket = (typeof ageBracketValues)[number];
 
 /**
- * What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+ * What raised an alert. tamper: Nilinde's permissions were turned off or the phone stopped checking in.
  */
 export const alertKindValues = ["flag", "escalation", "sos", "tamper"] as const;
 export type AlertKind = (typeof alertKindValues)[number];
@@ -95,6 +101,18 @@ export type ApprovalStatus = (typeof approvalStatusValues)[number];
  */
 export const escalationReasonValues = ["severity_threshold", "repeated_incidents", "grooming_detected", "sos_triggered", "manual"] as const;
 export type EscalationReason = (typeof escalationReasonValues)[number];
+
+/**
+ * What the child decided about a parent's request to see a case's messages.
+ */
+export const evidenceOutcomeValues = ["ready", "declined", "failed"] as const;
+export type EvidenceOutcome = (typeof evidenceOutcomeValues)[number];
+
+/**
+ * A parent's request to see a case's messages. requested: waiting for the child. ready: the child allowed it and the messages are sealed for the parent. declined: the child said no. failed: the phone could not build it.
+ */
+export const evidenceStatusValues = ["requested", "ready", "declined", "failed"] as const;
+export type EvidenceStatus = (typeof evidenceStatusValues)[number];
 
 /**
  * The child's verdict on a flag.
@@ -354,6 +372,16 @@ export interface CasefileCaseUpdatedPayload {
 }
 
 /**
+ * PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.
+ */
+export interface CasefileEvidenceReadyPayload {
+  requestId: Uuid;
+  caseId: Uuid;
+  status: EvidenceOutcome;
+  evidence?: EvidenceBundle;
+}
+
+/**
  * An evidence item was hashed into the vault's chain.
  */
 export interface CasefileEvidenceSealedPayload {
@@ -446,6 +474,83 @@ export interface ErrorResponse {
   error: ApiError;
 }
 
+export interface Evidence {
+  requestId: Uuid;
+  childId: Uuid;
+  caseId: Uuid;
+  status: EvidenceStatus;
+  createdAt: Timestamp;
+  completedAt?: Timestamp;
+  sealedEvidence?: SealedEvidence;
+}
+
+/**
+ * PHONE ONLY (travels sealed). The messages of one case as the child's phone holds them, with who sent them. Never sent to a service in the clear.
+ */
+export interface EvidenceBundle {
+  caseId: Uuid;
+  offenderLabel: OffenderLabel;
+  /**
+   * Names the sender appeared under in the messaging app.
+   */
+  senderNames: string[];
+  /**
+   * Phone numbers the sender used or wrote.
+   */
+  senderNumbers: string[];
+  messages: EvidenceMessage[];
+  /**
+   * Older messages were left out to fit.
+   */
+  truncated?: boolean;
+  createdAt: Timestamp;
+}
+
+export interface EvidenceList {
+  evidence: Evidence[];
+}
+
+/**
+ * One message in an EvidenceBundle (phone only, travels sealed).
+ */
+export interface EvidenceMessage {
+  sentAt: Timestamp;
+  appSource?: AppSource;
+  /**
+   * As the messaging app showed them; absent for the child's own messages.
+   */
+  sender?: string;
+  fromChild: boolean;
+  text: string;
+}
+
+/**
+ * A parent's request to see a case's messages, delivered to the child's phone at its heartbeat. The phone asks the child only if the family-key signature verifies.
+ */
+export interface EvidenceOrder {
+  requestId: Uuid;
+  caseId: Uuid;
+  signature: FamilySignature;
+  requestedAt: Timestamp;
+}
+
+/**
+ * POST /v1/guardian/children/{childId}/evidence. The parent asks to see a case's messages; the child decides. Signed with the family key over evidence|requestId|caseId.
+ */
+export interface EvidenceRequest {
+  requestId: Uuid;
+  caseId: Uuid;
+  signature: FamilySignature;
+}
+
+/**
+ * POST /v1/guardian/evidence/{requestId}/result, from the child's phone (device-signed).
+ */
+export interface EvidenceResultRequest {
+  status: EvidenceOutcome;
+  sealedEvidence?: SealedEvidence;
+}
+
 /**
  * Sent only when the child consented to training (consentToTrain).
  */
@@ -463,6 +568,14 @@ export interface GuardianAlertSentPayload {
   alertId: Uuid;
   caseId: Uuid;
   severity: Severity;
+}
+
+/**
+ * PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.
+ */
+export interface GuardianEvidenceRequestedPayload {
+  requestId: Uuid;
+  caseId: Uuid;
 }
 
 /**
@@ -526,7 +639,7 @@ export interface HeartbeatRequest {
    */
   protectionActive?: boolean;
   /**
-   * Permissions Kuuma needs that are currently off.
+   * Permissions Nilinde needs that are currently off.
    */
   missingPermissions?: PermissionName[];
 }
@@ -546,6 +659,10 @@ export interface HeartbeatResponse {
    * Parent report requests for this child not yet delivered.
    */
   reports?: ReportOrder[];
+  /**
+   * Parent requests to see a case's messages, not yet delivered.
+   */
+  evidenceRequests?: EvidenceOrder[];
 }
 
 /**
@@ -898,6 +1015,11 @@ export type CasefileCaseEscalated = Envelope<"casefile.case.escalated", 1, Casef
 export type CasefileCaseUpdated = Envelope<"casefile.case.updated", 1, CasefileCaseUpdatedPayload>;
 
 /**
+ * PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.
+ */
+export type CasefileEvidenceReady = Envelope<"casefile.evidence.ready", 1, CasefileEvidenceReadyPayload>;
+
+/**
  * An evidence item was hashed into the vault's chain.
  */
 export type CasefileEvidenceSealed = Envelope<"casefile.evidence.sealed", 1, CasefileEvidenceSealedPayload>;
@@ -941,6 +1063,11 @@ export type CompanionSosTriggered = Envelope<"companion.sos.triggered", 1, Compa
  * Guardian alerted a parent.
  */
 export type GuardianAlertSent = Envelope<"guardian.alert.sent", 1, GuardianAlertSentPayload>;
+
+/**
+ * PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.
+ */
+export type GuardianEvidenceRequested = Envelope<"guardian.evidence.requested", 1, GuardianEvidenceRequestedPayload>;
 
 /**
  * A child device was paired with a parent.
@@ -990,6 +1117,7 @@ export type SentinelMessageFlagged = Envelope<"sentinel.message.flagged", 1, Sen
 export type KuumaEvent =
   | CasefileCaseEscalated
   | CasefileCaseUpdated
+  | CasefileEvidenceReady
   | CasefileEvidenceSealed
   | CasefileReportReady
   | CasefileShareCompleted
@@ -999,6 +1127,7 @@ export type KuumaEvent =
   | CompanionFeedbackSubmitted
   | CompanionSosTriggered
   | GuardianAlertSent
+  | GuardianEvidenceRequested
   | GuardianPairingCompleted
   | GuardianPolicyUpdated
   | GuardianReportRequested
@@ -1010,7 +1139,9 @@ export type KuumaEvent =
   | SentinelMessageFlagged;
 
 export type PhoneOnlyEvent =
+  | CasefileEvidenceReady
   | CasefileReportReady
+  | GuardianEvidenceRequested
   | GuardianReportRequested
   | SentinelCaptureReady
   | SentinelConversationActive;
@@ -1049,6 +1180,15 @@ export const EVENTS: readonly EventSpec[] = [
     "phoneOnly": false,
     "title": "CasefileCaseUpdated",
     "payload": "CasefileCaseUpdatedPayload"
+  },
+  {
+    "type": "casefile.evidence.ready",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone",
+    "phoneOnly": true,
+    "title": "CasefileEvidenceReady",
+    "payload": "CasefileEvidenceReadyPayload"
   },
   {
     "type": "casefile.evidence.sealed",
@@ -1130,6 +1270,15 @@ export const EVENTS: readonly EventSpec[] = [
     "phoneOnly": false,
     "title": "GuardianAlertSent",
     "payload": "GuardianAlertSentPayload"
+  },
+  {
+    "type": "guardian.evidence.requested",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "phone",
+    "phoneOnly": true,
+    "title": "GuardianEvidenceRequested",
+    "payload": "GuardianEvidenceRequestedPayload"
   },
   {
     "type": "guardian.pairing.completed",

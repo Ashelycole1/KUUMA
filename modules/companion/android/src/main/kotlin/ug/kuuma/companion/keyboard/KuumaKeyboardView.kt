@@ -2,9 +2,7 @@ package ug.kuuma.companion.keyboard
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.os.Handler
@@ -53,29 +51,30 @@ class KuumaKeyboardView(context: Context) : View(context) {
         }
 
     private val density = resources.displayMetrics.density
-    private val rowHeight = (52 * density).toInt()
-    private val gap = 4 * density
-    private val radius = 6 * density
-    private val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-        Configuration.UI_MODE_NIGHT_YES
+    private val rowHeight = (54 * density).toInt()
+    private val gap = 5 * density
+    private val radius = 10 * density
+    private val lift = 1.5f * density
+    private val theme = KeyboardTheme.of(context)
 
-    private val bg = if (night) Color.rgb(0x1F, 0x23, 0x26) else Color.rgb(0xE3, 0xE7, 0xEA)
-    private val keyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (night) Color.rgb(0x3A, 0x3F, 0x44) else Color.WHITE
-    }
-    private val modPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (night) Color.rgb(0x2C, 0x31, 0x35) else Color.rgb(0xC9, 0xCF, 0xD4)
-    }
-    private val pressedPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (night) Color.rgb(0x55, 0x5B, 0x61) else Color.rgb(0xB0, 0xB8, 0xBF)
-    }
-    private val accentPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.rgb(0x2E, 0x7D, 0x6B) }
+    private fun fill(c: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c }
+    private val keyPaint = fill(theme.key)
+    private val modPaint = fill(theme.modifier)
+    private val pressedPaint = fill(theme.pressed)
+    private val shadowPaint = fill(theme.shadow)
+    private val accentPaint = fill(theme.primary)
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (night) Color.rgb(0xEE, 0xEE, 0xEE) else Color.rgb(0x21, 0x21, 0x21)
+        color = theme.text
         textAlign = Paint.Align.CENTER
         textSize = 22 * density
     }
     private val smallText = Paint(textPaint).apply { textSize = 15 * density }
+    private val onAccentText = Paint(textPaint).apply { color = theme.onPrimary }
+    private val onAccentSmall = Paint(smallText).apply { color = theme.onPrimary }
+    private val previewText = Paint(textPaint).apply {
+        textSize = 30 * density
+        color = theme.primary
+    }
 
     private class Cell(val key: Key, val rect: RectF)
 
@@ -97,7 +96,7 @@ class KuumaKeyboardView(context: Context) : View(context) {
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val width = MeasureSpec.getSize(widthMeasureSpec)
-        setMeasuredDimension(width, rowHeight * layout.rows.size + paddingTop + paddingBottom)
+        setMeasuredDimension(width, rowHeight * layout.rows.size + paddingTop + paddingBottom + (6 * density).toInt())
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) = computeCells(w)
@@ -109,7 +108,7 @@ class KuumaKeyboardView(context: Context) : View(context) {
         layout.rows.forEachIndexed { r, row ->
             val rowUnits = row.sumOf { it.width.toDouble() }.toFloat()
             var x = (w - rowUnits * unit) / 2f // centre short rows (e.g. a-l)
-            val top = paddingTop + r * rowHeight.toFloat()
+            val top = paddingTop + (3 * density) + r * rowHeight.toFloat()
             for (key in row) {
                 val kw = key.width * unit
                 out += Cell(key, RectF(x + gap / 2, top + gap / 2, x + kw - gap / 2, top + rowHeight - gap / 2))
@@ -120,27 +119,58 @@ class KuumaKeyboardView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
-        canvas.drawColor(bg)
+        canvas.drawColor(theme.background)
         for (cell in cells) drawKey(canvas, cell, cell === pressed && popup.isEmpty())
         if (popup.isNotEmpty()) {
             for (cell in popup) drawKey(canvas, cell, cell === popupChoice)
+        } else {
+            pressed?.takeIf { it.key.kind == KeyKind.CHAR }?.let { drawPreview(canvas, it) }
         }
     }
 
     private fun drawKey(canvas: Canvas, cell: Cell, isPressed: Boolean) {
         val key = cell.key
+        val accent = key.kind == KeyKind.ENTER ||
+            key.kind == KeyKind.SHIELD ||
+            (key.kind == KeyKind.SHIFT && (shifted || capsLock))
         val paint = when {
             isPressed -> pressedPaint
-            key.kind == KeyKind.SHIFT && (shifted || capsLock) -> accentPaint
+            accent -> accentPaint
             key.kind == KeyKind.CHAR || key.kind == KeyKind.SPACE -> keyPaint
             else -> modPaint
         }
+        // A soft edge under each key, so the keys read as buttons.
+        shadow.set(cell.rect.left, cell.rect.top + lift, cell.rect.right, cell.rect.bottom + lift)
+        canvas.drawRoundRect(shadow, radius, radius, shadowPaint)
         canvas.drawRoundRect(cell.rect, radius, radius, paint)
         val label = if (key.kind == KeyKind.CHAR && shifted) key.label.uppercase() else key.label
-        val p = if (label.length > 1 && key.kind != KeyKind.CHAR) smallText else textPaint
+        val small = label.length > 1 && key.kind != KeyKind.CHAR
+        val p = when {
+            accent && !isPressed -> if (small) onAccentSmall else onAccentText
+            small -> smallText
+            else -> textPaint
+        }
         val y = cell.rect.centerY() - (p.descent() + p.ascent()) / 2
         canvas.drawText(label, cell.rect.centerX(), y, p)
     }
+
+    /** The pressed letter, enlarged just above the finger. */
+    private fun drawPreview(canvas: Canvas, cell: Cell) {
+        val w = cell.rect.width() * 1.3f
+        val h = cell.rect.height() * 1.15f
+        val top = (cell.rect.top - h - gap).coerceAtLeast(0f)
+        val left = (cell.rect.centerX() - w / 2).coerceIn(0f, width - w)
+        preview.set(left, top, left + w, top + h)
+        shadow.set(preview.left, preview.top + lift, preview.right, preview.bottom + lift)
+        canvas.drawRoundRect(shadow, radius, radius, shadowPaint)
+        canvas.drawRoundRect(preview, radius, radius, keyPaint)
+        val label = if (shifted) cell.key.label.uppercase() else cell.key.label
+        val y = preview.centerY() - (previewText.descent() + previewText.ascent()) / 2
+        canvas.drawText(label, preview.centerX(), y, previewText)
+    }
+
+    private val shadow = RectF()
+    private val preview = RectF()
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {

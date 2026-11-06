@@ -1,8 +1,8 @@
-# Kuuma Guardian Build — Builder Brief
+# Nilinde Guardian Build — Builder Brief
 
 Nov 5, 2026 · @Niwasiima Ashelycole
 
-The Guardian owner builds the parent's side of Kuuma and the rulebook on the child's phone. That covers the parent app, setup and pairing, the age-bracket policy, alerts and approvals.
+The Guardian owner builds the parent's side of Nilinde and the rulebook on the child's phone. That covers the parent app, setup and pairing, the age-bracket policy, alerts and approvals.
 
 ## Your job
 
@@ -23,11 +23,11 @@ The Guardian owner builds the parent's side of Kuuma and the rulebook on the chi
 - [ ] **Policy:** the parent sets the child's age bracket and the apps to watch. The bracket decides alert thresholds, advice depth and which screens the child sees. Bracket values live in `kuuma-lang` (placeholders until the team agrees them).
 - [ ] **Alerts dashboard:** alerts per child, a severity trend, and step-by-step guidance for each alert on how to talk to the child and what to avoid.
 - [ ] **Approvals:** approve or decline Casefile's share and deletion requests for a child.
-- [ ] **Tamper alerts:** tells the parent if Kuuma's permissions are turned off or the app is removed from the child's phone.
+- [ ] **Tamper alerts:** tells the parent if Nilinde's permissions are turned off or the app is removed from the child's phone.
 
 ### Guardian agent on the child's phone (`android/` + `flutter/`)
 
-- [ ] **Setup wizard:** the parent installs Kuuma, scans the pairing QR code and records consent. They grant the permissions every module declares in Core's permission registry (notification access, accessibility, keyboard) and choose the apps to watch.
+- [ ] **Setup wizard:** the parent installs Nilinde, scans the pairing QR code and records consent. They grant the permissions every module declares in Core's permission registry (notification access, accessibility, keyboard) and choose the apps to watch.
 - [ ] **Policy holder:** stores the current policy in `guardian.db` and publishes `guardian.policy.updated`; the child cannot change it.
 - [ ] **Alert decisions:** on every flag, escalation or SOS, it checks the policy and sends an alert if it qualifies. High-severity flags and SOS always go through.
 - [ ] **Heartbeat:** regular check-ins that report whether permissions are still granted.
@@ -86,7 +86,7 @@ No cross-module imports; own only your folders, schema and database; publish onl
 
 - [ ] A parent sets up a child's phone in one sitting, without help
 - [ ] A high-severity flag reaches the parent's phone within the agreed time
-- [ ] The child cannot change the policy or turn off Kuuma without the parent being told
+- [ ] The child cannot change the policy or turn off Nilinde without the parent being told
 - [ ] An alert never contains anything beyond its summary fields
 - [ ] Works on an Android 5.0 emulator and a low-end physical phone
 

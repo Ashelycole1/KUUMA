@@ -2,7 +2,6 @@
 /// Everything goes through [CompanionBridge] to Companion's Kotlin half, which publishes the events.
 library;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:kuuma_ui/kuuma_ui.dart';
 
@@ -21,7 +20,7 @@ export 'src/home_screen.dart';
 class CompanionFlutterModule implements KuumaFlutterModule {
   CompanionFlutterModule({CompanionBridge? bridge, bool? debug})
       : bridge = bridge ?? ChannelCompanionBridge(),
-        debug = debug ?? kDebugMode;
+        debug = debug ?? kuumaDevTools;
 
   final CompanionBridge bridge;
 

@@ -1,14 +1,14 @@
-# Kuuma Core Build — Main Builder Brief
+# Nilinde Core Build — Main Builder Brief
 
 Nov 5, 2026 · @Niwasiima Ashelycole
 
-The main builder lays the base of the Kuuma repo so five other builders — AI, Sentinel, Companion, Casefile and Guardian — can start in parallel. Core is done when the handoff gate at the end of this brief is fully ticked.
+The main builder lays the base of the Nilinde repo so five other builders — AI, Sentinel, Companion, Casefile and Guardian — can start in parallel. Core is done when the handoff gate at the end of this brief is fully ticked.
 
 ## Your job
 
 You build the ground everyone else stands on: a repo where any builder can clone, run one command and start coding against real interfaces with fake data.
 
-Kuuma is a cyberbullying and harassment detection app for Android. It is split into six builds with one owner each:
+Nilinde is a cyberbullying and harassment detection app for Android. It is split into six builds with one owner each:
 
 | Build | Owner | Starts |
 | --- | --- | --- |

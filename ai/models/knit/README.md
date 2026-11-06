@@ -3,7 +3,7 @@
 This ports our tested Detoxify/ALBERT TFLite runtime into the shared Android AI package.
 It detects insults and threats in **English only**, with the prototype's 0.50 maximum
 threat/insult cutoff. Its sigmoid outputs are uncalibrated scores, not a measured
-probability of bullying. It does not detect every category in Kuuma's contracts.
+probability of bullying. It does not detect every category in Nilinde's contracts.
 
 Setup from the repository root:
 

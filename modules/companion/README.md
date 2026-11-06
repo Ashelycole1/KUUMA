@@ -16,7 +16,7 @@ Owner: see `CODEOWNERS`. Companion reacts to Sentinel's flags; it never reads ot
 | Part | Where |
 | --- | --- |
 | Module: flags → advice, keyboard context, the four published events | `android/.../CompanionModule.kt`, `Advice.kt` |
-| Kuuma Keyboard (InputMethodService, layouts, suggestions, reply check) | `android/.../keyboard/` |
+| Nilinde Keyboard (InputMethodService, layouts, suggestions, reply check) | `android/.../keyboard/` |
 | Content pack reader | `android/.../content/ContentPack.kt` |
 | Bridge for the Flutter screens | `android/.../CompanionBridge.kt` ↔ `flutter/lib/src/bridge.dart` |
 | Help tab, advice cards, crisis screen, feedback, debug fake | `flutter/lib/src/` |

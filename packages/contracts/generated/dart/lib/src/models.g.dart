@@ -10,6 +10,7 @@ abstract final class ContractPatterns {
   static final RegExp offenderLabel = RegExp(r'^Person [A-Z]{1,2}$');
   static final RegExp opaqueRef = RegExp(r'^or1_[A-Za-z0-9_-]{43}$');
   static final RegExp permissionName = RegExp(r'^[A-Za-z][A-Za-z0-9_.]{2,120}$');
+  static final RegExp sealedEvidence = RegExp(r'^[A-Za-z0-9_-]+$');
   static final RegExp sealedExcerpt = RegExp(r'^[A-Za-z0-9_-]{24,10000}$');
   static final RegExp sha256 = RegExp(r'^[0-9a-f]{64}$');
   static final RegExp timestamp = RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$');
@@ -31,7 +32,7 @@ enum AgeBracket {
           orElse: () => throw ArgumentError('Unknown AgeBracket: $wire'));
 }
 
-/// What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.
+/// What raised an alert. tamper: Nilinde's permissions were turned off or the phone stopped checking in.
 enum AlertKind {
   flag('flag'),
   escalation('escalation'),
@@ -123,6 +124,37 @@ enum EscalationReason {
   static EscalationReason fromWire(String wire) =>
       values.firstWhere((v) => v.wire == wire,
           orElse: () => throw ArgumentError('Unknown EscalationReason: $wire'));
+}
+
+/// What the child decided about a parent's request to see a case's messages.
+enum EvidenceOutcome {
+  ready('ready'),
+  declined('declined'),
+  failed('failed');
+
+  const EvidenceOutcome(this.wire);
+
+  final String wire;
+
+  static EvidenceOutcome fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown EvidenceOutcome: $wire'));
+}
+
+/// A parent's request to see a case's messages. requested: waiting for the child. ready: the child allowed it and the messages are sealed for the parent. declined: the child said no. failed: the phone could not build it.
+enum EvidenceStatus {
+  requested('requested'),
+  ready('ready'),
+  declined('declined'),
+  failed('failed');
+
+  const EvidenceStatus(this.wire);
+
+  final String wire;
+
+  static EvidenceStatus fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown EvidenceStatus: $wire'));
 }
 
 /// The child's verdict on a flag.
@@ -792,6 +824,31 @@ class CasefileCaseUpdatedPayload extends CloudSendablePayload {
       };
 }
 
+/// PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.
+class CasefileEvidenceReadyPayload extends PhoneOnlyPayload {
+  const CasefileEvidenceReadyPayload({required this.requestId, required this.caseId, required this.status, this.evidence});
+
+  final String requestId;
+  final String caseId;
+  final EvidenceOutcome status;
+  final EvidenceBundle? evidence;
+
+  factory CasefileEvidenceReadyPayload.fromJson(Map<String, dynamic> json) => CasefileEvidenceReadyPayload(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        status: EvidenceOutcome.fromWire(json['status'] as String),
+        evidence: json['evidence'] == null ? null : EvidenceBundle.fromJson(json['evidence'] as Map<String, dynamic>),
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'status': status.wire,
+        if (evidence != null) 'evidence': evidence!.toJson(),
+      };
+}
+
 /// An evidence item was hashed into the vault's chain.
 class CasefileEvidenceSealedPayload extends CloudSendablePayload {
   const CasefileEvidenceSealedPayload({required this.itemId, required this.flagId, required this.hash, required this.chainIndex});
@@ -1029,6 +1086,179 @@ class ErrorResponse {
       };
 }
 
+class Evidence {
+  const Evidence({required this.requestId, required this.childId, required this.caseId, required this.status, required this.createdAt, this.completedAt, this.sealedEvidence});
+
+  final String requestId;
+  final String childId;
+  final String caseId;
+  final EvidenceStatus status;
+  final String createdAt;
+  final String? completedAt;
+  final String? sealedEvidence;
+
+  factory Evidence.fromJson(Map<String, dynamic> json) => Evidence(
+        requestId: json['requestId'] as String,
+        childId: json['childId'] as String,
+        caseId: json['caseId'] as String,
+        status: EvidenceStatus.fromWire(json['status'] as String),
+        createdAt: json['createdAt'] as String,
+        completedAt: json['completedAt'] == null ? null : json['completedAt'] as String,
+        sealedEvidence: json['sealedEvidence'] == null ? null : json['sealedEvidence'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'childId': childId,
+        'caseId': caseId,
+        'status': status.wire,
+        'createdAt': createdAt,
+        if (completedAt != null) 'completedAt': completedAt!,
+        if (sealedEvidence != null) 'sealedEvidence': sealedEvidence!,
+      };
+}
+
+/// PHONE ONLY (travels sealed). The messages of one case as the child's phone holds them, with who sent them. Never sent to a service in the clear.
+class EvidenceBundle {
+  const EvidenceBundle({required this.caseId, required this.offenderLabel, required this.senderNames, required this.senderNumbers, required this.messages, this.truncated, required this.createdAt});
+
+  final String caseId;
+  final String offenderLabel;
+  /// Names the sender appeared under in the messaging app.
+  final List<String> senderNames;
+  /// Phone numbers the sender used or wrote.
+  final List<String> senderNumbers;
+  final List<EvidenceMessage> messages;
+  /// Older messages were left out to fit.
+  final bool? truncated;
+  final String createdAt;
+
+  factory EvidenceBundle.fromJson(Map<String, dynamic> json) => EvidenceBundle(
+        caseId: json['caseId'] as String,
+        offenderLabel: json['offenderLabel'] as String,
+        senderNames: (json['senderNames'] as List<dynamic>).map((e) => e as String).toList(),
+        senderNumbers: (json['senderNumbers'] as List<dynamic>).map((e) => e as String).toList(),
+        messages: (json['messages'] as List<dynamic>).map((e) => EvidenceMessage.fromJson(e as Map<String, dynamic>)).toList(),
+        truncated: json['truncated'] == null ? null : json['truncated'] as bool,
+        createdAt: json['createdAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'caseId': caseId,
+        'offenderLabel': offenderLabel,
+        'senderNames': senderNames,
+        'senderNumbers': senderNumbers,
+        'messages': messages.map((e) => e.toJson()).toList(),
+        if (truncated != null) 'truncated': truncated!,
+        'createdAt': createdAt,
+      };
+}
+
+class EvidenceList {
+  const EvidenceList({required this.evidence});
+
+  final List<Evidence> evidence;
+
+  factory EvidenceList.fromJson(Map<String, dynamic> json) => EvidenceList(
+        evidence: (json['evidence'] as List<dynamic>).map((e) => Evidence.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'evidence': evidence.map((e) => e.toJson()).toList(),
+      };
+}
+
+/// One message in an EvidenceBundle (phone only, travels sealed).
+class EvidenceMessage {
+  const EvidenceMessage({required this.sentAt, this.appSource, this.sender, required this.fromChild, required this.text});
+
+  final String sentAt;
+  final AppSource? appSource;
+  /// As the messaging app showed them; absent for the child's own messages.
+  final String? sender;
+  final bool fromChild;
+  final String text;
+
+  factory EvidenceMessage.fromJson(Map<String, dynamic> json) => EvidenceMessage(
+        sentAt: json['sentAt'] as String,
+        appSource: json['appSource'] == null ? null : AppSource.fromWire(json['appSource'] as String),
+        sender: json['sender'] == null ? null : json['sender'] as String,
+        fromChild: json['fromChild'] as bool,
+        text: json['text'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'sentAt': sentAt,
+        if (appSource != null) 'appSource': appSource!.wire,
+        if (sender != null) 'sender': sender!,
+        'fromChild': fromChild,
+        'text': text,
+      };
+}
+
+/// A parent's request to see a case's messages, delivered to the child's phone at its heartbeat. The phone asks the child only if the family-key signature verifies.
+class EvidenceOrder {
+  const EvidenceOrder({required this.requestId, required this.caseId, required this.signature, required this.requestedAt});
+
+  final String requestId;
+  final String caseId;
+  final String signature;
+  final String requestedAt;
+
+  factory EvidenceOrder.fromJson(Map<String, dynamic> json) => EvidenceOrder(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        signature: json['signature'] as String,
+        requestedAt: json['requestedAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'signature': signature,
+        'requestedAt': requestedAt,
+      };
+}
+
+/// POST /v1/guardian/children/{childId}/evidence. The parent asks to see a case's messages; the child decides. Signed with the family key over evidence|requestId|caseId.
+class EvidenceRequest {
+  const EvidenceRequest({required this.requestId, required this.caseId, required this.signature});
+
+  final String requestId;
+  final String caseId;
+  final String signature;
+
+  factory EvidenceRequest.fromJson(Map<String, dynamic> json) => EvidenceRequest(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        signature: json['signature'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'signature': signature,
+      };
+}
+
+/// POST /v1/guardian/evidence/{requestId}/result, from the child's phone (device-signed).
+class EvidenceResultRequest {
+  const EvidenceResultRequest({required this.status, this.sealedEvidence});
+
+  final EvidenceOutcome status;
+  final String? sealedEvidence;
+
+  factory EvidenceResultRequest.fromJson(Map<String, dynamic> json) => EvidenceResultRequest(
+        status: EvidenceOutcome.fromWire(json['status'] as String),
+        sealedEvidence: json['sealedEvidence'] == null ? null : json['sealedEvidence'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'status': status.wire,
+        if (sealedEvidence != null) 'sealedEvidence': sealedEvidence!,
+      };
+}
+
 /// Sent only when the child consented to training (consentToTrain).
 class FeedbackRequest {
   const FeedbackRequest({required this.flagId, required this.verdict, this.category, required this.modelVersion});
@@ -1072,6 +1302,25 @@ class GuardianAlertSentPayload extends CloudSendablePayload {
         'alertId': alertId,
         'caseId': caseId,
         'severity': severity.wire,
+      };
+}
+
+/// PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.
+class GuardianEvidenceRequestedPayload extends PhoneOnlyPayload {
+  const GuardianEvidenceRequestedPayload({required this.requestId, required this.caseId});
+
+  final String requestId;
+  final String caseId;
+
+  factory GuardianEvidenceRequestedPayload.fromJson(Map<String, dynamic> json) => GuardianEvidenceRequestedPayload(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
       };
 }
 
@@ -1206,7 +1455,7 @@ class HeartbeatRequest {
   final int policyVersion;
   /// False when the accessibility/notification service is off.
   final bool? protectionActive;
-  /// Permissions Kuuma needs that are currently off.
+  /// Permissions Nilinde needs that are currently off.
   final List<String>? missingPermissions;
 
   factory HeartbeatRequest.fromJson(Map<String, dynamic> json) => HeartbeatRequest(
@@ -1227,7 +1476,7 @@ class HeartbeatRequest {
 }
 
 class HeartbeatResponse {
-  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime, this.policy, this.decisions, this.reports});
+  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime, this.policy, this.decisions, this.reports, this.evidenceRequests});
 
   final int latestPolicyVersion;
   final String serverTime;
@@ -1237,6 +1486,8 @@ class HeartbeatResponse {
   final List<ApprovalResult>? decisions;
   /// Parent report requests for this child not yet delivered.
   final List<ReportOrder>? reports;
+  /// Parent requests to see a case's messages, not yet delivered.
+  final List<EvidenceOrder>? evidenceRequests;
 
   factory HeartbeatResponse.fromJson(Map<String, dynamic> json) => HeartbeatResponse(
         latestPolicyVersion: json['latestPolicyVersion'] as int,
@@ -1244,6 +1495,7 @@ class HeartbeatResponse {
         policy: json['policy'] == null ? null : Policy.fromJson(json['policy'] as Map<String, dynamic>),
         decisions: json['decisions'] == null ? null : (json['decisions'] as List<dynamic>).map((e) => ApprovalResult.fromJson(e as Map<String, dynamic>)).toList(),
         reports: json['reports'] == null ? null : (json['reports'] as List<dynamic>).map((e) => ReportOrder.fromJson(e as Map<String, dynamic>)).toList(),
+        evidenceRequests: json['evidenceRequests'] == null ? null : (json['evidenceRequests'] as List<dynamic>).map((e) => EvidenceOrder.fromJson(e as Map<String, dynamic>)).toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -1252,6 +1504,7 @@ class HeartbeatResponse {
         if (policy != null) 'policy': policy!.toJson(),
         if (decisions != null) 'decisions': decisions!.map((e) => e.toJson()).toList(),
         if (reports != null) 'reports': reports!.map((e) => e.toJson()).toList(),
+        if (evidenceRequests != null) 'evidenceRequests': evidenceRequests!.map((e) => e.toJson()).toList(),
       };
 }
 
@@ -2068,6 +2321,7 @@ class Envelope<P extends EventPayload> {
 abstract final class Events {
   static const EventSpec<CasefileCaseEscalatedPayload> casefileCaseEscalated = EventSpec('casefile.case.escalated', 1, 'casefile', 'phone_to_cloud', false, CasefileCaseEscalatedPayload.fromJson);
   static const EventSpec<CasefileCaseUpdatedPayload> casefileCaseUpdated = EventSpec('casefile.case.updated', 1, 'casefile', 'phone_to_cloud', false, CasefileCaseUpdatedPayload.fromJson);
+  static const EventSpec<CasefileEvidenceReadyPayload> casefileEvidenceReady = EventSpec('casefile.evidence.ready', 1, 'casefile', 'phone', true, CasefileEvidenceReadyPayload.fromJson);
   static const EventSpec<CasefileEvidenceSealedPayload> casefileEvidenceSealed = EventSpec('casefile.evidence.sealed', 1, 'casefile', 'phone', false, CasefileEvidenceSealedPayload.fromJson);
   static const EventSpec<CasefileReportReadyPayload> casefileReportReady = EventSpec('casefile.report.ready', 1, 'casefile', 'phone', true, CasefileReportReadyPayload.fromJson);
   static const EventSpec<CasefileShareCompletedPayload> casefileShareCompleted = EventSpec('casefile.share.completed', 1, 'casefile', 'cloud', false, CasefileShareCompletedPayload.fromJson);
@@ -2077,6 +2331,7 @@ abstract final class Events {
   static const EventSpec<CompanionFeedbackSubmittedPayload> companionFeedbackSubmitted = EventSpec('companion.feedback.submitted', 1, 'companion', 'phone', false, CompanionFeedbackSubmittedPayload.fromJson);
   static const EventSpec<CompanionSosTriggeredPayload> companionSosTriggered = EventSpec('companion.sos.triggered', 1, 'companion', 'phone_to_cloud', false, CompanionSosTriggeredPayload.fromJson);
   static const EventSpec<GuardianAlertSentPayload> guardianAlertSent = EventSpec('guardian.alert.sent', 1, 'guardian', 'cloud', false, GuardianAlertSentPayload.fromJson);
+  static const EventSpec<GuardianEvidenceRequestedPayload> guardianEvidenceRequested = EventSpec('guardian.evidence.requested', 1, 'guardian', 'phone', true, GuardianEvidenceRequestedPayload.fromJson);
   static const EventSpec<GuardianPairingCompletedPayload> guardianPairingCompleted = EventSpec('guardian.pairing.completed', 1, 'guardian', 'cloud_to_phone', false, GuardianPairingCompletedPayload.fromJson);
   static const EventSpec<GuardianPolicyUpdatedPayload> guardianPolicyUpdated = EventSpec('guardian.policy.updated', 1, 'guardian', 'cloud_to_phone', false, GuardianPolicyUpdatedPayload.fromJson);
   static const EventSpec<GuardianReportRequestedPayload> guardianReportRequested = EventSpec('guardian.report.requested', 1, 'guardian', 'phone', true, GuardianReportRequestedPayload.fromJson);
@@ -2090,6 +2345,7 @@ abstract final class Events {
   static const List<EventSpec<EventPayload>> all = [
     casefileCaseEscalated,
     casefileCaseUpdated,
+    casefileEvidenceReady,
     casefileEvidenceSealed,
     casefileReportReady,
     casefileShareCompleted,
@@ -2099,6 +2355,7 @@ abstract final class Events {
     companionFeedbackSubmitted,
     companionSosTriggered,
     guardianAlertSent,
+    guardianEvidenceRequested,
     guardianPairingCompleted,
     guardianPolicyUpdated,
     guardianReportRequested,

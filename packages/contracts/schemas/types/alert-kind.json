@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://schemas.kuuma.ug/types/alert-kind.json",
   "title": "AlertKind",
-  "description": "What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.",
+  "description": "What raised an alert. tamper: Nilinde's permissions were turned off or the phone stopped checking in.",
   "type": "string",
   "enum": [
     "flag",

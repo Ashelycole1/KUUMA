@@ -1,4 +1,4 @@
-// Kuuma Kotlin/Android build. Flutter apps under apps/ include this build (includeBuild)
+// Nilinde Kotlin/Android build. Flutter apps under apps/ include this build (includeBuild)
 // so their Android hosts can depend on these libraries.
 pluginManagement {
     repositories {

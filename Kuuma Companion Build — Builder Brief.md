@@ -1,8 +1,8 @@
-# Kuuma Companion Build — Builder Brief
+# Nilinde Companion Build — Builder Brief
 
 Nov 5, 2026 · @Niwasiima Ashelycole
 
-The Companion owner builds everything the victim sees and touches: the Kuuma Keyboard, advice, crisis support and discreet mode. Companion reacts to Sentinel's flags; it never reads other apps and never stores evidence.
+The Companion owner builds everything the victim sees and touches: the Nilinde Keyboard, advice, crisis support and discreet mode. Companion reacts to Sentinel's flags; it never reads other apps and never stores evidence.
 
 ## Your job
 
@@ -12,11 +12,11 @@ The Companion owner builds everything the victim sees and touches: the Kuuma Key
 
 **You start:** once the Core gate is passed. Your folder will already hold a running skeleton with a placeholder screen in the child app.
 
-**Done means:** a child can use the Kuuma Keyboard as their everyday keyboard, sees the right advice within a second of a flag, and can hide or lock Kuuma from any screen.
+**Done means:** a child can use the Nilinde Keyboard as their everyday keyboard, sees the right advice within a second of a flag, and can hide or lock Nilinde from any screen.
 
 ## What you build
 
-### Kuuma Keyboard (`android/`, InputMethodService)
+### Nilinde Keyboard (`android/`, InputMethodService)
 
 - [ ] **Full everyday keyboard** for English and Luganda first, then Runyankole and Swahili, with word suggestions in each
 - [ ] **Context banner** above the keys when the open chat has flags, showing severity and a one-line tip (driven by `sentinel.conversation.active`)
@@ -89,7 +89,7 @@ No cross-module imports; own only your folders, schema and database; publish onl
 
 - [ ] The keyboard is comfortable enough to use as an everyday keyboard on a low-end phone
 - [ ] Advice appears within a second of a flag
-- [ ] Quick-hide and lock work on every Kuuma screen
+- [ ] Quick-hide and lock work on every Nilinde screen
 - [ ] Nothing the child types is stored or logged, except IDs of advice shown
 - [ ] Child-safety and counselling reviewers have signed off on the content for each age bracket
 

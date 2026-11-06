@@ -1,1 +1,1 @@
-"""Kuuma Guardian service."""
+"""Nilinde Guardian service."""

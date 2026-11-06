@@ -1,4 +1,4 @@
-/// Kuuma contract types, generated from packages/contracts/schemas. See `make gen`.
+/// Nilinde contract types, generated from packages/contracts/schemas. See `make gen`.
 library;
 
 part 'src/models.g.dart';

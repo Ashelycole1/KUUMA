@@ -1,7 +1,7 @@
 [project]
 name = "kuuma-guardian-service"
 version = "0.1.0"
-description = "Kuuma Guardian service. Skeleton from Core; the Guardian owner fills it."
+description = "Nilinde Guardian service. Skeleton from Core; the Guardian owner fills it."
 requires-python = ">=3.12"
 dependencies = ["kuuma-server-common", "kuuma-contracts"]
 

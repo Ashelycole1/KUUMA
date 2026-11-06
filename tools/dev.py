@@ -52,7 +52,7 @@ def main() -> int:
         print("The gateway did not come up. See `make dev-logs`.", file=sys.stderr)
         return 1
     print(f"""
-Kuuma local stack is up.
+Nilinde local stack is up.
   Gateway        {GATEWAY}            (every /v1/... API)
   API docs       {GATEWAY}/v1/...     each service also serves /docs inside the stack
   MinIO console  http://localhost:9001  (user/password in .env)

@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Kuuma Guardian API
+  title: Nilinde Guardian API
   version: 1.1.0
   description: |
     Owned by the Guardian build. Child-phone endpoints are device-signed (deviceSignature).
@@ -327,6 +327,78 @@ paths:
             application/json:
               schema: { $ref: "../schemas/api/report.json" }
               example: *report
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/children/{childId}/evidence:
+    post:
+      operationId: createEvidenceRequest
+      summary: The parent asks to see a case's messages; the child allows or declines on their phone.
+      security:
+        - parentSession: []
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/uuid.json" }
+          example: 4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/evidence-request.json" }
+            example:
+              requestId: 5e4d3c2b-1a0f-4e9d-8c7b-6a5f4e3d2c1b
+              caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+              signature: TAVpvYY4LMEAlnUjOS7RVFpnPmvTf2VRd1Dv7ARBZgE
+      responses:
+        "201":
+          description: The request, waiting for the child.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/evidence.json" }
+              example: &evidence
+                requestId: 5e4d3c2b-1a0f-4e9d-8c7b-6a5f4e3d2c1b
+                childId: 4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f
+                caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+                status: requested
+                createdAt: "2026-11-05T09:45:00Z"
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/evidence:
+    get:
+      operationId: listEvidence
+      summary: The signed-in parent's requests to see messages, newest first.
+      security:
+        - parentSession: []
+      responses:
+        "200":
+          description: Requests.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/evidence-list.json" }
+              example: { evidence: [*evidence] }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/evidence/{requestId}/result:
+    post:
+      operationId: evidenceResult
+      summary: The child allowed (or declined) a parent's request to see a case's messages.
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/uuid.json" }
+          example: 5e4d3c2b-1a0f-4e9d-8c7b-6a5f4e3d2c1b
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/evidence-result-request.json" }
+            example: { status: declined }
+      responses:
+        "200":
+          description: The updated request.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/evidence.json" }
+              example: *evidence
         default: { $ref: "#/components/responses/Error" }
 components:
   securitySchemes:

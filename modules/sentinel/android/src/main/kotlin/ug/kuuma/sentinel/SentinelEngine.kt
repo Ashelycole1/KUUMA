@@ -87,13 +87,30 @@ class SentinelEngine(
     fun onNotification(n: NotificationSnapshot) {
         val app = WatchedApps.appFor(n.packageName) ?: return
         if (app !in policy.watchedApps) return
-        for (m in NotificationParser.parse(n, app)) if (dedupe.isNew(m)) onMessage(m)
+        for (m in NotificationParser.parse(n, app)) if (isNew(m)) onMessage(m)
+    }
+
+    /**
+     * Screen each message once. Messaging apps re-post old messages in every new notification,
+     * the phone re-reads active notifications when Nilinde restarts, and hidden chats are read
+     * again from the screen: without this, one message would raise a new flag (and a new parent
+     * alert) every time. The key leaves the sender out, because notifications and the screen
+     * name the sender differently.
+     */
+    private fun isNew(m: IncomingMessage): Boolean {
+        if (!dedupe.isNew(m)) return false
+        val key = refs.messageRef(
+            m.appSource.wire,
+            m.conversationKey,
+            "screened|" + Hashing.sha256Hex(m.text.trim().toByteArray())
+        )
+        return store.markScreened(key, clock(), SCREENED_WINDOW)
     }
 
     /**
      * Android 15+ hides the text of notifications it thinks are sensitive (any message with a
-     * number that looks like a code or phone number) from apps like Kuuma. Such a message is
-     * exactly the kind that can carry a threat, so when the child opens that chat, Kuuma screens
+     * number that looks like a code or phone number) from apps like Nilinde. Such a message is
+     * exactly the kind that can carry a threat, so when the child opens that chat, Nilinde screens
      * what is on the screen instead (read-only, through the accessibility service).
      */
     fun onHiddenNotification(n: NotificationSnapshot) {
@@ -172,7 +189,7 @@ class SentinelEngine(
                     chat.appSource, chat.title, chat.title, false,
                     sender ?: NotificationParser.SELF, sender.orEmpty(), sm.text, s.capturedAt, sm.fromChild
                 )
-                if (dedupe.isNew(m)) onMessage(m)
+                if (isNew(m)) onMessage(m)
             }
         }
         val wanted = screenCaptures[ref] ?: return
@@ -374,5 +391,8 @@ class SentinelEngine(
     companion object {
         /** How long a flagged chat waits for the child to open it so the screen can be captured. */
         const val SCREEN_CAPTURE_WINDOW = 24 * 3_600_000L
+
+        /** The same text in the same chat within this window is the same message. */
+        const val SCREENED_WINDOW = 12 * 3_600_000L
     }
 }

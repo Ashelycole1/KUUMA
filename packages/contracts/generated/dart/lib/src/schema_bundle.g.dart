@@ -447,6 +447,104 @@ const String kuumaSchemaBundle = r'''
   "title": "ChildStatus",
   "type": "object"
  },
+ "https://schemas.kuuma.ug/api/evidence-list.json": {
+  "$id": "https://schemas.kuuma.ug/api/evidence-list.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "evidence": {
+    "items": {
+     "$ref": "evidence.json"
+    },
+    "type": "array"
+   }
+  },
+  "required": [
+   "evidence"
+  ],
+  "title": "EvidenceList",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/evidence-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/evidence-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "POST /v1/guardian/children/{childId}/evidence. The parent asks to see a case's messages; the child decides. Signed with the family key over evidence|requestId|caseId.",
+  "properties": {
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
+   }
+  },
+  "required": [
+   "requestId",
+   "caseId",
+   "signature"
+  ],
+  "title": "EvidenceRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/evidence-result-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/evidence-result-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "POST /v1/guardian/evidence/{requestId}/result, from the child's phone (device-signed).",
+  "properties": {
+   "sealedEvidence": {
+    "$ref": "../types/sealed-evidence.json"
+   },
+   "status": {
+    "$ref": "../types/evidence-outcome.json"
+   }
+  },
+  "required": [
+   "status"
+  ],
+  "title": "EvidenceResultRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/evidence.json": {
+  "$id": "https://schemas.kuuma.ug/api/evidence.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "childId": {
+    "$ref": "../types/uuid.json"
+   },
+   "completedAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "createdAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   },
+   "sealedEvidence": {
+    "$ref": "../types/sealed-evidence.json"
+   },
+   "status": {
+    "$ref": "../types/evidence-status.json"
+   }
+  },
+  "required": [
+   "requestId",
+   "childId",
+   "caseId",
+   "status",
+   "createdAt"
+  ],
+  "title": "Evidence",
+  "type": "object"
+ },
  "https://schemas.kuuma.ug/api/feedback-request.json": {
   "$id": "https://schemas.kuuma.ug/api/feedback-request.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -487,7 +585,7 @@ const String kuumaSchemaBundle = r'''
     "$ref": "../types/uuid.json"
    },
    "missingPermissions": {
-    "description": "Permissions Kuuma needs that are currently off.",
+    "description": "Permissions Nilinde needs that are currently off.",
     "items": {
      "$ref": "../types/permission-name.json"
     },
@@ -520,6 +618,13 @@ const String kuumaSchemaBundle = r'''
     "description": "Parent decisions on this child's approval requests not yet delivered.",
     "items": {
      "$ref": "approval-result.json"
+    },
+    "type": "array"
+   },
+   "evidenceRequests": {
+    "description": "Parent requests to see a case's messages, not yet delivered.",
+    "items": {
+     "$ref": "../types/evidence-order.json"
     },
     "type": "array"
    },
@@ -1152,6 +1257,56 @@ const String kuumaSchemaBundle = r'''
    "where": "phone_to_cloud"
   }
  },
+ "https://schemas.kuuma.ug/events/casefile.evidence.ready.v1.json": {
+  "$id": "https://schemas.kuuma.ug/events/casefile.evidence.ready.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+   {
+    "$ref": "envelope.json"
+   }
+  ],
+  "description": "PHONE ONLY. The child answered a parent's request to see a case's messages. Guardian seals the bundle for the parent.",
+  "properties": {
+   "payload": {
+    "additionalProperties": false,
+    "properties": {
+     "caseId": {
+      "$ref": "../types/uuid.json"
+     },
+     "evidence": {
+      "$ref": "../types/evidence-bundle.json"
+     },
+     "requestId": {
+      "$ref": "../types/uuid.json"
+     },
+     "status": {
+      "$ref": "../types/evidence-outcome.json"
+     }
+    },
+    "required": [
+     "requestId",
+     "caseId",
+     "status"
+    ],
+    "title": "CasefileEvidenceReadyPayload",
+    "type": "object"
+   },
+   "type": {
+    "const": "casefile.evidence.ready"
+   },
+   "version": {
+    "const": 1
+   }
+  },
+  "title": "CasefileEvidenceReady",
+  "x-kuuma": {
+   "event": "casefile.evidence.ready",
+   "phoneOnly": true,
+   "publisher": "casefile",
+   "version": 1,
+   "where": "phone"
+  }
+ },
  "https://schemas.kuuma.ug/events/casefile.evidence.sealed.v1.json": {
   "$id": "https://schemas.kuuma.ug/events/casefile.evidence.sealed.v1.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1617,6 +1772,49 @@ const String kuumaSchemaBundle = r'''
    "publisher": "guardian",
    "version": 1,
    "where": "cloud"
+  }
+ },
+ "https://schemas.kuuma.ug/events/guardian.evidence.requested.v1.json": {
+  "$id": "https://schemas.kuuma.ug/events/guardian.evidence.requested.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+   {
+    "$ref": "envelope.json"
+   }
+  ],
+  "description": "PHONE ONLY. The parent asked to see a case's messages; the family-key signature has been checked. Casefile asks the child.",
+  "properties": {
+   "payload": {
+    "additionalProperties": false,
+    "properties": {
+     "caseId": {
+      "$ref": "../types/uuid.json"
+     },
+     "requestId": {
+      "$ref": "../types/uuid.json"
+     }
+    },
+    "required": [
+     "requestId",
+     "caseId"
+    ],
+    "title": "GuardianEvidenceRequestedPayload",
+    "type": "object"
+   },
+   "type": {
+    "const": "guardian.evidence.requested"
+   },
+   "version": {
+    "const": 1
+   }
+  },
+  "title": "GuardianEvidenceRequested",
+  "x-kuuma": {
+   "event": "guardian.evidence.requested",
+   "phoneOnly": true,
+   "publisher": "guardian",
+   "version": 1,
+   "where": "phone"
   }
  },
  "https://schemas.kuuma.ug/events/guardian.pairing.completed.v1.json": {
@@ -2146,7 +2344,7 @@ const String kuumaSchemaBundle = r'''
  "https://schemas.kuuma.ug/types/alert-kind.json": {
   "$id": "https://schemas.kuuma.ug/types/alert-kind.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "What raised an alert. tamper: Kuuma's permissions were turned off or the phone stopped checking in.",
+  "description": "What raised an alert. tamper: Nilinde's permissions were turned off or the phone stopped checking in.",
   "enum": [
    "flag",
    "escalation",
@@ -2393,6 +2591,148 @@ const String kuumaSchemaBundle = r'''
    "manual"
   ],
   "title": "EscalationReason",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/evidence-bundle.json": {
+  "$id": "https://schemas.kuuma.ug/types/evidence-bundle.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "PHONE ONLY (travels sealed). The messages of one case as the child's phone holds them, with who sent them. Never sent to a service in the clear.",
+  "properties": {
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "createdAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "messages": {
+    "items": {
+     "$ref": "../types/evidence-message.json"
+    },
+    "maxItems": 500,
+    "type": "array"
+   },
+   "offenderLabel": {
+    "$ref": "../types/offender-label.json"
+   },
+   "senderNames": {
+    "description": "Names the sender appeared under in the messaging app.",
+    "items": {
+     "maxLength": 200,
+     "type": "string"
+    },
+    "maxItems": 20,
+    "type": "array"
+   },
+   "senderNumbers": {
+    "description": "Phone numbers the sender used or wrote.",
+    "items": {
+     "maxLength": 50,
+     "type": "string"
+    },
+    "maxItems": 20,
+    "type": "array"
+   },
+   "truncated": {
+    "description": "Older messages were left out to fit.",
+    "type": "boolean"
+   }
+  },
+  "required": [
+   "caseId",
+   "offenderLabel",
+   "senderNames",
+   "senderNumbers",
+   "messages",
+   "createdAt"
+  ],
+  "title": "EvidenceBundle",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/evidence-message.json": {
+  "$id": "https://schemas.kuuma.ug/types/evidence-message.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "One message in an EvidenceBundle (phone only, travels sealed).",
+  "properties": {
+   "appSource": {
+    "$ref": "../types/app-source.json"
+   },
+   "fromChild": {
+    "type": "boolean"
+   },
+   "sender": {
+    "description": "As the messaging app showed them; absent for the child's own messages.",
+    "maxLength": 200,
+    "type": "string"
+   },
+   "sentAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "text": {
+    "maxLength": 10000,
+    "type": "string"
+   }
+  },
+  "required": [
+   "sentAt",
+   "fromChild",
+   "text"
+  ],
+  "title": "EvidenceMessage",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/evidence-order.json": {
+  "$id": "https://schemas.kuuma.ug/types/evidence-order.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A parent's request to see a case's messages, delivered to the child's phone at its heartbeat. The phone asks the child only if the family-key signature verifies.",
+  "properties": {
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "requestId": {
+    "$ref": "../types/uuid.json"
+   },
+   "requestedAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
+   }
+  },
+  "required": [
+   "requestId",
+   "caseId",
+   "signature",
+   "requestedAt"
+  ],
+  "title": "EvidenceOrder",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/evidence-outcome.json": {
+  "$id": "https://schemas.kuuma.ug/types/evidence-outcome.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What the child decided about a parent's request to see a case's messages.",
+  "enum": [
+   "ready",
+   "declined",
+   "failed"
+  ],
+  "title": "EvidenceOutcome",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/evidence-status.json": {
+  "$id": "https://schemas.kuuma.ug/types/evidence-status.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A parent's request to see a case's messages. requested: waiting for the child. ready: the child allowed it and the messages are sealed for the parent. declined: the child said no. failed: the phone could not build it.",
+  "enum": [
+   "requested",
+   "ready",
+   "declined",
+   "failed"
+  ],
+  "title": "EvidenceStatus",
   "type": "string"
  },
  "https://schemas.kuuma.ug/types/family-signature.json": {
@@ -2709,6 +3049,16 @@ const String kuumaSchemaBundle = r'''
   ],
   "title": "RiskySpan",
   "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/sealed-evidence.json": {
+  "$id": "https://schemas.kuuma.ug/types/sealed-evidence.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "base64url of AES-256-GCM(familyKey, 12-byte IV || ciphertext) of an EvidenceBundle as JSON. Only the parent's phone can open it; the server stores ciphertext only.",
+  "maxLength": 200000,
+  "minLength": 24,
+  "pattern": "^[A-Za-z0-9_-]+$",
+  "title": "SealedEvidence",
+  "type": "string"
  },
  "https://schemas.kuuma.ug/types/sealed-excerpt.json": {
   "$id": "https://schemas.kuuma.ug/types/sealed-excerpt.json",

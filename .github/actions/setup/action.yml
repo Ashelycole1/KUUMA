@@ -1,4 +1,4 @@
-name: Kuuma toolchains
+name: Nilinde toolchains
 description: Pinned toolchains for CI (same versions as versions.toml), then dependencies.
 runs:
   using: composite

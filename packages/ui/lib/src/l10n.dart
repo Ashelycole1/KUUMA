@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart' show CupertinoLocalizations;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-/// Kuuma's four languages, as contract `Language` wire values and Flutter locales.
+/// Nilinde's four languages, as contract `Language` wire values and Flutter locales.
 const kuumaLocales = [Locale('en'), Locale('lg'), Locale('nyn'), Locale('sw')];
 
 /// Translation registry.
@@ -112,7 +112,7 @@ const _coreStrings = <String, Map<String, String>>{
     'core.lock.wrong_pin': 'That PIN is not right. Try again.',
     'core.lock.use_fingerprint': 'Use fingerprint',
     'core.lock.delete': 'Delete',
-    'core.lock.fingerprint_reason': 'Unlock Kuuma',
+    'core.lock.fingerprint_reason': 'Unlock Nilinde',
     'core.discreet.decoy_title': 'Notes',
     'core.discreet.decoy_body': 'No notes yet.',
     'core.discreet.hide': 'Hide',
