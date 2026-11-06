@@ -20,6 +20,7 @@ import ug.kuuma.casefile.vault.ItemKind
 import ug.kuuma.casefile.vault.Vault
 import ug.kuuma.casefile.vault.VaultItem
 import ug.kuuma.contracts.HarmCategory
+import ug.kuuma.contracts.Language
 import ug.kuuma.contracts.RecipientType
 
 /** A trusted timestamp of a chain root, from POST /v1/cases/timestamps. */
@@ -85,7 +86,8 @@ object CaseFileBuilder {
         timestamp: RootTimestamp?,
         generatedAt: Long,
         verifyUrl: String,
-        victimIdentity: String? = null
+        victimIdentity: String? = null,
+        translations: Map<String, ExhibitTranslation> = emptyMap()
     ): CaseFile {
         val caseItems = items.filter { it.caseId == case.caseId && it.kind != ItemKind.CUSTODY }
         val custody = items.filter {
@@ -173,6 +175,25 @@ object CaseFileBuilder {
                     )
                 }
             )
+            put(
+                "translations",
+                JsonArray(
+                    caseItems.mapIndexedNotNull { i, item ->
+                        translations[item.itemId]?.let { t ->
+                            buildJsonObject {
+                                put("exhibit", "E${i + 1}")
+                                put("itemId", t.itemId)
+                                put("from", t.from.wire)
+                                put("to", t.to.wire)
+                                put("text", t.text)
+                                put("machineTranslated", true)
+                                put("model", t.model?.let { JsonPrimitive(it) } ?: JsonNull)
+                                put("promptVersion", t.promptVersion?.let { JsonPrimitive(it) } ?: JsonNull)
+                            }
+                        }
+                    }
+                )
+            )
             put("custody", JsonArray(custody.map { JsonPrimitive(it.contentJson) }))
             put(
                 "timestamp",
@@ -189,9 +210,19 @@ object CaseFileBuilder {
         }
         return CaseFile(
             json,
-            renderPdf(case, recipient, timeline, caseItems, entryFor, custody, root, timestamp, generatedAt, verifyUrl),
+            renderPdf(
+                case, recipient, timeline, caseItems, entryFor, custody, root, timestamp, generatedAt, verifyUrl,
+                translations
+            ),
             root
         )
+    }
+
+    private fun languageName(l: Language) = when (l) {
+        Language.EN -> "English"
+        Language.LG -> "Luganda"
+        Language.NYN -> "Runyankole"
+        Language.SW -> "Swahili"
     }
 
     private fun renderPdf(
@@ -204,7 +235,8 @@ object CaseFileBuilder {
         root: String,
         ts: RootTimestamp?,
         generatedAt: Long,
-        verifyUrl: String
+        verifyUrl: String,
+        translations: Map<String, ExhibitTranslation>
     ): ByteArray {
         val doc = PdfText()
         doc.heading("Kuuma case file")
@@ -241,6 +273,14 @@ object CaseFileBuilder {
                 else -> t.text.orEmpty()
             }
             doc.para("${exhibitNo[t.itemId] ?: "-"}  ${CaseIndex.iso(t.at)}  ${t.appSource ?: ""}  $who: $what")
+            translations[t.itemId]?.let { tr ->
+                val by = listOfNotNull(tr.model, tr.promptVersion).joinToString(", ")
+                doc.para(
+                    "      Machine translation from ${languageName(
+                        tr.from
+                    )}${if (by.isEmpty()) "" else " ($by)"}: ${tr.text}"
+                )
+            }
         }
         doc.gap()
         doc.heading("Exhibit hashes")

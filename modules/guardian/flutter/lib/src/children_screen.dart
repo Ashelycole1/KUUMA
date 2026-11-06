@@ -84,16 +84,24 @@ class _ChildCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final session = ParentScope.of(context);
     final (icon, color, text) = switch (status) {
-      ProtectionStatus.active => (Icons.verified_user_outlined, KuumaColors.low, context.t('guardian.status.active')),
+      ProtectionStatus.active => (
+          Icons.verified_user_outlined,
+          KuumaColors.of(context).low,
+          context.t('guardian.status.active')
+        ),
       ProtectionStatus.waiting => (
           Icons.qr_code,
           Theme.of(context).colorScheme.outline,
           context.t('guardian.status.waiting')
         ),
-      ProtectionStatus.missing => (Icons.gpp_bad_outlined, KuumaColors.high, context.t('guardian.status.missing')),
+      ProtectionStatus.missing => (
+          Icons.gpp_bad_outlined,
+          KuumaColors.of(context).high,
+          context.t('guardian.status.missing')
+        ),
       ProtectionStatus.silent => (
           Icons.portable_wifi_off,
-          KuumaColors.medium,
+          KuumaColors.of(context).medium,
           child.status.lastHeartbeatAt == null
               ? context.t('guardian.status.never')
               : context.t('guardian.status.silent', {'time': shortTime(context, child.status.lastHeartbeatAt)})

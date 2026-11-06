@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 
+import 'components.dart';
 import 'l10n.dart';
+import 'theme.dart';
 
 /// Biometric unlock, wrapped so tests and devices without a sensor can supply their own.
 abstract class BiometricAuth {
@@ -88,68 +90,94 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget key(String d) => SizedBox(
-          width: 72,
-          height: 72,
-          child: TextButton(
-            key: Key('pin-$d'),
-            onPressed: () => _press(d),
-            child: Text(d, style: theme.textTheme.headlineSmall),
+    final p = KuumaColors.of(context);
+    Widget key(String d) => Padding(
+          padding: const EdgeInsets.all(KuumaSpace.sm),
+          child: SizedBox(
+            width: 72,
+            height: 72,
+            child: Material(
+              color: p.surface,
+              shape: CircleBorder(side: BorderSide(color: p.border)),
+              child: InkWell(
+                key: Key('pin-$d'),
+                customBorder: const CircleBorder(),
+                onTap: () => _press(d),
+                child: Center(child: Text(d, style: theme.textTheme.headlineSmall)),
+              ),
+            ),
           ),
+        );
+    Widget side(Widget? child) => Padding(
+          padding: const EdgeInsets.all(KuumaSpace.sm),
+          child: SizedBox(width: 72, height: 72, child: child == null ? null : Center(child: child)),
         );
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(context.t('core.lock.title'), style: theme.textTheme.titleLarge),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                widget.pinLength,
-                (i) => Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(i < _entered.length ? Icons.circle : Icons.circle_outlined, size: 16),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(vertical: KuumaSpace.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const KuumaIconBadge(Icons.lock_outline, size: 56),
+                const SizedBox(height: KuumaSpace.lg),
+                Text(context.t('core.lock.title'), style: theme.textTheme.titleLarge),
+                const SizedBox(height: KuumaSpace.lg),
+                Semantics(
+                  label: '${_entered.length} / ${widget.pinLength}',
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      widget.pinLength,
+                      (i) => AnimatedContainer(
+                        duration: KuumaMotion.of(context, KuumaMotion.fast),
+                        margin: const EdgeInsets.all(7),
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: i < _entered.length ? p.primary : Colors.transparent,
+                          border: Border.all(color: i < _entered.length ? p.primary : p.muted, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(
-              height: 24,
-              child: _wrong
-                  ? Text(context.t('core.lock.wrong_pin'), style: TextStyle(color: theme.colorScheme.error))
-                  : null,
-            ),
-            for (final row in const [
-              ['1', '2', '3'],
-              ['4', '5', '6'],
-              ['7', '8', '9'],
-            ])
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: row.map(key).toList()),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: _bioAvailable
-                    ? IconButton(
-                        tooltip: context.t('core.lock.use_fingerprint'),
-                        icon: const Icon(Icons.fingerprint),
-                        onPressed: _biometric,
-                      )
-                    : null,
-              ),
-              key('0'),
-              SizedBox(
-                width: 72,
-                height: 72,
-                child: IconButton(
-                  icon: const Icon(Icons.backspace_outlined),
-                  onPressed: () =>
-                      setState(() => _entered = _entered.isEmpty ? '' : _entered.substring(0, _entered.length - 1)),
+                SizedBox(
+                  height: 32,
+                  child: Center(
+                    child: _wrong
+                        ? Text(context.t('core.lock.wrong_pin'),
+                            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error))
+                        : null,
+                  ),
                 ),
-              ),
-            ]),
-          ],
+                for (final row in const [
+                  ['1', '2', '3'],
+                  ['4', '5', '6'],
+                  ['7', '8', '9'],
+                ])
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: row.map(key).toList()),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  side(_bioAvailable
+                      ? IconButton(
+                          tooltip: context.t('core.lock.use_fingerprint'),
+                          icon: const Icon(Icons.fingerprint, size: 32),
+                          onPressed: _biometric,
+                        )
+                      : null),
+                  key('0'),
+                  side(IconButton(
+                    tooltip: context.t('core.lock.delete'),
+                    icon: const Icon(Icons.backspace_outlined),
+                    onPressed: () =>
+                        setState(() => _entered = _entered.isEmpty ? '' : _entered.substring(0, _entered.length - 1)),
+                  )),
+                ]),
+              ],
+            ),
+          ),
         ),
       ),
     );

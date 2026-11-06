@@ -13,6 +13,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.KSerializer
 import ug.kuuma.casefile.export.RootTimestamp
+import ug.kuuma.casefile.export.Translator
 import ug.kuuma.casefile.vault.InMemoryVaultStore
 import ug.kuuma.casefile.vault.ItemSigner
 import ug.kuuma.casefile.vault.SqlVaultStore
@@ -27,6 +28,8 @@ import ug.kuuma.contracts.ShareRequest
 import ug.kuuma.contracts.ShareResponse
 import ug.kuuma.contracts.TimestampRequest
 import ug.kuuma.contracts.TimestampResponse
+import ug.kuuma.contracts.TranslateRequest
+import ug.kuuma.contracts.TranslateResponse
 import ug.kuuma.core.crypto.DeviceSigner
 import ug.kuuma.core.log.LogField
 import ug.kuuma.core.log.SafeLog
@@ -41,7 +44,9 @@ data class CasefileConfig(
     val signer: ItemSigner? = null,
     val api: CasesApi? = null,
     /** Base of share links and the verification page, e.g. https://verify.kuuma.ug */
-    val shareBaseUrl: String = "http://localhost:8080/verify"
+    val shareBaseUrl: String = "http://localhost:8080/verify",
+    /** POST /v1/ai/translate for non-English exhibits; null keeps case files untranslated. */
+    val translator: Translator? = null
 )
 
 /**
@@ -69,7 +74,14 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
                 InMemoryVaultStore()
             }
             val signer = config.signer ?: DeviceItemSigner(DeviceSigner(config.androidContext!!))
-            engine = CasefileEngine(context.publisher, store, signer, config.api, config.shareBaseUrl)
+            engine = CasefileEngine(
+                context.publisher,
+                store,
+                signer,
+                config.api,
+                config.shareBaseUrl,
+                translator = config.translator
+            )
             SafeLog.i("casefile.ready", LogField.num("chain_length", store.chain().size))
         }
         context.events.subscribe(Events.SENTINEL_MESSAGE_FLAGGED) { e -> submit { engine.onFlagged(e.payload) } }
@@ -109,7 +121,10 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
                     "fromChild" to t.fromChild,
                     "category" to t.category?.wire,
                     "severity" to t.severity?.wire,
-                    "text" to t.text
+                    "text" to t.text,
+                    // Machine translation already made for an export (never fetched just to view).
+                    "translation" to engine.translationOf(t.itemId)?.text,
+                    "translatedFrom" to engine.translationOf(t.itemId)?.from?.wire
                 )
             }
             "verify" -> engine.verify().let { r ->
@@ -233,6 +248,36 @@ class HttpCasesApi(
             val out = ByteArrayOutputStream()
             conn.inputStream.use { it.copyTo(out) }
             return ContractJson.json.decodeFromString(outSer, out.toString("UTF-8"))
+        } finally {
+            conn.disconnect()
+        }
+    }
+}
+
+/** POST /v1/ai/translate, signed like every other device call. Sunflower is slow: long timeout. */
+class HttpTranslator(
+    private val baseUrl: String,
+    private val headers: (method: String, path: String, body: ByteArray) -> Map<String, String>,
+    private val readTimeoutMillis: Int = 200_000
+) : Translator {
+    override fun translate(request: TranslateRequest): TranslateResponse {
+        val path = "/v1/ai/translate"
+        val bytes = ContractJson.json.encodeToString(TranslateRequest.serializer(), request).toByteArray()
+        val conn = URL(baseUrl.trimEnd('/') + path).openConnection() as HttpURLConnection
+        try {
+            conn.requestMethod = "POST"
+            conn.doOutput = true
+            conn.connectTimeout = 15_000
+            conn.readTimeout = readTimeoutMillis
+            conn.setRequestProperty("Content-Type", "application/json")
+            headers("POST", path, bytes).forEach(conn::setRequestProperty)
+            conn.outputStream.use { it.write(bytes) }
+            if (conn.responseCode !in 200..299) throw IOException("POST $path -> ${conn.responseCode}")
+            val out = ByteArrayOutputStream()
+            conn.inputStream.use { it.copyTo(out) }
+            return ContractJson.json.decodeFromString(TranslateResponse.serializer(), out.toString("UTF-8"))
+        } catch (e: java.net.SocketTimeoutException) {
+            throw IOException("translate timed out")
         } finally {
             conn.disconnect()
         }

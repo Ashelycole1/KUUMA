@@ -58,19 +58,7 @@ class _Steps extends StatelessWidget {
   final List<String> steps;
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final (i, s) in steps.indexed)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                SizedBox(width: 24, child: Text('${i + 1}.')),
-                Expanded(child: Text(s)),
-              ]),
-            ),
-        ],
-      );
+  Widget build(BuildContext context) => KuumaSteps(steps);
 }
 
 class _StepsTile extends StatelessWidget {

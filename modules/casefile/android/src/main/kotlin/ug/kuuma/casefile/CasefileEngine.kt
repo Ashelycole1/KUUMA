@@ -15,8 +15,10 @@ import ug.kuuma.casefile.cases.Patterns
 import ug.kuuma.casefile.cases.TimelineEntry
 import ug.kuuma.casefile.export.CaseFile
 import ug.kuuma.casefile.export.CaseFileBuilder
+import ug.kuuma.casefile.export.CaseTranslator
 import ug.kuuma.casefile.export.RootTimestamp
 import ug.kuuma.casefile.export.ShareCrypto
+import ug.kuuma.casefile.export.Translator
 import ug.kuuma.casefile.vault.ChainEntry
 import ug.kuuma.casefile.vault.ChainReport
 import ug.kuuma.casefile.vault.ItemKind
@@ -75,9 +77,11 @@ class CasefileEngine(
     private val signer: ItemSigner,
     private val api: CasesApi? = null,
     private val shareBaseUrl: String = "http://localhost:8080/verify",
-    private val clock: () -> Long = System::currentTimeMillis
+    private val clock: () -> Long = System::currentTimeMillis,
+    translator: Translator? = null
 ) {
     val vault = Vault(store, signer, clock)
+    private val translations = CaseTranslator(store, translator)
 
     // ------------------------------------------------------------------ intake
 
@@ -183,6 +187,9 @@ class CasefileEngine(
 
     fun case(caseId: String) = cases().firstOrNull { it.caseId == caseId }
 
+    /** A machine translation made earlier for an export, if any. */
+    fun translationOf(itemId: String) = translations.cached(itemId)
+
     fun timeline(caseId: String, actor: Actor = Actor.CHILD): List<TimelineEntry> {
         val c = case(caseId) ?: return emptyList()
         custody(actor, "view", caseId, emptyList())
@@ -204,11 +211,14 @@ class CasefileEngine(
         custody(actor, "export", caseId, emptyList(), recipient)
         val root = vault.root()
         val ts = runCatching { api?.timestamp(root) }.getOrNull()
-        val timeline = CaseIndex.timeline(store.items(), caseId, c.offenderLabel)
+        val items = store.items()
+        val timeline = CaseIndex.timeline(items, caseId, c.offenderLabel)
+        // Machine translations of non-English messages, beside the evidence (never inside it).
+        val translated = translations.forCase(items.filter { it.caseId == caseId })
         return CaseFileBuilder.build(
-            c, store.items(), store.chain(), timeline, recipient, signer.publicKeyBase64(), signer.protection, ts,
+            c, items, store.chain(), timeline, recipient, signer.publicKeyBase64(), signer.protection, ts,
             clock(),
-            shareBaseUrl, victimIdentity
+            shareBaseUrl, victimIdentity, translated
         )
     }
 

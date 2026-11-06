@@ -79,10 +79,7 @@ class _CompanionHomeScreenState extends State<CompanionHomeScreen> {
     }
     return ListView(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Text(context.t('companion.home.recent'), style: Theme.of(context).textTheme.titleLarge),
-        ),
+        KuumaSectionHeader(context.t('companion.home.recent').toUpperCase()),
         for (final plan in _plans)
           KuumaCard(
             key: ValueKey(plan.flagId),

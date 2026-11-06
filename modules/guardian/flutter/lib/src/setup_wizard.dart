@@ -217,7 +217,7 @@ class _GuardianSetupScreenState extends State<GuardianSetupScreen> with WidgetsB
           KuumaCard(
             key: Key('perm-${p['permission']}'),
             leading: Icon(p['granted'] == true ? Icons.check_circle : Icons.radio_button_unchecked,
-                color: p['granted'] == true ? KuumaColors.low : null),
+                color: p['granted'] == true ? KuumaColors.of(context).low : null),
             title: _reason(p),
             subtitle: p['required'] == true ? null : context.t('guardian.wizard.optional'),
             trailing: p['granted'] == true
@@ -253,7 +253,7 @@ class _GuardianSetupScreenState extends State<GuardianSetupScreen> with WidgetsB
       child: ListView(padding: const EdgeInsets.all(16), children: [
         KuumaCard(
           leading: Icon(missing.isEmpty ? Icons.verified_user_outlined : Icons.gpp_bad_outlined,
-              color: missing.isEmpty ? KuumaColors.low : KuumaColors.high),
+              color: missing.isEmpty ? KuumaColors.of(context).low : KuumaColors.of(context).high),
           title: context.t(_paired ? 'guardian.wizard.managed_title' : 'guardian.wizard.done_title'),
           subtitle: context.t('guardian.wizard.managed_body'),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

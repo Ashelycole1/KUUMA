@@ -14,7 +14,7 @@ const confirm = (root: string) => fetch(`/v1/verify/${root}`).then((r) => r.json
 
 function show(report: Report, file: CaseFileJson, pdf?: Uint8Array): void {
   $("result").hidden = false;
-  $("result").className = report.intact ? "ok" : "bad";
+  $("result").className = `card ${report.intact ? "ok" : "bad"}`;
   $("verdict").textContent = report.intact ? "Verified" : "Not verified";
   $("summary").textContent = describeReport(report);
   $("details").textContent =
@@ -33,7 +33,7 @@ function show(report: Report, file: CaseFileJson, pdf?: Uint8Array): void {
 
 function fail(message: string): void {
   $("result").hidden = false;
-  $("result").className = "bad";
+  $("result").className = "card bad";
   $("verdict").textContent = "Could not open";
   $("summary").textContent = message;
 }

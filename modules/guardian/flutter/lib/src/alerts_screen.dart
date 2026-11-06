@@ -142,7 +142,7 @@ class SeverityTrend extends StatelessWidget {
                           Container(
                             height: 64 * counts[i][s]! / most,
                             margin: const EdgeInsets.symmetric(horizontal: 6),
-                            color: KuumaColors.severity(s),
+                            color: KuumaColors.of(context).severity(s),
                           ),
                       const SizedBox(height: 4),
                       Text(weekday[days[i].weekday % 7], style: theme.textTheme.labelSmall),
@@ -197,13 +197,7 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
     Widget steps(String titleKey, String key, IconData icon) => KuumaCard(
           leading: Icon(icon),
           title: context.t(titleKey),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            for (final (i, line) in context.t(key).split('\n').indexed)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text(titleKey.endsWith('avoid') ? '• $line' : '${i + 1}. $line'),
-              ),
-          ]),
+          child: KuumaSteps(context.t(key).split('\n'), bullets: titleKey.endsWith('avoid')),
         );
     return Scaffold(
       appBar: AppBar(title: Text(alertTitle(context, a))),
