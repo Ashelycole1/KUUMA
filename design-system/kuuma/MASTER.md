@@ -15,32 +15,22 @@ low-end Android phones, sometimes shared, sometimes looked at over a shoulder. T
 
 - **Style:** Minimalism, soft and rounded (skill: "Minimalism & Swiss Style", low variance 3/10,
   subtle motion 3/10, standard density 4/10). Generous white space, one idea per card.
-- **Palette:** "Mental Health App" from the skill, calming lavender + wellness green (chosen by the
-  product owner over calm teal and the old forest green).
+- **Palette:** Kuuma Violet, Warm Peach and Cloud White, sampled from the current pitch deck.
 - **Typography:** "Soft Rounded" pairing: **Varela Round** for headings, **Nunito Sans** for text
   (skill: best for children's products, friendly, wellness). Bundled in `packages/ui/fonts` (SIL OFL),
   never fetched at runtime (offline phones; no requests to third parties).
 
 ## Colour tokens
 
-Light (`KuumaColors.light`) and dark (`KuumaColors.dark`). Contrast checked (WCAG 2.2 AA, 4.5:1 for text).
+The three core brand colours are Kuuma Violet, Warm Peach and Cloud White. Light and dark UI tokens are defined in packages/ui/lib/src/theme.dart. Use these tokens in screens rather than raw hex values.
 
-| Token | Light | Dark | Use | Contrast |
-| --- | --- | --- | --- | --- |
-| `brand` | `#8B5CF6` | `#C4B5FD` | Brand tint, icons, selected states (not text on white) | decorative |
-| `primary` | `#7C3AED` | `#C4B5FD` | Filled buttons, links, focus ring | white on it 5.70; `#1E1038` on dark 9.59 |
-| `onPrimary` | `#FFFFFF` | `#1E1038` | Text on primary | |
-| `accent` | `#047857` | `#6EE7B7` | "Safe / protected / done" | 5.48 on white |
-| `background` | `#FAF5FF` | `#15121F` | Screen background | |
-| `surface` / card | `#FFFFFF` | `#1F1A2E` | Cards, sheets | |
-| `surfaceMuted` | `#F3EEFB` | `#2A2440` | Secondary areas, chips | |
-| `foreground` | `#2E1065` | `#EDE9FE` | Main text | 10.2 / 15.5 |
-| `muted` | `#5B5470` | `#A9A3BD` | Secondary text | 6.6 / 6.9 |
-| `border` | `#E9E2F7` | `#3A3354` | Card and field borders | |
-| `destructive` | `#B91C1C` | `#F8A3A3` | Delete, errors | |
+| Name | Hex | Role |
+| --- | --- | --- |
+| Kuuma Violet | #5D40A4 | Primary brand colour, headings, and primary actions |
+| Warm Peach | #EDB390 | Accent and highlights |
+| Cloud White | #F8FAFD | Main light background and text on violet |
 
-The skill suggested `#8B5CF6` as primary with black text; white text on it is only 4.23:1, so text-bearing
-surfaces use `#7C3AED`. Its accent `#059669` is 3.77:1 on white, so text uses `#047857`.
+Text on Kuuma Violet uses Cloud White for contrast. Use dark foreground text on Warm Peach. Secondary and severity colours remain separate semantic tokens.
 
 ### Severity (kept muted on purpose)
 

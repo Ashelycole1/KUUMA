@@ -47,16 +47,16 @@ class KuumaPalette {
 
 abstract final class KuumaColors {
   static const light = KuumaPalette(
-    brand: Color(0xFF8B5CF6),
-    primary: Color(0xFF7C3AED),
-    onPrimary: Color(0xFFFFFFFF),
-    accent: Color(0xFF047857),
-    background: Color(0xFFFAF5FF),
+    brand: Color(0xFF5D40A4),
+    primary: Color(0xFF5D40A4),
+    onPrimary: Color(0xFFF8FAFD),
+    accent: Color(0xFFEDB390),
+    background: Color(0xFFF8FAFD),
     surface: Color(0xFFFFFFFF),
-    surfaceMuted: Color(0xFFF3EEFB),
-    foreground: Color(0xFF2E1065),
+    surfaceMuted: Color(0xFFFBF2ED),
+    foreground: Color(0xFF2B2140),
     muted: Color(0xFF5B5470),
-    border: Color(0xFFE9E2F7),
+    border: Color(0xFFE8D9D2),
     destructive: Color(0xFFB91C1C),
     low: Color(0xFF256A51),
     medium: Color(0xFF7F560B),
@@ -64,16 +64,16 @@ abstract final class KuumaColors {
   );
 
   static const dark = KuumaPalette(
-    brand: Color(0xFFC4B5FD),
-    primary: Color(0xFFC4B5FD),
-    onPrimary: Color(0xFF1E1038),
-    accent: Color(0xFF6EE7B7),
-    background: Color(0xFF15121F),
-    surface: Color(0xFF1F1A2E),
-    surfaceMuted: Color(0xFF2A2440),
-    foreground: Color(0xFFEDE9FE),
-    muted: Color(0xFFA9A3BD),
-    border: Color(0xFF3A3354),
+    brand: Color(0xFFB9A6E6),
+    primary: Color(0xFFB9A6E6),
+    onPrimary: Color(0xFF271B43),
+    accent: Color(0xFFEDB390),
+    background: Color(0xFF1A1722),
+    surface: Color(0xFF26212E),
+    surfaceMuted: Color(0xFF30283C),
+    foreground: Color(0xFFF8FAFD),
+    muted: Color(0xFFC0B8CD),
+    border: Color(0xFF453A50),
     destructive: Color(0xFFF8A3A3),
     low: Color(0xFF7FCFAE),
     medium: Color(0xFFE3B866),
@@ -84,9 +84,9 @@ abstract final class KuumaColors {
   static KuumaPalette of(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? dark : light;
 
   // Light-mode constants, kept for existing callers. Prefer KuumaColors.of(context).
-  static const primary = Color(0xFF7C3AED);
-  static const secondary = Color(0xFF047857);
-  static const surface = Color(0xFFFAF5FF);
+  static const primary = Color(0xFF5D40A4);
+  static const secondary = Color(0xFFEDB390);
+  static const surface = Color(0xFFF8FAFD);
   static const low = Color(0xFF256A51);
   static const medium = Color(0xFF7F560B);
   static const high = Color(0xFFA8433A);
