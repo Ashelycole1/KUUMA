@@ -110,6 +110,8 @@ class SentinelModule(private val config: SentinelConfig) : KuumaModule {
 
     fun submitScreen(s: ScreenSnapshot) = submit { engine.onScreen(s) }
 
+    fun submitHiddenNotification(n: NotificationSnapshot) = submit { engine.onHiddenNotification(n) }
+
     /** Blocks until queued work is done. For tests and the debug tools only. */
     fun awaitIdle(timeoutMillis: Long = 10_000) {
         worker.submit {}.get(timeoutMillis, TimeUnit.MILLISECONDS)

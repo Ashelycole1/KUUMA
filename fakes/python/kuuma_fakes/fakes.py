@@ -244,7 +244,7 @@ class FakeGuardian(BaseFake):
 
     def announce_sample_child(self) -> None:
         """A sample child paired with a sample policy. Called explicitly, never on its own."""
-        bracket = "age_placeholder_b"
+        bracket = "age_13_15"
         self.publish(
             "guardian.pairing.completed",
             {"childId": self.SAMPLE_CHILD, "deviceId": self.SAMPLE_DEVICE, "ageBracket": bracket},

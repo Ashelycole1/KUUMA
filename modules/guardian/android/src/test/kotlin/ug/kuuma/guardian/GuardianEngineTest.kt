@@ -110,7 +110,7 @@ class GuardianEngineTest {
         signedBy: FamilyCrypto? = family
     ): Policy {
         val p = Policy(
-            AgeBracket.AGE_PLACEHOLDER_B,
+            AgeBracket.AGE_13_15,
             listOf(AppSource.WHATSAPP, AppSource.SMS),
             Thresholds(0.5, alertMin, Severity.MEDIUM),
             version
@@ -163,13 +163,13 @@ class GuardianEngineTest {
         val sealed = family.seal("an offending message")
         assertTrue(Regex("^[A-Za-z0-9_-]{24,10000}$").matches(sealed))
         assertEquals("an offending message", family.open(sealed))
-        assertEquals("age_placeholder_b|sms,whatsapp|0.500|medium|medium|1", FamilyCrypto.policyMessage(p))
+        assertEquals("age_13_15|sms,whatsapp|0.500|medium|medium|1", FamilyCrypto.policyMessage(p))
     }
 
     /** The same vectors are in kuuma_guardian's Dart tests: both phones must agree byte for byte. */
     @Test fun `matches the shared test vectors`() {
         assertEquals("AwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dw", Base64Url.encode(familyKey))
-        assertEquals("HTf5k54Ky4WK7qoii-xrLoP0AsX-OyhchvkcHdP0p-Y", policy().signature)
+        assertEquals("1Z2SpGTAhTea1G_J43Odm0v-qGHapSnC8-dwt-zqCOs", policy().signature)
         assertEquals("Nkuba ku ssimu", family.open("AQIDBAUGBwgJCgsMHkkPkEcmYMuc3ecpeDg1Z9Np9K2c4ZXLkL4QaXM_"))
     }
 

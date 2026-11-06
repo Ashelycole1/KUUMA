@@ -21,6 +21,9 @@ const companionStrings = <String, Map<String, String>>{
     'companion.crisis.call': 'Call {name}: {number}',
     'companion.crisis.free': 'Free',
     'companion.crisis.close': "I'm okay for now",
+    'companion.crisis.unavailable_title': 'You are not alone',
+    'companion.crisis.unavailable_body':
+        'Kuuma could not load the helplines just now. Please talk to an adult you trust, or call Sauti 116 for free.',
     'companion.debug.title': 'Companion fake',
     'companion.debug.capture': 'Publish companion.capture.requested',
     'companion.debug.sos': 'Publish companion.sos.triggered',

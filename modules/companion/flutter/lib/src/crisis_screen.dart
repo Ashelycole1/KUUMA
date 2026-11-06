@@ -20,6 +20,18 @@ class CrisisScreen extends StatelessWidget {
           future: bridge.crisis(),
           builder: (context, snap) {
             final c = snap.data;
+            if (snap.hasError) {
+              // Never a spinner forever on the screen a child in distress opens.
+              return EmptyState(
+                icon: Icons.favorite_outline,
+                title: context.t('companion.crisis.unavailable_title'),
+                message: context.t('companion.crisis.unavailable_body'),
+                action: KuumaButton(
+                  label: context.t('companion.crisis.close'),
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              );
+            }
             if (c == null) return const Center(child: CircularProgressIndicator());
             return ListView(
               padding: const EdgeInsets.all(24),

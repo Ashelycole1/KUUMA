@@ -115,7 +115,7 @@ class GuardianEngine(
         val a = api ?: return PairResult.OFFLINE
         val crypto = FamilyCrypto(qr.familyKey)
         val response = try {
-            a.pair(PairingRequest(qr.code, devicePublicKey(), ug.kuuma.contracts.AgeBracket.AGE_PLACEHOLDER_B))
+            a.pair(PairingRequest(qr.code, devicePublicKey(), ug.kuuma.contracts.AgeBracket.AGE_13_15))
         } catch (e: java.io.IOException) {
             return if (e.message?.contains("404") == true) PairResult.BAD_CODE else PairResult.OFFLINE
         }

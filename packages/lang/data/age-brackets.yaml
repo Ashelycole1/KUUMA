@@ -1,16 +1,16 @@
-# PLACEHOLDER until the team agrees the brackets (see "Decisions needed" in the Core brief).
+# Agreed with the product owner on Nov 6, 2026: 12 and under, 13 to 15, 16 to 18.
 # Must match packages/contracts/schemas/types/age-bracket.json. Changing ids is a contract change.
 contract: AgeBracket
 values:
-  - id: age_placeholder_a
+  - id: age_12_under
     minAge: null
-    maxAge: null
-    label: { en: "Age group A (placeholder)" }
-  - id: age_placeholder_b
-    minAge: null
-    maxAge: null
-    label: { en: "Age group B (placeholder)" }
-  - id: age_placeholder_c
-    minAge: null
-    maxAge: null
-    label: { en: "Age group C (placeholder)" }
+    maxAge: 12
+    label: { en: "12 and under", sw: "Miaka 12 na chini" }
+  - id: age_13_15
+    minAge: 13
+    maxAge: 15
+    label: { en: "13 to 15", sw: "Miaka 13 hadi 15" }
+  - id: age_16_18
+    minAge: 16
+    maxAge: 18
+    label: { en: "16 to 18", sw: "Miaka 16 hadi 18" }

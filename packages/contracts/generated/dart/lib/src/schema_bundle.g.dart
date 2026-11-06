@@ -1897,11 +1897,11 @@ const String kuumaSchemaBundle = r'''
  "https://schemas.kuuma.ug/types/age-bracket.json": {
   "$id": "https://schemas.kuuma.ug/types/age-bracket.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version.",
+  "description": "Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees.",
   "enum": [
-   "age_placeholder_a",
-   "age_placeholder_b",
-   "age_placeholder_c"
+   "age_12_under",
+   "age_13_15",
+   "age_16_18"
   ],
   "title": "AgeBracket",
   "type": "string"

@@ -117,7 +117,7 @@ void main() {
   testWidgets('children: changing settings sends a new signed version', (tester) async {
     tall(tester);
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     api.pairChild(p.childId);
     await s.refresh();
     await tester.pumpWidget(tab(s, const ChildrenScreen()));
@@ -135,7 +135,7 @@ void main() {
 
   testWidgets('alerts: trend, guidance, and the message only on request', (tester) async {
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final sealed = FamilyCrypto(p.qr.familyKey).seal('Ojja kulaba!');
     api.addAlert(p.childId, sealedExcerpt: sealed);
     api.addAlert(p.childId, kind: AlertKind.tamper, severity: Severity.medium);
@@ -159,7 +159,7 @@ void main() {
 
   testWidgets('approvals: approve signs and sends the decision', (tester) async {
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final req = api.addApproval(p.childId, recipient: RecipientType.police);
     await s.refresh();
     await tester.pumpWidget(tab(s, const ApprovalsScreen()));

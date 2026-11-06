@@ -77,6 +77,9 @@ class SentinelEngine(
     private val pending = HashMap<String, Pending>()
     private val chats = HashMap<String, Chat>()
     private val screenCaptures = HashMap<String, PendingCapture>()
+
+    /** Chats whose notification text Android hid: screen them from the screen when opened. */
+    private val screenOnOpen = HashMap<String, Long>()
     private var activeConversation: String? = null
 
     // ------------------------------------------------------------------ inputs
@@ -85,6 +88,20 @@ class SentinelEngine(
         val app = WatchedApps.appFor(n.packageName) ?: return
         if (app !in policy.watchedApps) return
         for (m in NotificationParser.parse(n, app)) if (dedupe.isNew(m)) onMessage(m)
+    }
+
+    /**
+     * Android 15+ hides the text of notifications it thinks are sensitive (any message with a
+     * number that looks like a code or phone number) from apps like Kuuma. Such a message is
+     * exactly the kind that can carry a threat, so when the child opens that chat, Kuuma screens
+     * what is on the screen instead (read-only, through the accessibility service).
+     */
+    fun onHiddenNotification(n: NotificationSnapshot) {
+        val app = WatchedApps.appFor(n.packageName) ?: return
+        if (app !in policy.watchedApps) return
+        val chat = (n.conversationTitle ?: n.title)?.trim()?.takeIf { it.isNotEmpty() } ?: return
+        screenOnOpen[conversationRef(app, chat)] = clock() + SCREEN_CAPTURE_WINDOW
+        SafeLog.i("sentinel.notification.hidden", LogField.enum("app", app))
     }
 
     fun onMessage(m: IncomingMessage) {
@@ -146,6 +163,17 @@ class SentinelEngine(
                     }?.severity
                 )
             )
+        }
+        screenOnOpen.remove(ref)?.takeIf { it >= s.capturedAt }?.let {
+            // The hidden messages are on screen now: screen them like any incoming message.
+            for (sm in chat.messages) {
+                val sender = sm.sender ?: if (sm.fromChild) null else chat.title
+                val m = IncomingMessage(
+                    chat.appSource, chat.title, chat.title, false,
+                    sender ?: NotificationParser.SELF, sender.orEmpty(), sm.text, s.capturedAt, sm.fromChild
+                )
+                if (dedupe.isNew(m)) onMessage(m)
+            }
         }
         val wanted = screenCaptures[ref] ?: return
         screenCaptures.remove(ref)

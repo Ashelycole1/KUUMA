@@ -16,11 +16,11 @@ abstract final class ContractPatterns {
   static final RegExp uuid = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
 }
 
-/// PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version.
+/// Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees.
 enum AgeBracket {
-  agePlaceholderA('age_placeholder_a'),
-  agePlaceholderB('age_placeholder_b'),
-  agePlaceholderC('age_placeholder_c');
+  age12Under('age_12_under'),
+  age1315('age_13_15'),
+  age1618('age_16_18');
 
   const AgeBracket(this.wire);
 

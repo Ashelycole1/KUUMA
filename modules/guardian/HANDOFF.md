@@ -25,8 +25,8 @@ worker exceptions arrived as `ExecutionException` (now unwrapped); locking left 
 ## What still needs to be done
 
 ### Blocked on a decision (team / product owner)
-- [ ] **Age brackets and thresholds.** `age-brackets.yaml` and `defaultThresholds()` in
-      `flutter/lib/src/session.dart` are placeholders. Changing bracket ids is a contract change.
+- [x] **Age brackets** agreed Nov 6: `age_12_under`, `age_13_15`, `age_16_18` (contract updated).
+- [ ] **Thresholds per bracket:** `defaultThresholds()` in `flutter/lib/src/session.dart` are still placeholders.
 - [ ] **Agreed delivery time for high-severity alerts.** Alerts are sent as soon as the phone is online;
       the heartbeat (`GuardianConfig.heartbeatMinutes`, 15) and the tamper window (`TAMPER_AFTER`, 60 min,
       mirrored as `silentAfter` in `children_screen.dart`) should be set from it.

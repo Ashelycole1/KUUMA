@@ -38,14 +38,15 @@ class MemoryGuardianVault implements GuardianVault {
   Future<void> write(String key, String? value) async => value == null ? values.remove(key) : values[key] = value;
 }
 
-/// PLACEHOLDER defaults per age bracket until the team agrees brackets and thresholds
+/// Defaults per age group (12 and under, 13 to 15, 16 to 18). Younger children get more sensitive
+/// settings. PLACEHOLDER values until the team agrees the thresholds themselves
 /// (Guardian brief, "Decisions you need"). Younger children get more sensitive settings.
 Thresholds defaultThresholds(AgeBracket bracket) => switch (bracket) {
-      AgeBracket.agePlaceholderA =>
+      AgeBracket.age12Under =>
         const Thresholds(flagMinConfidence: 0.4, alertMinSeverity: Severity.low, captureMinSeverity: Severity.low),
-      AgeBracket.agePlaceholderB => const Thresholds(
+      AgeBracket.age1315 => const Thresholds(
           flagMinConfidence: 0.5, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.medium),
-      AgeBracket.agePlaceholderC =>
+      AgeBracket.age1618 =>
         const Thresholds(flagMinConfidence: 0.6, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.high),
     };
 

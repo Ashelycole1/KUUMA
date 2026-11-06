@@ -22,7 +22,7 @@ EXCERPT = "2xe1KPnJyC1COJEUWY1q7PMR8pG4e7wkcCRg_4RNW-jsl5QnWXGDXUA3vFN_0DzBfG_IQ
 
 def policy(version=1, **over):
     return {
-        "ageBracket": "age_placeholder_b",
+        "ageBracket": "age_13_15",
         "watchedApps": ["whatsapp", "sms"],
         "thresholds": {
             "flagMinConfidence": 0.6,
@@ -86,7 +86,7 @@ def pair(client, auth):
         {
             "pairingCode": code.json()["pairingCode"],
             "devicePublicKey": public_der(phone.key),
-            "ageBracket": "age_placeholder_b",
+            "ageBracket": "age_13_15",
         },
     )
     assert r.status_code == 201, r.text
@@ -104,7 +104,7 @@ def test_pairing_is_one_time_and_publishes(env):
     payload = {
         "pairingCode": code,
         "devicePublicKey": public_der(phone.key),
-        "ageBracket": "age_placeholder_b",
+        "ageBracket": "age_13_15",
     }
     assert phone.post("/v1/guardian/pairings", payload).status_code == 201
     assert phone.post("/v1/guardian/pairings", payload).status_code == 404  # used

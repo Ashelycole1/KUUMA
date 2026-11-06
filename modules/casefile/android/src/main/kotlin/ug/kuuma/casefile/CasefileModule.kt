@@ -97,7 +97,10 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
     }
 
     /** Calls from the kuuma_casefile screens. Everything runs on the vault's own thread. */
-    override fun onCall(method: String, args: Map<String, Any?>): Any? = onWorker {
+    override fun onCall(method: String, args: Map<String, Any?>): Any? = onWorker(
+        // Exports and shares may translate messages first (seconds each on a local model).
+        if (method == "export" || method == "requestShare") 300L else 30L
+    ) {
         when (method) {
             "listCases" -> engine.cases().map { c ->
                 mapOf(
@@ -169,7 +172,7 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
         worker.submit {}.get(10, TimeUnit.SECONDS)
     }
 
-    fun <T> onWorker(work: () -> T): T = worker.submit<T> { work() }.get(30, TimeUnit.SECONDS)
+    fun <T> onWorker(seconds: Long = 30, work: () -> T): T = worker.submit<T> { work() }.get(seconds, TimeUnit.SECONDS)
 
     private fun submit(work: () -> Unit) = worker.execute {
         try {

@@ -95,6 +95,7 @@ object CaseFileBuilder {
                 CaseIndex.parse(it)["caseId"]?.let { v -> (v as? JsonPrimitive)?.content } == case.caseId
         }
         val entryFor = chain.associateBy { it.itemId }
+        val sender = SenderDetails.of(case, caseItems)
         val root = chain.lastOrNull()?.chainHash ?: Vault.GENESIS
 
         val json = buildJsonObject {
@@ -103,6 +104,16 @@ object CaseFileBuilder {
             put("generatedAt", CaseIndex.iso(generatedAt))
             put("recipientType", recipient.wire)
             put("offenderLabel", case.offenderLabel)
+            put(
+                "senderDetails",
+                buildJsonObject {
+                    put("note", "As shown on the child's phone. From the sealed messages; not verified.")
+                    put("displayNames", buildJsonArray { sender.displayNames.forEach { add(JsonPrimitive(it)) } })
+                    put("phoneNumbers", buildJsonArray { sender.phoneNumbers.forEach { add(JsonPrimitive(it)) } })
+                    put("emails", buildJsonArray { sender.emails.forEach { add(JsonPrimitive(it)) } })
+                    put("handles", buildJsonArray { sender.handles.forEach { add(JsonPrimitive(it)) } })
+                }
+            )
             put("victim", victimIdentity?.let { JsonPrimitive(it) } ?: JsonNull)
             put(
                 "summary",
@@ -212,7 +223,7 @@ object CaseFileBuilder {
             json,
             renderPdf(
                 case, recipient, timeline, caseItems, entryFor, custody, root, timestamp, generatedAt, verifyUrl,
-                translations
+                translations, sender
             ),
             root
         )
@@ -236,7 +247,8 @@ object CaseFileBuilder {
         ts: RootTimestamp?,
         generatedAt: Long,
         verifyUrl: String,
-        translations: Map<String, ExhibitTranslation>
+        translations: Map<String, ExhibitTranslation>,
+        sender: SenderDetails
     ): ByteArray {
         val doc = PdfText()
         doc.heading("Kuuma case file")
@@ -262,6 +274,21 @@ object CaseFileBuilder {
         doc.heading("Possible offences (guidance)")
         doc.para(OffenceGuidance.DISCLAIMER)
         case.categories.forEach { doc.para("- ${it.wire}: ${OffenceGuidance.forCategory(it)}") }
+        doc.gap()
+        doc.heading("Sender details (as shown on the child's phone)")
+        if (sender.isEmpty) {
+            doc.para("The phone showed no name or number for this sender.")
+        } else {
+            if (sender.displayNames.isNotEmpty()) doc.para("Shown as: ${sender.displayNames.joinToString(", ")}")
+            if (sender.phoneNumbers.isNotEmpty()) {
+                doc.para(
+                    "Phone numbers in their messages: ${sender.phoneNumbers.joinToString(", ")}"
+                )
+            }
+            if (sender.emails.isNotEmpty()) doc.para("Emails in their messages: ${sender.emails.joinToString(", ")}")
+            if (sender.handles.isNotEmpty()) doc.para("Handles in their messages: ${sender.handles.joinToString(", ")}")
+            doc.para("Taken from the sealed messages below; not verified by Kuuma.")
+        }
         doc.gap()
         doc.heading("Timeline")
         val exhibitNo = caseItems.mapIndexed { i, it -> it.itemId to "E${i + 1}" }.toMap()

@@ -271,6 +271,19 @@ class CasefileEngineTest {
         assertEquals(translations.size, again.json["translations"]!!.jsonArray.size)
     }
 
+    @Test fun `case files name the sender as the phone showed them, from the offender's messages only`() {
+        play("luganda-insults")
+        val file = engine.export(engine.cases().single().caseId, RecipientType.POLICE)
+        val details = file.json["senderDetails"]!!.jsonObject
+        val names = details["displayNames"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(listOf("Classmate (invented)"), names) // not the child, not the friend
+        val pdf = String(file.pdf, Charsets.ISO_8859_1)
+        assertTrue(pdf.contains("Sender details"))
+        assertTrue(pdf.contains("Classmate"))
+        // Names and numbers never go to the translator.
+        assertTrue(translator.sent.none { "Classmate" in it.text })
+    }
+
     @Test fun `offline export works without translations, English is never sent`() {
         translator.online = false
         play("luganda-insults")

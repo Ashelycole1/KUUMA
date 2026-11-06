@@ -8,7 +8,7 @@ import 'package:kuuma_guardian/kuuma_guardian.dart';
 final vectorKey = Uint8List.fromList(List.generate(32, (i) => (i * 7 + 3) & 0xff));
 
 const vectorPolicy = Policy(
-  ageBracket: AgeBracket.agePlaceholderB,
+  ageBracket: AgeBracket.age1315,
   watchedApps: [AppSource.whatsapp, AppSource.sms],
   thresholds:
       Thresholds(flagMinConfidence: 0.5, alertMinSeverity: Severity.medium, captureMinSeverity: Severity.medium),
@@ -20,8 +20,8 @@ void main() {
 
   test('shared vectors match the Kotlin side', () {
     expect(b64url(vectorKey), 'AwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dw');
-    expect(FamilyCrypto.policyMessage(vectorPolicy), 'age_placeholder_b|sms,whatsapp|0.500|medium|medium|1');
-    expect(crypto.signPolicy(vectorPolicy).signature, 'HTf5k54Ky4WK7qoii-xrLoP0AsX-OyhchvkcHdP0p-Y');
+    expect(FamilyCrypto.policyMessage(vectorPolicy), 'age_13_15|sms,whatsapp|0.500|medium|medium|1');
+    expect(crypto.signPolicy(vectorPolicy).signature, '1Z2SpGTAhTea1G_J43Odm0v-qGHapSnC8-dwt-zqCOs');
     expect(crypto.open('AQIDBAUGBwgJCgsMHkkPkEcmYMuc3ecpeDg1Z9Np9K2c4ZXLkL4QaXM_'), 'Nkuba ku ssimu');
   });
 

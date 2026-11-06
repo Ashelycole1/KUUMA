@@ -183,6 +183,6 @@ ui:
 
 # Sign-off per age bracket. The build refuses `--release` unless every bracket is approved.
 review:
-  age_placeholder_a: { status: draft }
-  age_placeholder_b: { status: draft }
-  age_placeholder_c: { status: draft }
+  age_12_under: { status: draft }
+  age_13_15: { status: draft }
+  age_16_18: { status: draft }

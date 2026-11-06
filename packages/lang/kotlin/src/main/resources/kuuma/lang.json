@@ -108,28 +108,31 @@
   "contract": "AgeBracket",
   "values": [
    {
-    "id": "age_placeholder_a",
+    "id": "age_12_under",
     "label": {
-     "en": "Age group A (placeholder)"
+     "en": "12 and under",
+     "sw": "Miaka 12 na chini"
     },
-    "maxAge": null,
+    "maxAge": 12,
     "minAge": null
    },
    {
-    "id": "age_placeholder_b",
+    "id": "age_13_15",
     "label": {
-     "en": "Age group B (placeholder)"
+     "en": "13 to 15",
+     "sw": "Miaka 13 hadi 15"
     },
-    "maxAge": null,
-    "minAge": null
+    "maxAge": 15,
+    "minAge": 13
    },
    {
-    "id": "age_placeholder_c",
+    "id": "age_16_18",
     "label": {
-     "en": "Age group C (placeholder)"
+     "en": "16 to 18",
+     "sw": "Miaka 16 hadi 18"
     },
-    "maxAge": null,
-    "minAge": null
+    "maxAge": 18,
+    "minAge": 16
    }
   ]
  },

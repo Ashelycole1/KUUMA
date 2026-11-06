@@ -118,7 +118,7 @@ class SentinelEngineTest {
             e.onPolicy(
                 GuardianPolicyUpdatedPayload(
                     "3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c",
-                    AgeBracket.AGE_PLACEHOLDER_B,
+                    AgeBracket.AGE_13_15,
                     listOf(AppSource.fromWire(s.appSource)),
                     Thresholds(0.6, Severity.MEDIUM, Severity.MEDIUM),
                     1
@@ -295,6 +295,34 @@ class SentinelEngineTest {
         events.clear()
         e.onScreen(ScreenSnapshot("com.whatsapp", screen, now + 5_000))
         assertTrue(events.isEmpty())
+    }
+
+    @Test fun `messages Android hid are screened from the screen when the chat is opened`() {
+        val e = engine()
+        // Android 15 hid this one (it carried a phone number); Kuuma only knows which chat it was.
+        e.onHiddenNotification(notification("com.whatsapp", "Kato", "Sensitive notification content hidden"))
+        assertTrue(payloads(Events.SENTINEL_MESSAGE_FLAGGED).isEmpty())
+        val screen = ScreenNode(
+            children = listOf(
+                ScreenNode("com.whatsapp:id/conversation_contact_name", "Kato"),
+                ScreenNode(
+                    "com.whatsapp:id/main_layout",
+                    children = listOf(
+                        ScreenNode("com.whatsapp:id/message_text", "Oli musiru nnyo. Nkubire ku 0772 123 456 enkya.")
+                    )
+                )
+            )
+        )
+        e.onScreen(ScreenSnapshot("com.whatsapp", screen, now))
+        val flag = payloads(Events.SENTINEL_MESSAGE_FLAGGED).single()
+        assertEquals(HarmCategory.INSULT, flag.category)
+        // Captured with the number intact: evidence keeps it (only the copy sent to the cloud is redacted).
+        val capture = payloads(Events.SENTINEL_CAPTURE_READY).last()
+        assertTrue(capture.messages.any { "0772 123 456" in it.text })
+        // Opening the chat again does not screen it twice.
+        events.clear()
+        e.onScreen(ScreenSnapshot("com.whatsapp", screen, now + 1_000))
+        assertTrue(payloads(Events.SENTINEL_MESSAGE_FLAGGED).isEmpty())
     }
 
     @Test fun `stored data holds no text`() {

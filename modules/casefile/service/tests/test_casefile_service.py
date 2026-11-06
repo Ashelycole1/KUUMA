@@ -92,7 +92,7 @@ def test_child_share_waits_for_parent(env):
     app.state.handle_event(
         {
             "type": "guardian.pairing.completed",
-            "payload": {"childId": str(uuid.uuid4()), "deviceId": CHILD, "ageBracket": "age_placeholder_b"},
+            "payload": {"childId": str(uuid.uuid4()), "deviceId": CHILD, "ageBracket": "age_13_15"},
         }
     )
     upload_bundle(client, store)
@@ -120,7 +120,7 @@ def test_declined_share_never_opens(env):
     app.state.handle_event(
         {
             "type": "guardian.pairing.completed",
-            "payload": {"childId": str(uuid.uuid4()), "deviceId": CHILD, "ageBracket": "age_placeholder_b"},
+            "payload": {"childId": str(uuid.uuid4()), "deviceId": CHILD, "ageBracket": "age_13_15"},
         }
     )
     upload_bundle(client, store)

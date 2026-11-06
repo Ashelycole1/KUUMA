@@ -48,11 +48,11 @@ Uuid = Annotated[str, StringConstraints(pattern='^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a
 
 
 class AgeBracket(StrEnum):
-    """PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version."""
+    """Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees."""
 
-    AGE_PLACEHOLDER_A = 'age_placeholder_a'
-    AGE_PLACEHOLDER_B = 'age_placeholder_b'
-    AGE_PLACEHOLDER_C = 'age_placeholder_c'
+    AGE_12_UNDER = 'age_12_under'
+    AGE_13_15 = 'age_13_15'
+    AGE_16_18 = 'age_16_18'
 
 
 class AlertKind(StrEnum):
