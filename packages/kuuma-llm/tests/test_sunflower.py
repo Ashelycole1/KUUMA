@@ -227,6 +227,16 @@ def test_language_gate():
     assert needs_sunflower("wewe ni mjinga", None)
 
 
+@pytest.mark.parametrize("language", [None, "", "und", "unknown", "LG"])
+def test_unknown_language_routes_without_marker_words(language):
+    # Invented fixture with no word from the routing marker list. Not an accuracy label.
+    assert needs_sunflower("Tugende tukole.", language)
+
+
+def test_explicit_english_without_markers_keeps_fast_path():
+    assert not needs_sunflower("Can you bring the notebook tomorrow?", "en")
+
+
 def test_config_from_env():
     c = AiConfig.from_env({"KUUMA_AI_MODE": "Sunflower", "KUUMA_SUNFLOWER_MODEL": "sunflower-14b:q5"})
     assert c.mode == "sunflower" and c.sunflower_model == "sunflower-14b:q5"

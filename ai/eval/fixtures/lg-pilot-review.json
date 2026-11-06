@@ -1,0 +1,14 @@
+{
+  "kind": "synthetic",
+  "purpose": "Fluent-speaker review before Luganda harm evaluation; no accuracy claim",
+  "cases": [
+    {"id": "lg-greeting", "language": "lg", "text": "Wasuze otya?", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-insult", "language": "lg", "text": "Oli musiru nnyo", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-degrading", "language": "lg", "text": "Tolina mugaso", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-threat", "language": "lg", "text": "Nja kukukuba bw'onodda ku ssomero enkya", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-no-marker", "language": "lg", "text": "Ekitabo kiri ku mmeeza.", "expected_label": null, "review_status": "pending"},
+    {"id": "mixed-english-lg", "language": null, "text": "You are so musiru nnyo", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-quoted-insult", "language": "lg", "text": "Yampise musiru.", "expected_label": null, "review_status": "pending"},
+    {"id": "lg-thanks", "language": "lg", "text": "Webale nnyo.", "expected_label": null, "review_status": "pending"}
+  ]
+}

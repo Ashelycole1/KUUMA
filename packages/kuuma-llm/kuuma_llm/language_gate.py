@@ -1,9 +1,9 @@
-"""Should a message go to Sunflower? Plain English skips it; anything else, or English with
-Luganda / Swahili / Runyankole words mixed in, goes through.
+"""Should a message go to Sunflower? Explicit English can skip it; unknown languages and
+English with known Luganda / Swahili / Runyankole markers go through.
 
 PLACEHOLDER heuristic until the lexicon (packages/lang/lexicon) has non-English entries:
-a short list of very common words in the three languages. Code-switched slang is
-Sunflower's main job, so when in doubt the gate says yes.
+a short list of very common words in the three languages. This is a routing hint, not a
+language detector or a harm classifier. Missing language must not silently mean English.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ _MARKERS = {
 
 
 def needs_sunflower(text: str, language: str | None) -> bool:
-    if language and language != "en":
+    if language != "en":
         return True
     words = set(_WORDS.findall(text.lower()))
     return bool(words & _MARKERS)

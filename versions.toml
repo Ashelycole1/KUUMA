@@ -20,6 +20,7 @@ node = "22"
 pnpm = "9.15.0"
 
 [kotlin]
+litert = "1.4.2"
 kotlinx-serialization = "1.8.1"
 kotlinx-coroutines = "1.10.2"
 androidx-core = "1.13.1"
