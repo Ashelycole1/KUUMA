@@ -34,6 +34,11 @@ abstract class GuardianParentApi {
 
   Future<ApprovalResult> decide(String token, String approvalId, ApprovalDecision decision, String signature);
 
+  /// Reports a case: the child's phone builds the file and sends the link back sealed.
+  Future<Report> createReport(String token, String childId, ReportRequest request);
+
+  Future<List<Report>> reports(String token);
+
   /// The token [createPairingCode] uses. Set by the session after sign-in.
   String? token;
 }
@@ -110,4 +115,14 @@ class HttpGuardianParentApi implements GuardianParentApi {
   Future<ApprovalResult> decide(String token, String approvalId, ApprovalDecision decision, String signature) async =>
       ApprovalResult.fromJson(await _call('POST', '/v1/guardian/approvals/$approvalId',
           body: {'decision': decision.wire, 'signature': signature}, auth: token));
+
+  @override
+  Future<Report> createReport(String token, String childId, ReportRequest request) async => Report.fromJson(
+      await _call('POST', '/v1/guardian/children/$childId/reports', body: request.toJson(), auth: token));
+
+  @override
+  Future<List<Report>> reports(String token) async {
+    final json = await _call('GET', '/v1/guardian/reports', auth: token) as Map<String, dynamic>;
+    return [for (final r in json['reports'] as List<dynamic>) Report.fromJson(r as Map<String, dynamic>)];
+  }
 }

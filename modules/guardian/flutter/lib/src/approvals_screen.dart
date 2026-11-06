@@ -4,6 +4,7 @@ import 'package:kuuma_ui/kuuma_ui.dart';
 
 import 'children_screen.dart';
 import 'parent_gate.dart';
+import 'report_screen.dart';
 
 /// Casefile's share requests. Each decision is signed with the child's family key.
 class ApprovalsScreen extends StatefulWidget {
@@ -38,6 +39,7 @@ class _ApprovalsScreenState extends State<ApprovalsScreen> {
       onRefresh: session.refresh,
       child: ListView(padding: const EdgeInsets.all(8), children: [
         const OfflineBanner(),
+        const ReportsSection(),
         if (approvals.isEmpty)
           SizedBox(
             height: 360,

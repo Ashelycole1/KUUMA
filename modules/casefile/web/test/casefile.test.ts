@@ -20,10 +20,27 @@ describe("case file verification (against the Kotlin vault's real output)", () =
   it("an edited exhibit is caught", async () => {
     const f = caseFile();
     const msg = f.exhibits.find((x) => x.kind === "MESSAGE")!;
-    msg.content = msg.content.replace("hurt", "meet");
+    msg.content = msg.content!.replace("hurt", "meet");
     const r = await verifyCaseFile(f);
     expect(r.intact).toBe(false);
     expect(r.problems).toContainEqual({ kind: "exhibit_altered", exhibit: msg.exhibit });
+  });
+
+  it("a withheld exhibit keeps its place in the chain but not its content", async () => {
+    const f = caseFile();
+    const msg = f.exhibits.find((x) => x.kind === "MESSAGE")!;
+    delete msg.content;
+    msg.withheld = true;
+    const r = await verifyCaseFile(f);
+    expect(r.problems).toEqual([]);
+    expect(r.withheld).toBe(1);
+    expect(describeReport(r)).toContain("withheld to protect the child");
+    // Claiming a different hash for a withheld exhibit is still caught.
+    msg.itemHash = "0".repeat(64);
+    expect((await verifyCaseFile(f)).problems).toContainEqual({
+      kind: "exhibit_altered",
+      exhibit: msg.exhibit,
+    });
   });
 
   it("a removed or re-hashed link is caught", async () => {

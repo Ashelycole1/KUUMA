@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/report-list.json",
+  "title": "ReportList",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reports"
+  ],
+  "properties": {
+    "reports": {
+      "type": "array",
+      "items": {
+        "$ref": "report.json"
+      }
+    }
+  }
+}

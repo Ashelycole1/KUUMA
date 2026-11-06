@@ -87,6 +87,7 @@ class ParentSession extends ChangeNotifier {
   List<ChildView> children = const [];
   List<Alert> alerts = const [];
   List<Approval> approvals = const [];
+  List<Report> reports = const [];
 
   /// Set when the last refresh could not reach the server (screens show cached data).
   bool offline = false;
@@ -173,6 +174,7 @@ class ParentSession extends ChangeNotifier {
       children = views;
       alerts = await api.alerts(_token);
       approvals = await api.approvals(_token);
+      reports = await api.reports(_token);
       offline = false;
     } on GuardianApiException catch (e) {
       if (!e.offline) rethrow;
@@ -252,6 +254,46 @@ class ParentSession extends ChangeNotifier {
     if (sealed == null || childId == null) return null;
     try {
       return (await crypto(childId))?.open(sealed);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Reports a case to a school, the police, the app or a lawyer. The child's phone builds the
+  /// case file; with [anonymous], everything that could identify the child is left out. The
+  /// child's nickname goes along sealed with the family key (the server cannot read it) so
+  /// messages that name the child can be withheld.
+  Future<Report> requestReport(
+    String childId,
+    String caseId,
+    RecipientType recipient, {
+    bool anonymous = true,
+  }) async {
+    final family = await crypto(childId) ?? (throw StateError('no family key for this child'));
+    final reportId = newUuid();
+    final nickname = child(childId)?.nickname ?? '';
+    final r = await api.createReport(
+      _token,
+      childId,
+      ReportRequest(
+        reportId: reportId,
+        caseId: caseId,
+        recipientType: recipient,
+        anonymous: anonymous,
+        signature: family.signReport(reportId, caseId, recipient, anonymous),
+        sealedChildName: anonymous && nickname.isNotEmpty ? family.seal(nickname) : null,
+      ),
+    );
+    await refresh();
+    return r;
+  }
+
+  /// Opens a ready report's link (sealed by the child's phone with the family key).
+  Future<String?> openReportLink(Report report) async {
+    final sealed = report.sealedLink;
+    if (sealed == null) return null;
+    try {
+      return (await crypto(report.childId))?.open(sealed);
     } catch (_) {
       return null;
     }

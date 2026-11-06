@@ -83,9 +83,25 @@ class FamilyCrypto {
         '${p.policyVersion}',
       ].join('|');
 
+  String signReport(String reportId, String caseId, RecipientType recipient, bool anonymous) =>
+      sign(reportMessage(reportId, caseId, recipient.wire, anonymous));
+
+  /// What the parent signs to report a case (same formula in FamilyCrypto.kt).
+  static String reportMessage(String reportId, String caseId, String recipient, bool anonymous) =>
+      'report|$reportId|$caseId|$recipient|$anonymous';
+
   /// Not decidedAt: the server stamps that after the parent signs.
   static String decisionMessage(String approvalId, String requestId, String decision) =>
       '$approvalId|$requestId|$decision';
+}
+
+/// A random version-4 UUID (report ids are made on the parent's phone so it can sign them).
+String newUuid([Random? random]) {
+  final b = randomBytes(16, random);
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  final h = b.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
+  return '${h.substring(0, 8)}-${h.substring(8, 12)}-${h.substring(12, 16)}-${h.substring(16, 20)}-${h.substring(20)}';
 }
 
 /// The pairing QR payload: `kuuma-pair:1:<6-digit code>:<base64url family key>`.

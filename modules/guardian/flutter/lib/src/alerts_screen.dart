@@ -5,6 +5,7 @@ import 'package:kuuma_ui/kuuma_ui.dart';
 
 import 'children_screen.dart';
 import 'parent_gate.dart';
+import 'report_screen.dart';
 import 'strings.dart';
 
 String alertTitle(BuildContext context, Alert a) {
@@ -226,6 +227,22 @@ class _AlertDetailScreenState extends State<AlertDetailScreen> {
           ),
         steps('guardian.alerts.talk', 'guardian.guide.$guide.talk', Icons.forum_outlined),
         steps('guardian.alerts.avoid', 'guardian.guide.$guide.avoid', Icons.block),
+        // Reporting needs a real case on the child's phone (not a tamper alert).
+        if (a.childId != null && a.kind != AlertKind.tamper)
+          Padding(
+            padding: const EdgeInsets.all(KuumaSpace.lg),
+            child: KuumaButton(
+              key: const Key('report-case'),
+              icon: Icons.outgoing_mail,
+              label: context.t('guardian.report.button'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<bool>(
+                builder: (_) => ParentScope(
+                  session: session,
+                  child: ReportScreen(childId: a.childId!, caseId: a.caseId),
+                ),
+              )),
+            ),
+          ),
       ]),
     );
   }

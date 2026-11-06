@@ -34,7 +34,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from kuuma_contracts.testing import ContractViolation, validate_body
-from kuuma_guardian_service.db import Alert, Approval, Base, Child, PairingCode, Parent
+from kuuma_guardian_service.db import Alert, Approval, Base, Child, PairingCode, Parent, Report
 from kuuma_server_common import KuumaError, StreamPublisher, audit, create_app, device_auth, get_logger
 from kuuma_server_common.service import envelope, redis_client
 
@@ -401,6 +401,98 @@ def build_app(
         audit(f"approval.{a.status}", actor=p.parent_id, resource=a.approval_id, service="guardian")
         return approval_result(a)
 
+    # ------------------------------------------------------------------ parent reports
+
+    def report_body(r: Report) -> dict:
+        out = {
+            "reportId": r.report_id,
+            "childId": r.child_id,
+            "caseId": r.case_id,
+            "recipientType": r.recipient_type,
+            "anonymous": r.anonymous,
+            "status": r.status,
+            "createdAt": iso(aware(r.created_at)),
+        }
+        if r.completed_at:
+            out["completedAt"] = iso(aware(r.completed_at))
+        if r.sealed_link:
+            out["sealedLink"] = r.sealed_link
+        return out
+
+    def report_order(r: Report) -> dict:
+        out = {
+            "reportId": r.report_id,
+            "caseId": r.case_id,
+            "recipientType": r.recipient_type,
+            "anonymous": r.anonymous,
+            "signature": r.signature,
+            "requestedAt": iso(aware(r.created_at)),
+        }
+        if r.sealed_child_name:
+            out["sealedChildName"] = r.sealed_child_name
+        return out
+
+    @app.post("/v1/guardian/children/{childId}/reports", status_code=201)
+    def create_report(
+        childId: str,  # noqa: N803
+        data: dict = Depends(body("api/report-request.json")),
+        p: Parent = Depends(parent),
+        s: Session = Depends(db),
+    ):
+        child = owned_child(s, p, childId)
+        if not child.paired:
+            raise KuumaError(409, "not_paired", "This child's phone is not paired yet")
+        if s.get(Report, data["reportId"]) is not None:
+            raise KuumaError(409, "duplicate_report", "This report was already requested")
+        r = Report(
+            report_id=data["reportId"],
+            child_id=child.child_id,
+            case_id=data["caseId"],
+            recipient_type=data["recipientType"],
+            anonymous=data["anonymous"],
+            signature=data["signature"],
+            sealed_child_name=data.get("sealedChildName"),
+            status="requested",
+            created_at=clock(),
+            delivered=False,
+        )
+        s.add(r)
+        s.commit()
+        # The parent is the approver: Casefile's service may accept this share without waiting.
+        publish(
+            "guardian.share.approved",
+            {"requestId": r.report_id, "caseId": r.case_id, "decidedAt": iso(aware(r.created_at))},
+            child.device_id,
+            r.case_id,
+        )
+        audit("report.requested", actor=p.parent_id, resource=r.report_id, service="guardian")
+        return report_body(r)
+
+    @app.get("/v1/guardian/reports")
+    def list_reports(p: Parent = Depends(parent), s: Session = Depends(db)):
+        ids = [c.child_id for c in s.scalars(select(Child).where(Child.parent_id == p.parent_id))]
+        rows = s.scalars(
+            select(Report).where(Report.child_id.in_(ids)).order_by(Report.created_at.desc())
+        ).all()
+        return {"reports": [report_body(r) for r in rows]}
+
+    @app.post("/v1/guardian/reports/{reportId}/result")
+    def report_result(
+        reportId: str,  # noqa: N803
+        data: dict = Depends(body("api/report-result-request.json")),
+        child: Child = Depends(device_child),
+        s: Session = Depends(db),
+    ):
+        r = s.get(Report, reportId) if UUID.match(reportId) else None
+        if r is None or r.child_id != child.child_id:
+            raise KuumaError(404, "not_found", "No such report")
+        if data["status"] == "ready" and "sealedLink" not in data:
+            raise KuumaError(422, "missing_link", "A ready report needs its sealed link")
+        r.status, r.completed_at, r.sealed_link = data["status"], clock(), data.get("sealedLink")
+        s.commit()
+        audit(f"report.{r.status}", actor=child.child_id, resource=r.report_id, service="guardian")
+        return report_body(r)
+
     # ------------------------------------------------------------------ child phone
 
     @app.post("/v1/guardian/pairings", status_code=201)
@@ -516,6 +608,12 @@ def build_app(
         out["decisions"] = [approval_result(a) for a in undelivered]
         for a in undelivered:
             a.delivered = True
+        orders = s.scalars(
+            select(Report).where(Report.child_id == child.child_id, Report.delivered.is_(False))
+        ).all()
+        out["reports"] = [report_order(r) for r in orders]
+        for r in orders:
+            r.delivered = True
         s.commit()
         return out
 

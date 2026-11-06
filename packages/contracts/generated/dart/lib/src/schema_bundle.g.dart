@@ -531,6 +531,13 @@ const String kuumaSchemaBundle = r'''
     "$ref": "../types/policy.json",
     "description": "Present when a newer policy than the phone's exists."
    },
+   "reports": {
+    "description": "Parent report requests for this child not yet delivered.",
+    "items": {
+     "$ref": "../types/report-order.json"
+    },
+    "type": "array"
+   },
    "serverTime": {
     "$ref": "../types/timestamp.json"
    }
@@ -708,6 +715,124 @@ const String kuumaSchemaBundle = r'''
    "sessionToken"
   ],
   "title": "ParentRegistrationResponse",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/report-list.json": {
+  "$id": "https://schemas.kuuma.ug/api/report-list.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "reports": {
+    "items": {
+     "$ref": "report.json"
+    },
+    "type": "array"
+   }
+  },
+  "required": [
+   "reports"
+  ],
+  "title": "ReportList",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/report-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/report-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous.",
+  "properties": {
+   "anonymous": {
+    "type": "boolean"
+   },
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "recipientType": {
+    "$ref": "../types/recipient-type.json"
+   },
+   "reportId": {
+    "$ref": "../types/uuid.json"
+   },
+   "sealedChildName": {
+    "$ref": "../types/sealed-excerpt.json"
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
+   }
+  },
+  "required": [
+   "reportId",
+   "caseId",
+   "recipientType",
+   "anonymous",
+   "signature"
+  ],
+  "title": "ReportRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/report-result-request.json": {
+  "$id": "https://schemas.kuuma.ug/api/report-result-request.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed).",
+  "properties": {
+   "sealedLink": {
+    "$ref": "../types/sealed-excerpt.json"
+   },
+   "status": {
+    "$ref": "../types/report-outcome.json"
+   }
+  },
+  "required": [
+   "status"
+  ],
+  "title": "ReportResultRequest",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/api/report.json": {
+  "$id": "https://schemas.kuuma.ug/api/report.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+   "anonymous": {
+    "type": "boolean"
+   },
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "childId": {
+    "$ref": "../types/uuid.json"
+   },
+   "completedAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "createdAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "recipientType": {
+    "$ref": "../types/recipient-type.json"
+   },
+   "reportId": {
+    "$ref": "../types/uuid.json"
+   },
+   "sealedLink": {
+    "$ref": "../types/sealed-excerpt.json",
+    "description": "The share link (its key is in the #fragment), sealed with the family key. Only the parent's phone can open it."
+   },
+   "status": {
+    "$ref": "../types/report-status.json"
+   }
+  },
+  "required": [
+   "reportId",
+   "childId",
+   "caseId",
+   "recipientType",
+   "anonymous",
+   "status",
+   "createdAt"
+  ],
+  "title": "Report",
   "type": "object"
  },
  "https://schemas.kuuma.ug/api/share-download.json": {
@@ -1074,6 +1199,57 @@ const String kuumaSchemaBundle = r'''
   "x-kuuma": {
    "event": "casefile.evidence.sealed",
    "phoneOnly": false,
+   "publisher": "casefile",
+   "version": 1,
+   "where": "phone"
+  }
+ },
+ "https://schemas.kuuma.ug/events/casefile.report.ready.v1.json": {
+  "$id": "https://schemas.kuuma.ug/events/casefile.report.ready.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+   {
+    "$ref": "envelope.json"
+   }
+  ],
+  "description": "PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.",
+  "properties": {
+   "payload": {
+    "additionalProperties": false,
+    "properties": {
+     "caseId": {
+      "$ref": "../types/uuid.json"
+     },
+     "link": {
+      "maxLength": 2000,
+      "type": "string"
+     },
+     "requestId": {
+      "$ref": "../types/uuid.json"
+     },
+     "status": {
+      "$ref": "../types/report-outcome.json"
+     }
+    },
+    "required": [
+     "requestId",
+     "caseId",
+     "status"
+    ],
+    "title": "CasefileReportReadyPayload",
+    "type": "object"
+   },
+   "type": {
+    "const": "casefile.report.ready"
+   },
+   "version": {
+    "const": 1
+   }
+  },
+  "title": "CasefileReportReady",
+  "x-kuuma": {
+   "event": "casefile.report.ready",
+   "phoneOnly": true,
    "publisher": "casefile",
    "version": 1,
    "where": "phone"
@@ -1547,6 +1723,67 @@ const String kuumaSchemaBundle = r'''
    "publisher": "guardian",
    "version": 1,
    "where": "cloud_to_phone"
+  }
+ },
+ "https://schemas.kuuma.ug/events/guardian.report.requested.v1.json": {
+  "$id": "https://schemas.kuuma.ug/events/guardian.report.requested.v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+   {
+    "$ref": "envelope.json"
+   }
+  ],
+  "description": "PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.",
+  "properties": {
+   "payload": {
+    "additionalProperties": false,
+    "properties": {
+     "anonymous": {
+      "type": "boolean"
+     },
+     "caseId": {
+      "$ref": "../types/uuid.json"
+     },
+     "childNames": {
+      "description": "Names to withhold in an anonymous report.",
+      "items": {
+       "maxLength": 100,
+       "type": "string"
+      },
+      "maxItems": 5,
+      "type": "array"
+     },
+     "recipientType": {
+      "$ref": "../types/recipient-type.json"
+     },
+     "requestId": {
+      "$ref": "../types/uuid.json"
+     }
+    },
+    "required": [
+     "requestId",
+     "caseId",
+     "recipientType",
+     "anonymous",
+     "childNames"
+    ],
+    "title": "GuardianReportRequestedPayload",
+    "type": "object"
+   },
+   "type": {
+    "const": "guardian.report.requested"
+   },
+   "version": {
+    "const": 1
+   }
+  },
+  "title": "GuardianReportRequested",
+  "x-kuuma": {
+   "event": "guardian.report.requested",
+   "phoneOnly": true,
+   "publisher": "guardian",
+   "version": 1,
+   "where": "phone"
   }
  },
  "https://schemas.kuuma.ug/events/guardian.share.approved.v1.json": {
@@ -2382,6 +2619,70 @@ const String kuumaSchemaBundle = r'''
   ],
   "title": "ReplyRisk",
   "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/report-order.json": {
+  "$id": "https://schemas.kuuma.ug/types/report-order.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies.",
+  "properties": {
+   "anonymous": {
+    "description": "Leave out everything that could identify the child.",
+    "type": "boolean"
+   },
+   "caseId": {
+    "$ref": "../types/uuid.json"
+   },
+   "recipientType": {
+    "$ref": "../types/recipient-type.json"
+   },
+   "reportId": {
+    "$ref": "../types/uuid.json"
+   },
+   "requestedAt": {
+    "$ref": "../types/timestamp.json"
+   },
+   "sealedChildName": {
+    "$ref": "../types/sealed-excerpt.json",
+    "description": "The child's name as the parent knows it, sealed with the family key, so the phone can withhold messages that name the child. The server cannot read it."
+   },
+   "signature": {
+    "$ref": "../types/family-signature.json"
+   }
+  },
+  "required": [
+   "reportId",
+   "caseId",
+   "recipientType",
+   "anonymous",
+   "signature",
+   "requestedAt"
+  ],
+  "title": "ReportOrder",
+  "type": "object"
+ },
+ "https://schemas.kuuma.ug/types/report-outcome.json": {
+  "$id": "https://schemas.kuuma.ug/types/report-outcome.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "What the child's phone did with a parent's report request.",
+  "enum": [
+   "ready",
+   "failed"
+  ],
+  "title": "ReportOutcome",
+  "type": "string"
+ },
+ "https://schemas.kuuma.ug/types/report-status.json": {
+  "$id": "https://schemas.kuuma.ug/types/report-status.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.",
+  "enum": [
+   "requested",
+   "ready",
+   "failed"
+  ],
+  "title": "ReportStatus",
+  "type": "string"
  },
  "https://schemas.kuuma.ug/types/risky-span.json": {
   "$id": "https://schemas.kuuma.ug/types/risky-span.json",

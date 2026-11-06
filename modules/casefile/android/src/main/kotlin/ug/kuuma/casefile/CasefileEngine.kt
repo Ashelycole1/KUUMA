@@ -16,6 +16,7 @@ import ug.kuuma.casefile.cases.TimelineEntry
 import ug.kuuma.casefile.export.CaseFile
 import ug.kuuma.casefile.export.CaseFileBuilder
 import ug.kuuma.casefile.export.CaseTranslator
+import ug.kuuma.casefile.export.ParentReport
 import ug.kuuma.casefile.export.RootTimestamp
 import ug.kuuma.casefile.export.ShareCrypto
 import ug.kuuma.casefile.export.Translator
@@ -29,11 +30,14 @@ import ug.kuuma.contracts.BundleRequest
 import ug.kuuma.contracts.CasefileCaseEscalatedPayload
 import ug.kuuma.contracts.CasefileCaseUpdatedPayload
 import ug.kuuma.contracts.CasefileEvidenceSealedPayload
+import ug.kuuma.contracts.CasefileReportReadyPayload
 import ug.kuuma.contracts.CasefileShareRequestedPayload
 import ug.kuuma.contracts.EscalationReason
 import ug.kuuma.contracts.Events
+import ug.kuuma.contracts.GuardianReportRequestedPayload
 import ug.kuuma.contracts.HarmCategory
 import ug.kuuma.contracts.RecipientType
+import ug.kuuma.contracts.ReportOutcome
 import ug.kuuma.contracts.SentinelCaptureReadyPayload
 import ug.kuuma.contracts.SentinelFlagUpdatedPayload
 import ug.kuuma.contracts.SentinelMessageFlaggedPayload
@@ -205,7 +209,8 @@ class CasefileEngine(
         caseId: String,
         recipient: RecipientType,
         actor: Actor = Actor.CHILD,
-        victimIdentity: String? = null
+        victimIdentity: String? = null,
+        parentReport: ParentReport? = null
     ): CaseFile {
         val c = requireNotNull(case(caseId)) { "unknown case" }
         custody(actor, "export", caseId, emptyList(), recipient)
@@ -218,7 +223,7 @@ class CasefileEngine(
         return CaseFileBuilder.build(
             c, items, store.chain(), timeline, recipient, signer.publicKeyBase64(), signer.protection, ts,
             clock(),
-            shareBaseUrl, victimIdentity, translated
+            shareBaseUrl, victimIdentity, translated, parentReport
         )
     }
 
@@ -259,9 +264,43 @@ class CasefileEngine(
         custody(Actor.PARENT, "share_declined", s.caseId, emptyList(), s.recipient, requestId)
     }
 
-    private fun completeShare(requestId: String, actor: Actor) {
+    /**
+     * The parent reported a case (Guardian checked the family-key signature). No approval to wait
+     * for: the parent is the approver. The link goes back to Guardian, which seals it for the parent.
+     */
+    fun onReportRequested(p: GuardianReportRequestedPayload) {
+        if (share(p.requestId) != null) return
+        if (case(p.caseId) == null) {
+            publisher.publish(
+                Events.CASEFILE_REPORT_READY,
+                CasefileReportReadyPayload(p.requestId, p.caseId, ReportOutcome.FAILED),
+                p.caseId
+            )
+            return
+        }
+        store.setMeta("report.${p.requestId}", if (p.anonymous) "anonymous" else "named")
+        saveShare(ShareRecord(p.requestId, p.caseId, p.recipientType, ShareStatus.PENDING_APPROVAL.wire, null))
+        custody(Actor.PARENT, "report_requested", p.caseId, emptyList(), p.recipientType, p.requestId)
+        val record = completeShare(p.requestId, Actor.PARENT, ParentReport(p.anonymous, p.childNames))
+        val uploaded = record.status != "built_offline" && record.link != null
+        publisher.publish(
+            Events.CASEFILE_REPORT_READY,
+            CasefileReportReadyPayload(
+                p.requestId,
+                p.caseId,
+                if (uploaded) ReportOutcome.READY else ReportOutcome.FAILED,
+                if (uploaded) record.link else null
+            ),
+            p.caseId
+        )
+    }
+
+    /** "anonymous", "named" or null (a share the child started). */
+    fun reportKind(requestId: String): String? = store.meta("report.$requestId")
+
+    private fun completeShare(requestId: String, actor: Actor, parentReport: ParentReport? = null): ShareRecord {
         val s = share(requestId)!!
-        val file = export(s.caseId, s.recipient, actor)
+        val file = export(s.caseId, s.recipient, actor, parentReport = parentReport)
         val sealed = ShareCrypto.encrypt(ShareCrypto.container(file))
         val link = "$shareBaseUrl/s/$requestId#k=${Base64Url.encode(sealed.key)}"
         var status = "built_offline"
@@ -279,7 +318,8 @@ class CasefileEngine(
                 status = a.createShare(s.caseId, ShareRequest(requestId, s.recipient, bundle.bundleId)).status.wire
             }.onFailure { SafeLog.w("casefile.share.upload_failed") }
         }
-        saveShare(s.copy(status = status, link = link))
+        val done = s.copy(status = status, link = link)
+        saveShare(done)
         custody(actor, "shared", s.caseId, emptyList(), s.recipient, requestId)
         SafeLog.i(
             "casefile.share.ready",
@@ -289,6 +329,7 @@ class CasefileEngine(
                 status != "built_offline"
             )
         )
+        return done
     }
 
     fun share(requestId: String): ShareRecord? =

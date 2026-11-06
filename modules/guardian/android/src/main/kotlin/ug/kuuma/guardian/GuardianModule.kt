@@ -28,6 +28,7 @@ import ug.kuuma.contracts.HeartbeatResponse
 import ug.kuuma.contracts.Namespace
 import ug.kuuma.contracts.PairingRequest
 import ug.kuuma.contracts.PairingResponse
+import ug.kuuma.contracts.ReportResultRequest
 import ug.kuuma.core.log.LogField
 import ug.kuuma.core.log.SafeLog
 import ug.kuuma.core.module.KuumaModule
@@ -130,6 +131,9 @@ class GuardianModule(private val config: GuardianConfig = GuardianConfig()) : Ku
         }
         context.events.subscribe(Events.CASEFILE_SHARE_REQUESTED) { e ->
             submit { engine.onShareRequested(e.payload.requestId, e.payload.caseId, e.payload.recipientType) }
+        }
+        context.events.subscribe(Events.CASEFILE_REPORT_READY) { e ->
+            submit { engine.onReportReady(e.payload.requestId, e.payload.status, e.payload.link) }
         }
         context.events.subscribe(Events.COMPANION_SOS_TRIGGERED) { e ->
             submit { engine.onSos(e.payload.caseId, e.payload.triggeredAt) }
@@ -307,6 +311,15 @@ class HttpGuardianApi(
 
     override fun approvalRequest(request: ApprovalRequest) {
         call<ApprovalRequest, Unit>("/v1/guardian/approval-requests", request, ApprovalRequest.serializer(), null)
+    }
+
+    override fun reportResult(reportId: String, request: ReportResultRequest) {
+        call<ReportResultRequest, Unit>(
+            "/v1/guardian/reports/$reportId/result",
+            request,
+            ReportResultRequest.serializer(),
+            null
+        )
     }
 
     private fun <I, O> call(

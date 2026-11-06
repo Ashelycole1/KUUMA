@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/report-order.json",
+  "title": "ReportOrder",
+  "description": "A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reportId",
+    "caseId",
+    "recipientType",
+    "anonymous",
+    "signature",
+    "requestedAt"
+  ],
+  "properties": {
+    "reportId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "recipientType": {
+      "$ref": "../types/recipient-type.json"
+    },
+    "anonymous": {
+      "type": "boolean",
+      "description": "Leave out everything that could identify the child."
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
+    },
+    "sealedChildName": {
+      "$ref": "../types/sealed-excerpt.json",
+      "description": "The child's name as the parent knows it, sealed with the family key, so the phone can withhold messages that name the child. The server cannot read it."
+    },
+    "requestedAt": {
+      "$ref": "../types/timestamp.json"
+    }
+  }
+}

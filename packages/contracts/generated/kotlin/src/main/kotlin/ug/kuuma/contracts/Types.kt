@@ -288,6 +288,39 @@ enum class RecipientType(val wire: String) {
 }
 
 /**
+ * What the child's phone did with a parent's report request.
+ */
+@Serializable
+enum class ReportOutcome(val wire: String) {
+    @SerialName("ready") READY("ready"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ReportOutcome =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ReportOutcome: $wire")
+    }
+}
+
+/**
+ * A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.
+ */
+@Serializable
+enum class ReportStatus(val wire: String) {
+    @SerialName("requested") REQUESTED("requested"),
+    @SerialName("ready") READY("ready"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ReportStatus =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ReportStatus: $wire")
+    }
+}
+
+/**
  * How serious a harmful message is.
  */
 @Serializable

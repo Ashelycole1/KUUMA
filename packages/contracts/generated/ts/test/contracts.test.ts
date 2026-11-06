@@ -24,7 +24,7 @@ const flagged: SentinelMessageFlagged = {
 };
 
 describe("contracts", () => {
-  it("has 18 events", () => expect(EVENTS).toHaveLength(18));
+  it("has 20 events", () => expect(EVENTS).toHaveLength(20));
   it("accepts a valid event from its publisher", () => assertPublishes("sentinel", flagged));
   it("rejects another publisher", () =>
     expect(() => assertPublishes("guardian", flagged)).toThrow(ContractViolation));

@@ -266,3 +266,61 @@ def test_tamper_alerts(env):
     assert app.state.sweep() == 1
     assert app.state.sweep() == 0
     assert len(client.get("/v1/guardian/alerts", headers=auth).json()["alerts"]) == 2
+
+
+def test_parent_report_round_trip(env):
+    client, _, redis, _, _, auth = env
+    phone, child = pair(client, auth)
+    rid = str(uuid.uuid4())
+    req = {
+        "reportId": rid,
+        "caseId": CASE,
+        "recipientType": "police",
+        "anonymous": True,
+        "signature": SIG,
+        "sealedChildName": EXCERPT,
+    }
+    r = client.post(f"/v1/guardian/children/{child}/reports", json=req, headers=auth)
+    assert r.status_code == 201, r.text
+    validate_body("api/report.json", r.json())
+    assert r.json()["status"] == "requested"
+    assert client.post(f"/v1/guardian/children/{child}/reports", json=req, headers=auth).status_code == 409
+    # The parent is the approver: Casefile may accept the share.
+    approved = redis.events("guardian.share.approved")[-1]
+    assert approved["payload"]["requestId"] == rid
+    assert_publishes("guardian", approved)
+    # Delivered to the phone once, at its heartbeat, with the parent's signature.
+    hb = {"deviceId": phone.device_id, "appVersion": "0.1.0", "policyVersion": 1}
+    first = phone.post("/v1/guardian/heartbeat", hb).json()
+    validate_body("api/heartbeat-response.json", first)
+    assert [(o["reportId"], o["signature"], o["sealedChildName"]) for o in first["reports"]] == [
+        (rid, SIG, EXCERPT)
+    ]
+    assert phone.post("/v1/guardian/heartbeat", hb).json()["reports"] == []
+    # The phone returns the link, sealed for the parent.
+    done = phone.post(f"/v1/guardian/reports/{rid}/result", {"status": "ready", "sealedLink": EXCERPT})
+    assert done.status_code == 200, done.text
+    listed = client.get("/v1/guardian/reports", headers=auth).json()
+    validate_body("api/report-list.json", listed)
+    assert listed["reports"][0]["status"] == "ready" and listed["reports"][0]["sealedLink"] == EXCERPT
+    assert phone.post(f"/v1/guardian/reports/{rid}/result", {"status": "ready"}).status_code == 422
+
+
+def test_reports_are_per_family(env):
+    client, *_, auth = env
+    _, child = pair(client, auth)
+    other = client.post(
+        "/v1/guardian/parents", json={"devicePublicKey": public_der(ec.generate_private_key(ec.SECP256R1()))}
+    ).json()
+    other_auth = {"Authorization": f"Bearer {other['sessionToken']}"}
+    req = {
+        "reportId": str(uuid.uuid4()),
+        "caseId": CASE,
+        "recipientType": "school",
+        "anonymous": True,
+        "signature": SIG,
+    }
+    assert (
+        client.post(f"/v1/guardian/children/{child}/reports", json=req, headers=other_auth).status_code == 404
+    )
+    assert client.get("/v1/guardian/reports", headers=other_auth).json() == {"reports": []}

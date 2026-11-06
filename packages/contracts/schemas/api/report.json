@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/report.json",
+  "title": "Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reportId",
+    "childId",
+    "caseId",
+    "recipientType",
+    "anonymous",
+    "status",
+    "createdAt"
+  ],
+  "properties": {
+    "reportId": {
+      "$ref": "../types/uuid.json"
+    },
+    "childId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "recipientType": {
+      "$ref": "../types/recipient-type.json"
+    },
+    "anonymous": {
+      "type": "boolean"
+    },
+    "status": {
+      "$ref": "../types/report-status.json"
+    },
+    "createdAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "completedAt": {
+      "$ref": "../types/timestamp.json"
+    },
+    "sealedLink": {
+      "$ref": "../types/sealed-excerpt.json",
+      "description": "The share link (its key is in the #fragment), sealed with the family key. Only the parent's phone can open it."
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/guardian.report.requested.v1.json",
+  "title": "GuardianReportRequested",
+  "description": "PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.",
+  "x-kuuma": {
+    "event": "guardian.report.requested",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "guardian.report.requested"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "GuardianReportRequestedPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "recipientType",
+        "anonymous",
+        "childNames"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "recipientType": {
+          "$ref": "../types/recipient-type.json"
+        },
+        "anonymous": {
+          "type": "boolean"
+        },
+        "childNames": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "maxItems": 5,
+          "description": "Names to withhold in an anonymous report."
+        }
+      }
+    }
+  }
+}

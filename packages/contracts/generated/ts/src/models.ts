@@ -127,6 +127,18 @@ export const recipientTypeValues = ["school", "police", "platform", "lawyer"] as
 export type RecipientType = (typeof recipientTypeValues)[number];
 
 /**
+ * What the child's phone did with a parent's report request.
+ */
+export const reportOutcomeValues = ["ready", "failed"] as const;
+export type ReportOutcome = (typeof reportOutcomeValues)[number];
+
+/**
+ * A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.
+ */
+export const reportStatusValues = ["requested", "ready", "failed"] as const;
+export type ReportStatus = (typeof reportStatusValues)[number];
+
+/**
  * How serious a harmful message is.
  */
 export const severityValues = ["low", "medium", "high"] as const;
@@ -352,6 +364,16 @@ export interface CasefileEvidenceSealedPayload {
 }
 
 /**
+ * PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.
+ */
+export interface CasefileReportReadyPayload {
+  requestId: Uuid;
+  caseId: Uuid;
+  status: ReportOutcome;
+  link?: string;
+}
+
+/**
  * A share link was issued to the recipient.
  */
 export interface CasefileShareCompletedPayload {
@@ -464,6 +486,20 @@ export interface GuardianPolicyUpdatedPayload {
 }
 
 /**
+ * PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.
+ */
+export interface GuardianReportRequestedPayload {
+  requestId: Uuid;
+  caseId: Uuid;
+  recipientType: RecipientType;
+  anonymous: boolean;
+  /**
+   * Names to withhold in an anonymous report.
+   */
+  childNames: string[];
+}
+
+/**
  * A parent approved a share request.
  */
 export interface GuardianShareApprovedPayload {
@@ -506,6 +542,10 @@ export interface HeartbeatResponse {
    * Parent decisions on this child's approval requests not yet delivered.
    */
   decisions?: ApprovalResult[];
+  /**
+   * Parent report requests for this child not yet delivered.
+   */
+  reports?: ReportOrder[];
 }
 
 /**
@@ -605,6 +645,64 @@ export interface ReplyRisk {
   risky: boolean;
   spans: RiskySpan[];
   suggestionKeys: AdviceKey[];
+}
+
+export interface Report {
+  reportId: Uuid;
+  childId: Uuid;
+  caseId: Uuid;
+  recipientType: RecipientType;
+  anonymous: boolean;
+  status: ReportStatus;
+  createdAt: Timestamp;
+  completedAt?: Timestamp;
+  /**
+   * The share link (its key is in the #fragment), sealed with the family key. Only the parent's phone can open it.
+   */
+  sealedLink?: SealedExcerpt;
+}
+
+export interface ReportList {
+  reports: Report[];
+}
+
+/**
+ * A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies.
+ */
+export interface ReportOrder {
+  reportId: Uuid;
+  caseId: Uuid;
+  recipientType: RecipientType;
+  /**
+   * Leave out everything that could identify the child.
+   */
+  anonymous: boolean;
+  signature: FamilySignature;
+  /**
+   * The child's name as the parent knows it, sealed with the family key, so the phone can withhold messages that name the child. The server cannot read it.
+   */
+  sealedChildName?: SealedExcerpt;
+  requestedAt: Timestamp;
+}
+
+/**
+ * POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous.
+ */
+export interface ReportRequest {
+  reportId: Uuid;
+  caseId: Uuid;
+  recipientType: RecipientType;
+  anonymous: boolean;
+  signature: FamilySignature;
+  sealedChildName?: SealedExcerpt;
+}
+
+/**
+ * POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed).
+ */
+export interface ReportResultRequest {
+  status: ReportOutcome;
+  sealedLink?: SealedExcerpt;
 }
 
 /**
@@ -805,6 +903,11 @@ export type CasefileCaseUpdated = Envelope<"casefile.case.updated", 1, CasefileC
 export type CasefileEvidenceSealed = Envelope<"casefile.evidence.sealed", 1, CasefileEvidenceSealedPayload>;
 
 /**
+ * PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.
+ */
+export type CasefileReportReady = Envelope<"casefile.report.ready", 1, CasefileReportReadyPayload>;
+
+/**
  * A share link was issued to the recipient.
  */
 export type CasefileShareCompleted = Envelope<"casefile.share.completed", 1, CasefileShareCompletedPayload>;
@@ -850,6 +953,11 @@ export type GuardianPairingCompleted = Envelope<"guardian.pairing.completed", 1,
 export type GuardianPolicyUpdated = Envelope<"guardian.policy.updated", 1, GuardianPolicyUpdatedPayload>;
 
 /**
+ * PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.
+ */
+export type GuardianReportRequested = Envelope<"guardian.report.requested", 1, GuardianReportRequestedPayload>;
+
+/**
  * A parent approved a share request.
  */
 export type GuardianShareApproved = Envelope<"guardian.share.approved", 1, GuardianShareApprovedPayload>;
@@ -883,6 +991,7 @@ export type KuumaEvent =
   | CasefileCaseEscalated
   | CasefileCaseUpdated
   | CasefileEvidenceSealed
+  | CasefileReportReady
   | CasefileShareCompleted
   | CasefileShareRequested
   | CompanionAdviceShown
@@ -892,6 +1001,7 @@ export type KuumaEvent =
   | GuardianAlertSent
   | GuardianPairingCompleted
   | GuardianPolicyUpdated
+  | GuardianReportRequested
   | GuardianShareApproved
   | GuardianShareDeclined
   | SentinelCaptureReady
@@ -900,6 +1010,8 @@ export type KuumaEvent =
   | SentinelMessageFlagged;
 
 export type PhoneOnlyEvent =
+  | CasefileReportReady
+  | GuardianReportRequested
   | SentinelCaptureReady
   | SentinelConversationActive;
 
@@ -946,6 +1058,15 @@ export const EVENTS: readonly EventSpec[] = [
     "phoneOnly": false,
     "title": "CasefileEvidenceSealed",
     "payload": "CasefileEvidenceSealedPayload"
+  },
+  {
+    "type": "casefile.report.ready",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone",
+    "phoneOnly": true,
+    "title": "CasefileReportReady",
+    "payload": "CasefileReportReadyPayload"
   },
   {
     "type": "casefile.share.completed",
@@ -1027,6 +1148,15 @@ export const EVENTS: readonly EventSpec[] = [
     "phoneOnly": false,
     "title": "GuardianPolicyUpdated",
     "payload": "GuardianPolicyUpdatedPayload"
+  },
+  {
+    "type": "guardian.report.requested",
+    "version": 1,
+    "publisher": "guardian",
+    "where": "phone",
+    "phoneOnly": true,
+    "title": "GuardianReportRequested",
+    "payload": "GuardianReportRequestedPayload"
   },
   {
     "type": "guardian.share.approved",

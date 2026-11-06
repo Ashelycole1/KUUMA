@@ -22,6 +22,7 @@ export 'src/children_screen.dart';
 export 'src/fake_api.dart';
 export 'src/family_crypto.dart';
 export 'src/parent_gate.dart';
+export 'src/report_screen.dart';
 export 'src/session.dart';
 export 'src/setup_wizard.dart';
 export 'src/strings.dart' show appLabel, guideKey;

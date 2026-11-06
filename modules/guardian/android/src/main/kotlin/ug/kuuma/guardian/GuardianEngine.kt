@@ -12,6 +12,7 @@ import ug.kuuma.contracts.ContractJson
 import ug.kuuma.contracts.Events
 import ug.kuuma.contracts.GuardianPairingCompletedPayload
 import ug.kuuma.contracts.GuardianPolicyUpdatedPayload
+import ug.kuuma.contracts.GuardianReportRequestedPayload
 import ug.kuuma.contracts.GuardianShareApprovedPayload
 import ug.kuuma.contracts.GuardianShareDeclinedPayload
 import ug.kuuma.contracts.HarmCategory
@@ -21,6 +22,9 @@ import ug.kuuma.contracts.PairingRequest
 import ug.kuuma.contracts.PairingResponse
 import ug.kuuma.contracts.Policy
 import ug.kuuma.contracts.RecipientType
+import ug.kuuma.contracts.ReportOrder
+import ug.kuuma.contracts.ReportOutcome
+import ug.kuuma.contracts.ReportResultRequest
 import ug.kuuma.contracts.Severity
 import ug.kuuma.core.bus.EventBus
 import ug.kuuma.core.bus.ModulePublisher
@@ -33,6 +37,9 @@ interface GuardianApi {
     fun heartbeat(request: HeartbeatRequest): HeartbeatResponse
     fun alert(request: AlertRequest)
     fun approvalRequest(request: ApprovalRequest)
+
+    /** The child's phone built (or could not build) a parent's report. */
+    fun reportResult(reportId: String, request: ReportResultRequest) {}
 }
 
 /** guardian.db: the policy, pairing keys and unsent requests. Key-value is enough. */
@@ -56,8 +63,12 @@ enum class PairResult { PAIRED, BAD_CODE, BAD_POLICY_SIGNATURE, ALREADY_PAIRED, 
 @Serializable
 private data class Outbox(
     val alerts: List<AlertRequest> = emptyList(),
-    val approvals: List<ApprovalRequest> = emptyList()
+    val approvals: List<ApprovalRequest> = emptyList(),
+    val reports: List<PendingReportResult> = emptyList()
 )
+
+@Serializable
+private data class PendingReportResult(val reportId: String, val result: ReportResultRequest)
 
 /**
  * Guardian's agent on the child's phone, free of Android so it is unit-tested end to end.
@@ -282,6 +293,43 @@ class GuardianEngine(
             }
         }
         r.decisions?.forEach(::onDecision)
+        r.reports?.forEach(::onReportOrder)
+    }
+
+    // ------------------------------------------------------------------ parent reports
+
+    /**
+     * The parent asked to report a case. Only a request the family key signed is accepted, so
+     * the server cannot make the phone share anything. The child's name (sealed by the parent)
+     * is opened here and stays on the phone, so Casefile can leave it out.
+     */
+    private fun onReportOrder(o: ReportOrder) {
+        val c = crypto ?: return
+        val message = FamilyCrypto.reportMessage(o.reportId, o.caseId, o.recipientType.wire, o.anonymous)
+        if (!c.verify(message, o.signature)) {
+            SafeLog.w("guardian.report.bad_signature", LogField.id("report_id", o.reportId))
+            return
+        }
+        if (store.get("report.${o.reportId}") != null) return
+        store.put("report.${o.reportId}", "requested")
+        val name = o.sealedChildName?.let { runCatching { c.open(it).trim() }.getOrNull() }?.takeIf { it.isNotEmpty() }
+        publisher.publish(
+            Events.GUARDIAN_REPORT_REQUESTED,
+            GuardianReportRequestedPayload(o.reportId, o.caseId, o.recipientType, o.anonymous, listOfNotNull(name)),
+            o.caseId
+        )
+        SafeLog.i("guardian.report.requested", LogField.id("report_id", o.reportId))
+    }
+
+    /** Casefile built the report: send the link back sealed, so only the parent's phone can open it. */
+    fun onReportReady(requestId: String, status: ReportOutcome, link: String?) {
+        if (store.get("report.$requestId") != "requested") return
+        store.put("report.$requestId", status.wire)
+        val sealed = if (status == ReportOutcome.READY && link != null) crypto?.seal(link) else null
+        val result = ReportResultRequest(if (sealed == null) ReportOutcome.FAILED else status, sealed)
+        val out = outbox()
+        saveOutbox(out.copy(reports = out.reports + PendingReportResult(requestId, result)))
+        flush()
     }
 
     /** Sends queued alerts and approval requests. Unsent ones stay in guardian.db for the next try. */
@@ -306,6 +354,15 @@ class GuardianEngine(
                 break
             }
             out = out.copy(approvals = out.approvals.drop(1))
+            saveOutbox(out)
+        }
+        while (out.reports.isNotEmpty()) {
+            try {
+                out.reports.first().let { a.reportResult(it.reportId, it.result) }
+            } catch (e: java.io.IOException) {
+                break
+            }
+            out = out.copy(reports = out.reports.drop(1))
             saveOutbox(out)
         }
     }

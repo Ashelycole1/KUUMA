@@ -94,4 +94,27 @@ void main() {
     expect(s.alerts, isEmpty);
     expect(s.state, SessionState.locked);
   });
+
+  test('a parent report is signed, carries the sealed nickname, and its link opens on this phone', () async {
+    final (s, api, _) = await signedIn();
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    api.pairChild(p.childId);
+    await s.refresh();
+    const caseId = 'c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a';
+    final r = await s.requestReport(p.childId, caseId, RecipientType.police);
+    final sent = api.reportRequests[r.reportId]!;
+    final family = FamilyCrypto(p.qr.familyKey);
+    expect(sent.anonymous, isTrue);
+    expect(family.verify(FamilyCrypto.reportMessage(r.reportId, caseId, 'police', true), sent.signature), isTrue);
+    expect(family.open(sent.sealedChildName!), 'Amara'); // only the child's phone can read it
+    expect(s.reports.single.status, ReportStatus.requested);
+
+    api.completeReport(r.reportId, family.seal('http://kuuma/verify/s/x#k=secret'));
+    await s.refresh();
+    expect(await s.openReportLink(s.reports.single), 'http://kuuma/verify/s/x#k=secret');
+
+    // Not anonymous: no name is sent at all.
+    final named = await s.requestReport(p.childId, caseId, RecipientType.school, anonymous: false);
+    expect(api.reportRequests[named.reportId]!.sealedChildName, isNull);
+  });
 }

@@ -28,6 +28,9 @@ class CasefileFlutterModule implements KuumaFlutterModule {
         'casefile.case.flagged': 'Kuuma flagged this',
         'casefile.case.you': 'You',
         'casefile.case.machine_translation': 'Machine translation, not checked by a person',
+        'casefile.share.sent_to': 'Shared with: {recipient}',
+        'casefile.share.parent_reported': 'Your parent reported this to: {recipient}',
+        'casefile.share.anonymous': 'Your name, your replies and your friends were left out.',
         'casefile.cases.intro_title': 'Your saved evidence',
         'casefile.cases.intro_body':
             'Kuuma keeps a sealed copy of harmful messages. Nobody can change it, and only you decide who sees it.',

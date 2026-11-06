@@ -88,6 +88,9 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
         context.events.subscribe(Events.SENTINEL_FLAG_UPDATED) { e -> submit { engine.onFlagUpdated(e.payload) } }
         context.events.subscribe(Events.SENTINEL_CAPTURE_READY) { e -> submit { engine.onCapture(e.payload) } }
         context.events.subscribe(Events.GUARDIAN_PAIRING_COMPLETED) { submit { engine.onPaired() } }
+        context.events.subscribe(Events.GUARDIAN_REPORT_REQUESTED) { e ->
+            submit { engine.onReportRequested(e.payload) }
+        }
         context.events.subscribe(Events.GUARDIAN_SHARE_APPROVED) { e ->
             submit { engine.onShareApproved(e.payload.requestId) }
         }
@@ -159,7 +162,9 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
                     "requestId" to it.requestId,
                     "recipientType" to it.recipient.wire,
                     "status" to it.status,
-                    "link" to it.link
+                    "link" to it.link,
+                    // Set when the parent reported it ("anonymous" or "named").
+                    "reportedByParent" to engine.reportKind(it.requestId)
                 )
             }
             "deleteVault" -> engine.deleteVault(args["parentApproved"] as? Boolean ?: false).name
