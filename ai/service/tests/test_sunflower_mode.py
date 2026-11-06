@@ -128,6 +128,34 @@ def test_analyse_skips_sunflower_for_plain_english():
         assert len(llm.calls) == calls
 
 
+def test_analyse_unknown_language_gets_interpretation_without_changing_verdict():
+    llm = FakeLlm()
+    # No language hint, and no marker words: the old gate silently skipped this input.
+    with make(llm) as c:
+        r = c.post(
+            "/v1/ai/analyse",
+            json={"text": "Tugende tukole.", "onDevice": ON_DEVICE},
+        )
+        assert r.status_code == 200, r.text
+        response = r.json()
+        validate_body("api/analyse-response.json", response)
+        assert "interpret" in llm.calls
+        assert response["interpretation"]["model"] == MODEL
+        assert response["verdict"] == ON_DEVICE
+        assert response["verdictSource"] == "on_device"
+
+
+def test_analyse_unknown_language_model_failure_preserves_on_device_verdict():
+    with make(FakeLlm(up=False)) as c:
+        r = c.post(
+            "/v1/ai/analyse",
+            json={"text": "Tugende tukole.", "onDevice": ON_DEVICE},
+        )
+        assert r.status_code == 200
+        assert r.json()["verdict"] == ON_DEVICE
+        assert "interpretation" not in r.json()
+
+
 def test_analyse_falls_back_to_the_on_device_verdict():
     with make(FakeLlm(up=False)) as c:
         r = c.post("/v1/ai/analyse", json={"text": LUGANDA, "language": "lg", "onDevice": ON_DEVICE})

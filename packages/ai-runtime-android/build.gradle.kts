@@ -8,6 +8,7 @@ android {
     namespace = "ug.kuuma.ai.runtime"
     compileSdk = libs.versions.compileSdk.get().toInt()
     defaultConfig { minSdk = libs.versions.minSdk.get().toInt() }
+    androidResources { noCompress += "tflite" }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -18,5 +19,6 @@ kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarg
 
 dependencies {
     api(project(":contracts"))
+    implementation(libs.litert)
     testImplementation(libs.junit)
 }

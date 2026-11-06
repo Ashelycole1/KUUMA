@@ -1,0 +1,16 @@
+Detoxify unbiased-small toxicity classifier and ALBERT tokenizer
+
+Published by Unitary AI (Detoxify) and Google Research (ALBERT).
+Distributed under the Apache License, Version 2.0. See LICENSE.txt.
+https://github.com/unitaryai/detoxify
+https://huggingface.co/albert/albert-base-v2
+
+The TFLite export, tokenizer and label order were obtained unmodified from Knit
+at commit 915e7021dd3df9563ff033e21f9b3acb977ac4f7. The asset documentation
+describes this export and attributes it to Detoxify and ALBERT.
+https://github.com/getknit/knit/blob/915e7021dd3df9563ff033e21f9b3acb977ac4f7/app/src/main/assets/moderation/README.md
+
+SHA-256 of the bundled files
+toxicity.tflite  5edb906c77e7b872f7e53eac15968da238f7b0fadd26e7b497ef22f72fac8a39
+tokenizer.json   77e18685566ddefc3267601b473a3c55aa6fa2735611e1eae67dee9a27e4d966
+labels.txt       76fd52d4d35136175281f28f96972e4e4db19e4dc4877f6335429ae97dea7b1c

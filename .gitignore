@@ -48,3 +48,5 @@ out/
 # Model weights never go in git (Sunflower lives in ~/kuuma-models or ai/local/*/models).
 ai/local/*/models/
 *.gguf
+# Prepared AI assets are reproducible, checksum-pinned and never committed.
+packages/ai-runtime-android/src/main/assets/knit/
