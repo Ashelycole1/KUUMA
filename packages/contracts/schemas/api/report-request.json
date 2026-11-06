@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/report-request.json",
+  "title": "ReportRequest",
+  "description": "POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reportId",
+    "caseId",
+    "recipientType",
+    "anonymous",
+    "signature"
+  ],
+  "properties": {
+    "reportId": {
+      "$ref": "../types/uuid.json"
+    },
+    "caseId": {
+      "$ref": "../types/uuid.json"
+    },
+    "recipientType": {
+      "$ref": "../types/recipient-type.json"
+    },
+    "anonymous": {
+      "type": "boolean"
+    },
+    "signature": {
+      "$ref": "../types/family-signature.json"
+    },
+    "sealedChildName": {
+      "$ref": "../types/sealed-excerpt.json"
+    }
+  }
+}

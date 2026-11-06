@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/report-status.json",
+  "title": "ReportStatus",
+  "description": "A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.",
+  "type": "string",
+  "enum": [
+    "requested",
+    "ready",
+    "failed"
+  ]
+}

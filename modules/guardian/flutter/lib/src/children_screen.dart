@@ -145,7 +145,7 @@ class ChildPolicyScreen extends StatefulWidget {
 
 class _ChildPolicyScreenState extends State<ChildPolicyScreen> {
   final _name = TextEditingController();
-  AgeBracket _bracket = AgeBracket.agePlaceholderB;
+  AgeBracket _bracket = AgeBracket.age1315;
   final Set<AppSource> _apps = {AppSource.whatsapp, AppSource.sms};
   Severity _alertMin = Severity.medium;
   bool _busy = false;

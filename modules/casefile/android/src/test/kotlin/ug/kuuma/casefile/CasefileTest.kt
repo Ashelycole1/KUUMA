@@ -16,6 +16,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import ug.kuuma.ai.runtime.DummyHarmClassifier
+import ug.kuuma.casefile.export.ParentReport
 import ug.kuuma.casefile.export.RootTimestamp
 import ug.kuuma.casefile.export.ShareCrypto
 import ug.kuuma.casefile.export.Translator
@@ -33,8 +34,10 @@ import ug.kuuma.contracts.EventPayload
 import ug.kuuma.contracts.EventType
 import ug.kuuma.contracts.Events
 import ug.kuuma.contracts.GroomingStage
+import ug.kuuma.contracts.GuardianReportRequestedPayload
 import ug.kuuma.contracts.Namespace
 import ug.kuuma.contracts.RecipientType
+import ug.kuuma.contracts.ReportOutcome
 import ug.kuuma.contracts.ShareRequest
 import ug.kuuma.contracts.ShareResponse
 import ug.kuuma.contracts.ShareStatus
@@ -269,6 +272,74 @@ class CasefileEngineTest {
         val again = engine.export(case.caseId, RecipientType.SCHOOL)
         assertEquals(before, translator.sent.size)
         assertEquals(translations.size, again.json["translations"]!!.jsonArray.size)
+    }
+
+    @Test fun `case files name the sender as the phone showed them, from the offender's messages only`() {
+        play("luganda-insults")
+        val file = engine.export(engine.cases().single().caseId, RecipientType.POLICE)
+        val details = file.json["senderDetails"]!!.jsonObject
+        val names = details["displayNames"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(listOf("Classmate (invented)"), names) // not the child, not the friend
+        val pdf = String(file.pdf, Charsets.ISO_8859_1)
+        assertTrue(pdf.contains("Sender details"))
+        assertTrue(pdf.contains("Classmate"))
+        // Names and numbers never go to the translator.
+        assertTrue(translator.sent.none { "Classmate" in it.text })
+    }
+
+    @Test fun `an anonymous parent report leaves out the child and still verifies`() {
+        play("luganda-insults")
+        val case = engine.cases().single()
+        val report = ParentReport(anonymous = true, childNames = listOf("Ggwe"))
+        val file = engine.export(case.caseId, RecipientType.POLICE, Actor.PARENT, parentReport = report)
+        val json = file.json
+        assertEquals("null", json["victim"].toString())
+        assertEquals("true", json["report"]!!.jsonObject["anonymous"]!!.jsonPrimitive.content)
+        val exhibits = json["exhibits"]!!.jsonArray.map { it.jsonObject }
+        val messages = exhibits.filter { it["kind"]!!.jsonPrimitive.content == "MESSAGE" }
+        // Only the offender's messages: no child replies, no friends.
+        val contents = messages.mapNotNull { it["content"]?.jsonPrimitive?.content }
+        assertTrue(contents.none { "\"fromChild\":true" in it })
+        assertTrue(contents.none { "Friend (invented)" in it })
+        // The message naming the child is withheld: hash only.
+        val withheld = messages.filter { it["withheld"]?.jsonPrimitive?.content == "true" }
+        assertEquals(1, withheld.size)
+        assertTrue(withheld.single()["content"] == null)
+        assertTrue(json.toString().contains("itemHash"))
+        assertFalse(json.toString().contains("Ggwe kasiru"))
+        val pdf = String(file.pdf, Charsets.ISO_8859_1)
+        assertTrue(pdf.contains("message withheld"))
+        assertFalse(pdf.contains("Ggwe"))
+        assertFalse(pdf.contains("Leka kunvuma")) // the child's own reply
+        // Every exhibit still sits in the signed chain.
+        val chain = store.chain().associateBy { it.index }
+        exhibits.forEach { x ->
+            assertEquals(
+                chain.getValue(x["chainIndex"]!!.jsonPrimitive.content.toLong()).itemHash,
+                x["itemHash"]!!.jsonPrimitive.content
+            )
+        }
+    }
+
+    @Test fun `a parent's report is built at once and its link handed back on the phone`() {
+        play("luganda-insults")
+        val case = engine.cases().single()
+        events.clear()
+        val id = "abababab-abab-4bab-8bab-abababababab"
+        engine.onReportRequested(
+            GuardianReportRequestedPayload(id, case.caseId, RecipientType.SCHOOL, true, listOf("Ggwe"))
+        )
+        val ready = payloads(Events.CASEFILE_REPORT_READY).single()
+        assertEquals(ReportOutcome.READY, ready.status)
+        assertTrue(ready.link!!.contains("#k="))
+        assertTrue(payloads(Events.CASEFILE_SHARE_REQUESTED).isEmpty()) // nothing to approve: the parent asked
+        assertEquals("anonymous", engine.reportKind(id))
+        assertEquals(1, api.shares.size)
+        // Asked again (duplicate delivery): built once.
+        engine.onReportRequested(
+            GuardianReportRequestedPayload(id, case.caseId, RecipientType.SCHOOL, true, emptyList())
+        )
+        assertEquals(1, api.shares.size)
     }
 
     @Test fun `offline export works without translations, English is never sent`() {

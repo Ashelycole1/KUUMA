@@ -30,7 +30,7 @@ class ContractsTest {
         )
     )
 
-    @Test fun `there are 18 events`() = assertEquals(18, Events.all.size)
+    @Test fun `there are 20 events`() = assertEquals(20, Events.all.size)
 
     @Test fun `valid event passes the schema and round-trips`() {
         val json = ContractAssert.assertPublishes(Namespace.SENTINEL, Events.SENTINEL_MESSAGE_FLAGGED, flagged())

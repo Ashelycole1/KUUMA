@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/types/report-outcome.json",
+  "title": "ReportOutcome",
+  "description": "What the child's phone did with a parent's report request.",
+  "type": "string",
+  "enum": [
+    "ready",
+    "failed"
+  ]
+}

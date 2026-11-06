@@ -32,7 +32,7 @@ void main() {
   test('adding a child signs the policy and keeps the key and nickname on the phone', () async {
     final (s, api, vault) = await signedIn();
     final pending =
-        await s.addChild(nickname: ' Amara ', bracket: AgeBracket.agePlaceholderA, watchedApps: [AppSource.whatsapp]);
+        await s.addChild(nickname: ' Amara ', bracket: AgeBracket.age12Under, watchedApps: [AppSource.whatsapp]);
     final policy = api.policies[pending.childId]!;
     expect(FamilyCrypto(pending.qr.familyKey).verifyPolicy(policy), isTrue);
     expect(policy.thresholds.alertMinSeverity, Severity.low); // bracket default
@@ -43,11 +43,9 @@ void main() {
 
   test('policy updates bump the version and stay signed', () async {
     final (s, api, _) = await signedIn();
-    final pending = await s.addChild(nickname: 'A', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final pending = await s.addChild(nickname: 'A', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final p = await s.updatePolicy(pending.childId,
-        bracket: AgeBracket.agePlaceholderC,
-        watchedApps: [AppSource.sms, AppSource.tiktok],
-        alertMinSeverity: Severity.high);
+        bracket: AgeBracket.age1618, watchedApps: [AppSource.sms, AppSource.tiktok], alertMinSeverity: Severity.high);
     expect(p.policyVersion, 2);
     expect(api.policies[pending.childId]!.policyVersion, 2);
     expect(FamilyCrypto(pending.qr.familyKey).verifyPolicy(p), isTrue);
@@ -56,8 +54,8 @@ void main() {
 
   test('excerpts open with the right child key only', () async {
     final (s, api, _) = await signedIn();
-    final a = await s.addChild(nickname: 'A', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
-    final b = await s.addChild(nickname: 'B', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final a = await s.addChild(nickname: 'A', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    final b = await s.addChild(nickname: 'B', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final sealed = FamilyCrypto(a.qr.familyKey).seal('Tujja kukukuba');
     api.addAlert(a.childId, sealedExcerpt: sealed);
     api.addAlert(b.childId, sealedExcerpt: sealed); // wrong key for B
@@ -69,7 +67,7 @@ void main() {
 
   test('decisions are signed with the requesting child key', () async {
     final (s, api, _) = await signedIn();
-    final p = await s.addChild(nickname: 'A', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'A', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final req = api.addApproval(p.childId);
     await s.refresh();
     await s.decide(s.approvals.single, ApprovalDecision.approve);
@@ -80,7 +78,7 @@ void main() {
 
   test('offline refresh keeps what was loaded', () async {
     final (s, api, _) = await signedIn();
-    await s.addChild(nickname: 'A', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    await s.addChild(nickname: 'A', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     api.online = false;
     await s.refresh();
     expect(s.offline, isTrue);
@@ -89,11 +87,34 @@ void main() {
 
   test('locking clears alerts from memory', () async {
     final (s, api, _) = await signedIn();
-    final p = await s.addChild(nickname: 'A', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'A', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     api.addAlert(p.childId);
     await s.refresh();
     s.lock();
     expect(s.alerts, isEmpty);
     expect(s.state, SessionState.locked);
+  });
+
+  test('a parent report is signed, carries the sealed nickname, and its link opens on this phone', () async {
+    final (s, api, _) = await signedIn();
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    api.pairChild(p.childId);
+    await s.refresh();
+    const caseId = 'c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a';
+    final r = await s.requestReport(p.childId, caseId, RecipientType.police);
+    final sent = api.reportRequests[r.reportId]!;
+    final family = FamilyCrypto(p.qr.familyKey);
+    expect(sent.anonymous, isTrue);
+    expect(family.verify(FamilyCrypto.reportMessage(r.reportId, caseId, 'police', true), sent.signature), isTrue);
+    expect(family.open(sent.sealedChildName!), 'Amara'); // only the child's phone can read it
+    expect(s.reports.single.status, ReportStatus.requested);
+
+    api.completeReport(r.reportId, family.seal('http://kuuma/verify/s/x#k=secret'));
+    await s.refresh();
+    expect(await s.openReportLink(s.reports.single), 'http://kuuma/verify/s/x#k=secret');
+
+    // Not anonymous: no name is sent at all.
+    final named = await s.requestReport(p.childId, caseId, RecipientType.school, anonymous: false);
+    expect(api.reportRequests[named.reportId]!.sealedChildName, isNull);
   });
 }

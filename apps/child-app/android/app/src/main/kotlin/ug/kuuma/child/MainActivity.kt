@@ -1,11 +1,15 @@
 package ug.kuuma.child
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import ug.kuuma.companion.CompanionBridge
+import ug.kuuma.companion.CompanionModule
 
 /** FlutterFragmentActivity (not FlutterActivity) so kuuma_ui's fingerprint unlock works. */
 class MainActivity : FlutterFragmentActivity() {
@@ -64,6 +68,8 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
+        connectCompanion(messenger)
+
         if (BuildConfig.DEBUG) {
             EventChannel(messenger, "ug.kuuma/bus").setStreamHandler(
                 object : EventChannel.StreamHandler {
@@ -80,5 +86,46 @@ class MainActivity : FlutterFragmentActivity() {
                 },
             )
         }
+    }
+
+    /**
+     * Companion's screens (Help, advice, Talk to someone) use their own bridge: advice plans
+     * stream in, crisis content and helplines come back, and the dialler opens with a helpline
+     * number filled in (the child still presses call).
+     */
+    private fun connectCompanion(messenger: io.flutter.plugin.common.BinaryMessenger) {
+        val companion = KuumaRuntime.registry.modules.filterIsInstance<CompanionModule>().firstOrNull() ?: return
+        val bridge = CompanionBridge(companion, dialer = { number ->
+            main.post { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number"))) }
+        })
+        MethodChannel(messenger, CompanionBridge.METHOD_CHANNEL).setMethodCallHandler { call, result ->
+            val args = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
+            moduleCalls.execute {
+                try {
+                    val value = bridge.handle(call.method, args).takeUnless { it is Unit }
+                    main.post { result.success(value) }
+                } catch (e: CompanionBridge.UnknownMethod) {
+                    main.post { result.notImplemented() }
+                } catch (e: IllegalArgumentException) {
+                    main.post { result.error("bad_args", null, null) }
+                } catch (e: Exception) {
+                    main.post { result.error(e.javaClass.simpleName, null, null) }
+                }
+            }
+        }
+        EventChannel(messenger, CompanionBridge.EVENT_CHANNEL).setStreamHandler(
+            object : EventChannel.StreamHandler {
+                private var stop: (() -> Unit)? = null
+
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                    stop = bridge.listen { m -> main.post { events.success(m) } }
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    stop?.invoke()
+                    stop = null
+                }
+            },
+        )
     }
 }

@@ -26,7 +26,10 @@ export interface Exhibit {
   kind: string;
   chainIndex: number;
   itemHash: string;
-  content: string;
+  /** Absent when withheld: the exact sealed bytes, which recipients re-hash. */
+  content?: string;
+  /** An anonymous report leaves out exhibits that name the child; their hash stays in the chain. */
+  withheld?: boolean;
 }
 
 export interface CaseFileJson {
@@ -59,6 +62,8 @@ export interface Report {
   root: string;
   links: number;
   exhibits: number;
+  /** Exhibits whose content was withheld to protect the child (place in the chain checked, content not). */
+  withheld: number;
   timestamp: { present: boolean; confirmed: boolean | null; at: string | null; authority: string | null };
 }
 
@@ -124,6 +129,7 @@ export async function verifyCaseFile(
       root: "",
       links: 0,
       exhibits: 0,
+      withheld: 0,
       timestamp: { present: false, confirmed: null, at: null, authority: null },
     };
   }
@@ -160,13 +166,20 @@ export async function verifyCaseFile(
   if (prev !== file.chain.root) problems.push({ kind: "root_mismatch" });
 
   const byIndex = new Map(links.map((l) => [l.index, l]));
+  let withheld = 0;
   for (const x of file.exhibits) {
     const link = byIndex.get(x.chainIndex);
     if (!link) {
       problems.push({ kind: "exhibit_not_in_chain", exhibit: x.exhibit });
       continue;
     }
-    const h = await itemHash(x.kind, x.content);
+    if (x.withheld === true && x.content === undefined) {
+      // Its place in the signed chain is checked; its content cannot be.
+      withheld++;
+      if (x.itemHash !== link.itemHash) problems.push({ kind: "exhibit_altered", exhibit: x.exhibit });
+      continue;
+    }
+    const h = await itemHash(x.kind, x.content ?? "");
     if (h !== link.itemHash || h !== x.itemHash)
       problems.push({ kind: "exhibit_altered", exhibit: x.exhibit });
   }
@@ -191,6 +204,7 @@ export async function verifyCaseFile(
     root: file.chain.root,
     links: links.length,
     exhibits: file.exhibits.length,
+    withheld,
     timestamp: { present: !!ts, confirmed, at: ts?.timestamp ?? null, authority: ts?.authority ?? null },
   };
 }
@@ -243,5 +257,9 @@ export function describeReport(r: Report): string {
   const when = r.timestamp.present
     ? ` Its chain root was timestamped at ${r.timestamp.at} by ${r.timestamp.authority}.`
     : " It has no trusted timestamp.";
-  return `All ${r.exhibits} exhibits match their sealed hashes and all ${r.links} chain links are signed by the same device.${when}`;
+  const shown = r.exhibits - r.withheld;
+  const anon = r.withheld
+    ? ` ${r.withheld} exhibit${r.withheld === 1 ? " was" : "s were"} withheld to protect the child's identity: ${r.withheld === 1 ? "its" : "their"} place in the chain is verified, but not ${r.withheld === 1 ? "its" : "their"} content.`
+    : "";
+  return `All ${shown} exhibits match their sealed hashes and all ${r.links} chain links are signed by the same device.${anon}${when}`;
 }

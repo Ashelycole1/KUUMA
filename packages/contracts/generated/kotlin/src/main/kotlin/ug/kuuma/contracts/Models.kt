@@ -261,6 +261,10 @@ data class HeartbeatResponse(
      * Parent decisions on this child's approval requests not yet delivered.
      */
     val decisions: List<ApprovalResult>? = null,
+    /**
+     * Parent report requests for this child not yet delivered.
+     */
+    val reports: List<ReportOrder>? = null,
 )
 
 /**
@@ -372,6 +376,69 @@ data class ReplyRisk(
     val risky: Boolean,
     val spans: List<RiskySpan>,
     val suggestionKeys: List<AdviceKey>,
+)
+
+@Serializable
+data class Report(
+    val reportId: Uuid,
+    val childId: Uuid,
+    val caseId: Uuid,
+    val recipientType: RecipientType,
+    val anonymous: Boolean,
+    val status: ReportStatus,
+    val createdAt: Timestamp,
+    val completedAt: Timestamp? = null,
+    /**
+     * The share link (its key is in the #fragment), sealed with the family key. Only the parent's phone can open it.
+     */
+    val sealedLink: SealedExcerpt? = null,
+)
+
+@Serializable
+data class ReportList(
+    val reports: List<Report>,
+)
+
+/**
+ * A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies.
+ */
+@Serializable
+data class ReportOrder(
+    val reportId: Uuid,
+    val caseId: Uuid,
+    val recipientType: RecipientType,
+    /**
+     * Leave out everything that could identify the child.
+     */
+    val anonymous: Boolean,
+    val signature: FamilySignature,
+    /**
+     * The child's name as the parent knows it, sealed with the family key, so the phone can withhold messages that name the child. The server cannot read it.
+     */
+    val sealedChildName: SealedExcerpt? = null,
+    val requestedAt: Timestamp,
+)
+
+/**
+ * POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous.
+ */
+@Serializable
+data class ReportRequest(
+    val reportId: Uuid,
+    val caseId: Uuid,
+    val recipientType: RecipientType,
+    val anonymous: Boolean,
+    val signature: FamilySignature,
+    val sealedChildName: SealedExcerpt? = null,
+)
+
+/**
+ * POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed).
+ */
+@Serializable
+data class ReportResultRequest(
+    val status: ReportOutcome,
+    val sealedLink: SealedExcerpt? = null,
 )
 
 /**

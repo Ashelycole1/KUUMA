@@ -1,6 +1,6 @@
 # kuuma-contracts
 
-The only thing the builds share at runtime: the event envelope, 18 events, shared types,
+The only thing the builds share at runtime: the event envelope, 20 events, shared types,
 API bodies (JSON Schema 2020-12) and one OpenAPI file per API prefix. Code for Kotlin, Dart,
 Python and TypeScript is generated into `generated/` by `make gen`. Never edit `generated/`.
 

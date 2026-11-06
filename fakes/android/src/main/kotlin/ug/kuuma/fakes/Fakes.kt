@@ -181,7 +181,7 @@ class FakeGuardian : BaseFake(Namespace.GUARDIAN) {
      * a real parent's policy.
      */
     fun announceSampleChild(childId: String = SAMPLE_CHILD, deviceId: String = SAMPLE_DEVICE) {
-        val bracket = AgeBracket.AGE_PLACEHOLDER_B
+        val bracket = AgeBracket.AGE_13_15
         publish(Events.GUARDIAN_PAIRING_COMPLETED, GuardianPairingCompletedPayload(childId, deviceId, bracket))
         publish(
             Events.GUARDIAN_POLICY_UPDATED,

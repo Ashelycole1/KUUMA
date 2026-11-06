@@ -43,7 +43,7 @@ paths:
           application/json:
             schema: { $ref: "../schemas/api/pairing-code-request.json" }
             example: { policy: &policy
-                { ageBracket: age_placeholder_b, watchedApps: [whatsapp, sms],
+                { ageBracket: age_13_15, watchedApps: [whatsapp, sms],
                   thresholds: { flagMinConfidence: 0.6, alertMinSeverity: medium, captureMinSeverity: medium },
                   policyVersion: 1, signature: wIb_NLyPXQ2pLw0INOBonUMMH7KFQumUTf8WGWpB93A } }
       responses:
@@ -64,7 +64,7 @@ paths:
         content:
           application/json:
             schema: { $ref: "../schemas/api/pairing-request.json" }
-            example: { pairingCode: "482913", devicePublicKey: TUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FF, ageBracket: age_placeholder_b }
+            example: { pairingCode: "482913", devicePublicKey: TUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FF, ageBracket: age_13_15 }
       responses:
         "201":
           description: Paired.
@@ -90,7 +90,7 @@ paths:
               schema: { $ref: "../schemas/api/child-list.json" }
               example:
                 children:
-                  - { childId: 3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c, paired: true, ageBracket: age_placeholder_b, policyVersion: 1,
+                  - { childId: 3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c, paired: true, ageBracket: age_13_15, policyVersion: 1,
                       lastHeartbeatAt: "2026-11-05T09:30:00Z", protectionActive: true, missingPermissions: [] }
         default: { $ref: "#/components/responses/Error" }
   /v1/guardian/children/{childId}/policy:
@@ -251,6 +251,82 @@ paths:
             application/json:
               schema: { $ref: "../schemas/api/heartbeat-response.json" }
               example: { latestPolicyVersion: 1, serverTime: "2026-11-05T09:30:00Z", decisions: [] }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/children/{childId}/reports:
+    post:
+      operationId: createReport
+      summary: The parent reports a case; the child's phone builds it at its next check-in.
+      security:
+        - parentSession: []
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/uuid.json" }
+          example: 3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/report-request.json" }
+            example:
+              reportId: 9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a
+              caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+              recipientType: school
+              anonymous: true
+              signature: TAVpvYY4LMEAlnUjOS7RVFpnPmvTf2VRd1Dv7ARBZgE
+      responses:
+        "201":
+          description: The report, waiting for the child's phone.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/report.json" }
+              example: &report
+                reportId: 9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a
+                childId: 3f1c6a2e-8b7d-4c1e-9a2b-1d2e3f4a5b6c
+                caseId: c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a
+                recipientType: school
+                anonymous: true
+                status: requested
+                createdAt: "2026-11-06T09:30:00Z"
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/reports:
+    get:
+      operationId: listReports
+      summary: The signed-in parent's reports, newest first.
+      security:
+        - parentSession: []
+      responses:
+        "200":
+          description: Reports.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/report-list.json" }
+              example: { reports: [*report] }
+        default: { $ref: "#/components/responses/Error" }
+  /v1/guardian/reports/{reportId}/result:
+    post:
+      operationId: reportResult
+      summary: The child's phone built (or could not build) a parent's report.
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { $ref: "../schemas/types/uuid.json" }
+          example: 9d8c7b6a-5f4e-4d3c-8b2a-1f0e9d8c7b6a
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "../schemas/api/report-result-request.json" }
+            example: { status: ready, sealedLink: 2xe1KPnJyC1COJEUWY1q7PMR8pG4e7wkcCRg_4RNW-jsl5QnWXGDXUA3vFN_0DzBfG_IQYwq2mzRDNSs }
+      responses:
+        "200":
+          description: The updated report.
+          content:
+            application/json:
+              schema: { $ref: "../schemas/api/report.json" }
+              example: *report
         default: { $ref: "#/components/responses/Error" }
 components:
   securitySchemes:

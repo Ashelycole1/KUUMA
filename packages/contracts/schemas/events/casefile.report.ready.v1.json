@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/events/casefile.report.ready.v1.json",
+  "title": "CasefileReportReady",
+  "description": "PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.",
+  "x-kuuma": {
+    "event": "casefile.report.ready",
+    "version": 1,
+    "publisher": "casefile",
+    "where": "phone",
+    "phoneOnly": true
+  },
+  "allOf": [
+    {
+      "$ref": "envelope.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "casefile.report.ready"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "title": "CasefileReportReadyPayload",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requestId",
+        "caseId",
+        "status"
+      ],
+      "properties": {
+        "requestId": {
+          "$ref": "../types/uuid.json"
+        },
+        "caseId": {
+          "$ref": "../types/uuid.json"
+        },
+        "status": {
+          "$ref": "../types/report-outcome.json"
+        },
+        "link": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    }
+  }
+}

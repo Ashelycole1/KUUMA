@@ -75,6 +75,11 @@ object RecipientTemplates {
 object CaseFileBuilder {
     const val FORMAT = "kuuma-casefile/1"
 
+    private const val ANONYMOUS_NOTE =
+        "Reported by the child's parent or guardian. The child's identity is withheld: only the " +
+            "offender's messages are included, and messages that name the child are withheld " +
+            "(their hashes stay in the chain)."
+
     fun build(
         case: CaseState,
         items: List<VaultItem>,
@@ -87,14 +92,21 @@ object CaseFileBuilder {
         generatedAt: Long,
         verifyUrl: String,
         victimIdentity: String? = null,
-        translations: Map<String, ExhibitTranslation> = emptyMap()
+        translations: Map<String, ExhibitTranslation> = emptyMap(),
+        parentReport: ParentReport? = null
     ): CaseFile {
         val caseItems = items.filter { it.caseId == case.caseId && it.kind != ItemKind.CUSTODY }
+            .filter { parentReport?.keeps(it, case) ?: true }
+        val withheld = caseItems.filter { parentReport?.withholds(it) == true }.map { it.itemId }.toSet()
+        val included = caseItems.map { it.itemId }.toSet()
+        val shownTimeline = timeline.filter { it.itemId in included }
+        val mask: (String) -> String = { parentReport?.mask(it) ?: it }
         val custody = items.filter {
             it.kind == ItemKind.CUSTODY &&
                 CaseIndex.parse(it)["caseId"]?.let { v -> (v as? JsonPrimitive)?.content } == case.caseId
         }
         val entryFor = chain.associateBy { it.itemId }
+        val sender = SenderDetails.of(case, caseItems)
         val root = chain.lastOrNull()?.chainHash ?: Vault.GENESIS
 
         val json = buildJsonObject {
@@ -103,7 +115,32 @@ object CaseFileBuilder {
             put("generatedAt", CaseIndex.iso(generatedAt))
             put("recipientType", recipient.wire)
             put("offenderLabel", case.offenderLabel)
-            put("victim", victimIdentity?.let { JsonPrimitive(it) } ?: JsonNull)
+            put(
+                "senderDetails",
+                buildJsonObject {
+                    put("note", "As shown on the child's phone. From the sealed messages; not verified.")
+                    put("displayNames", buildJsonArray { sender.displayNames.forEach { add(JsonPrimitive(it)) } })
+                    put("phoneNumbers", buildJsonArray { sender.phoneNumbers.forEach { add(JsonPrimitive(it)) } })
+                    put("emails", buildJsonArray { sender.emails.forEach { add(JsonPrimitive(it)) } })
+                    put("handles", buildJsonArray { sender.handles.forEach { add(JsonPrimitive(it)) } })
+                }
+            )
+            put("victim", victimIdentity?.takeIf { parentReport == null }?.let { JsonPrimitive(it) } ?: JsonNull)
+            parentReport?.let { r ->
+                put(
+                    "report",
+                    buildJsonObject {
+                        put("reportedBy", "parent")
+                        put("anonymous", r.anonymous)
+                        if (r.anonymous) {
+                            put(
+                                "note",
+                                ANONYMOUS_NOTE
+                            )
+                        }
+                    }
+                )
+            }
             put(
                 "summary",
                 buildJsonObject {
@@ -145,7 +182,11 @@ object CaseFileBuilder {
                             put("kind", item.kind.name)
                             put("chainIndex", e.index)
                             put("itemHash", e.itemHash)
-                            put("content", item.contentJson) // exact sealed bytes: recipients re-hash them
+                            if (item.itemId in withheld) {
+                                put("withheld", true) // names the child: hash only, content left out
+                            } else {
+                                put("content", item.contentJson) // exact sealed bytes: recipients re-hash them
+                            }
                         }
                     }
                 )
@@ -179,13 +220,13 @@ object CaseFileBuilder {
                 "translations",
                 JsonArray(
                     caseItems.mapIndexedNotNull { i, item ->
-                        translations[item.itemId]?.let { t ->
+                        translations[item.itemId]?.takeIf { item.itemId !in withheld }?.let { t ->
                             buildJsonObject {
                                 put("exhibit", "E${i + 1}")
                                 put("itemId", t.itemId)
                                 put("from", t.from.wire)
                                 put("to", t.to.wire)
-                                put("text", t.text)
+                                put("text", mask(t.text))
                                 put("machineTranslated", true)
                                 put("model", t.model?.let { JsonPrimitive(it) } ?: JsonNull)
                                 put("promptVersion", t.promptVersion?.let { JsonPrimitive(it) } ?: JsonNull)
@@ -211,8 +252,8 @@ object CaseFileBuilder {
         return CaseFile(
             json,
             renderPdf(
-                case, recipient, timeline, caseItems, entryFor, custody, root, timestamp, generatedAt, verifyUrl,
-                translations
+                case, recipient, shownTimeline, caseItems, entryFor, custody, root, timestamp, generatedAt, verifyUrl,
+                translations, sender, parentReport, withheld
             ),
             root
         )
@@ -236,12 +277,27 @@ object CaseFileBuilder {
         ts: RootTimestamp?,
         generatedAt: Long,
         verifyUrl: String,
-        translations: Map<String, ExhibitTranslation>
+        translations: Map<String, ExhibitTranslation>,
+        sender: SenderDetails,
+        parentReport: ParentReport?,
+        withheld: Set<String>
     ): ByteArray {
+        val mask: (String) -> String = { parentReport?.mask(it) ?: it }
         val doc = PdfText()
         doc.heading("Kuuma case file")
         doc.line("Case ${case.caseId}  ·  prepared for: ${recipient.wire}  ·  generated ${CaseIndex.iso(generatedAt)}")
         doc.gap()
+        if (parentReport != null) {
+            doc.para(
+                if (parentReport.anonymous) {
+                    "$ANONYMOUS_NOTE In this copy the child's name is replaced with [the child]; " +
+                        "${withheld.size} message(s) are withheld."
+                } else {
+                    "Reported by the child's parent or guardian."
+                }
+            )
+            doc.gap()
+        }
         doc.para(RecipientTemplates.intro(recipient))
         doc.gap()
         doc.heading("Summary")
@@ -263,6 +319,21 @@ object CaseFileBuilder {
         doc.para(OffenceGuidance.DISCLAIMER)
         case.categories.forEach { doc.para("- ${it.wire}: ${OffenceGuidance.forCategory(it)}") }
         doc.gap()
+        doc.heading("Sender details (as shown on the child's phone)")
+        if (sender.isEmpty) {
+            doc.para("The phone showed no name or number for this sender.")
+        } else {
+            if (sender.displayNames.isNotEmpty()) doc.para("Shown as: ${sender.displayNames.joinToString(", ")}")
+            if (sender.phoneNumbers.isNotEmpty()) {
+                doc.para(
+                    "Phone numbers in their messages: ${sender.phoneNumbers.joinToString(", ")}"
+                )
+            }
+            if (sender.emails.isNotEmpty()) doc.para("Emails in their messages: ${sender.emails.joinToString(", ")}")
+            if (sender.handles.isNotEmpty()) doc.para("Handles in their messages: ${sender.handles.joinToString(", ")}")
+            doc.para("Taken from the sealed messages below; not verified by Kuuma.")
+        }
+        doc.gap()
         doc.heading("Timeline")
         val exhibitNo = caseItems.mapIndexed { i, it -> it.itemId to "E${i + 1}" }.toMap()
         for (t in timeline) {
@@ -270,15 +341,15 @@ object CaseFileBuilder {
             val what = when (t.kind) {
                 ItemKind.FLAG -> "FLAGGED ${t.category?.wire} / ${t.severity?.wire}"
                 ItemKind.MEDIA -> "[media recorded as hash only; not copied]"
-                else -> t.text.orEmpty()
+                else -> if (t.itemId in withheld) "[message withheld: it names the child]" else mask(t.text.orEmpty())
             }
             doc.para("${exhibitNo[t.itemId] ?: "-"}  ${CaseIndex.iso(t.at)}  ${t.appSource ?: ""}  $who: $what")
-            translations[t.itemId]?.let { tr ->
+            translations[t.itemId]?.takeIf { t.itemId !in withheld }?.let { tr ->
                 val by = listOfNotNull(tr.model, tr.promptVersion).joinToString(", ")
                 doc.para(
                     "      Machine translation from ${languageName(
                         tr.from
-                    )}${if (by.isEmpty()) "" else " ($by)"}: ${tr.text}"
+                    )}${if (by.isEmpty()) "" else " ($by)"}: ${mask(tr.text)}"
                 )
             }
         }

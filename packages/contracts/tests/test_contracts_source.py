@@ -51,6 +51,9 @@ EXPECTED_ENDPOINTS = {
     ("get", "/v1/guardian/children"),
     ("post", "/v1/guardian/approval-requests"),
     ("get", "/v1/guardian/approvals"),
+    ("post", "/v1/guardian/children/{childId}/reports"),
+    ("get", "/v1/guardian/reports"),
+    ("post", "/v1/guardian/reports/{reportId}/result"),
 }
 
 
@@ -119,9 +122,9 @@ def test_every_example_matches_its_schema(label, schema_ref, example):
     check(schema_ref, example)
 
 
-def test_eighteen_events_and_all_shared_types():
+def test_twenty_events_and_all_shared_types():
     m = codegen_model.load()
-    assert len(m.events) == 18
+    assert len(m.events) == 20
     for t in [
         "Severity",
         "HarmCategory",

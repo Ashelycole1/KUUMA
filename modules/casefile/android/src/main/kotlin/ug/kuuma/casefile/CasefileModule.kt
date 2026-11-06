@@ -88,6 +88,9 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
         context.events.subscribe(Events.SENTINEL_FLAG_UPDATED) { e -> submit { engine.onFlagUpdated(e.payload) } }
         context.events.subscribe(Events.SENTINEL_CAPTURE_READY) { e -> submit { engine.onCapture(e.payload) } }
         context.events.subscribe(Events.GUARDIAN_PAIRING_COMPLETED) { submit { engine.onPaired() } }
+        context.events.subscribe(Events.GUARDIAN_REPORT_REQUESTED) { e ->
+            submit { engine.onReportRequested(e.payload) }
+        }
         context.events.subscribe(Events.GUARDIAN_SHARE_APPROVED) { e ->
             submit { engine.onShareApproved(e.payload.requestId) }
         }
@@ -97,7 +100,10 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
     }
 
     /** Calls from the kuuma_casefile screens. Everything runs on the vault's own thread. */
-    override fun onCall(method: String, args: Map<String, Any?>): Any? = onWorker {
+    override fun onCall(method: String, args: Map<String, Any?>): Any? = onWorker(
+        // Exports and shares may translate messages first (seconds each on a local model).
+        if (method == "export" || method == "requestShare") 300L else 30L
+    ) {
         when (method) {
             "listCases" -> engine.cases().map { c ->
                 mapOf(
@@ -156,7 +162,9 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
                     "requestId" to it.requestId,
                     "recipientType" to it.recipient.wire,
                     "status" to it.status,
-                    "link" to it.link
+                    "link" to it.link,
+                    // Set when the parent reported it ("anonymous" or "named").
+                    "reportedByParent" to engine.reportKind(it.requestId)
                 )
             }
             "deleteVault" -> engine.deleteVault(args["parentApproved"] as? Boolean ?: false).name
@@ -169,7 +177,7 @@ class CasefileModule(private val config: CasefileConfig = CasefileConfig()) : Ku
         worker.submit {}.get(10, TimeUnit.SECONDS)
     }
 
-    fun <T> onWorker(work: () -> T): T = worker.submit<T> { work() }.get(30, TimeUnit.SECONDS)
+    fun <T> onWorker(seconds: Long = 30, work: () -> T): T = worker.submit<T> { work() }.get(seconds, TimeUnit.SECONDS)
 
     private fun submit(work: () -> Unit) = worker.execute {
         try {

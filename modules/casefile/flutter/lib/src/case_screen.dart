@@ -20,6 +20,7 @@ class CaseScreen extends StatefulWidget {
 
 class _CaseScreenState extends State<CaseScreen> {
   List<Map<Object?, Object?>> _timeline = const [];
+  List<Map<Object?, Object?>> _shares = const [];
   final Set<int> _revealed = {};
   String? _notice;
   bool? _intact;
@@ -33,7 +34,13 @@ class _CaseScreenState extends State<CaseScreen> {
 
   Future<void> _load() async {
     final t = await widget.vault.call<List<Object?>>('timeline', {'caseId': widget.caseId});
-    if (mounted) setState(() => _timeline = (t ?? const []).cast<Map<Object?, Object?>>());
+    final shares = await widget.vault.call<List<Object?>>('shares', {'caseId': widget.caseId});
+    if (mounted) {
+      setState(() {
+        _timeline = (t ?? const []).cast<Map<Object?, Object?>>();
+        _shares = (shares ?? const []).cast<Map<Object?, Object?>>();
+      });
+    }
   }
 
   Future<void> _run(Future<void> Function() work) async {
@@ -153,9 +160,24 @@ class _CaseScreenState extends State<CaseScreen> {
             ]),
           ]),
         ),
+        // The child always sees who this case was sent to, including reports their parent made.
+        for (final s in _shares) _shareNote(context, s),
         KuumaSectionHeader(context.t('casefile.case.timeline').toUpperCase()),
         for (final (i, e) in _timeline.indexed) _entry(context, i, e),
       ]),
+    );
+  }
+
+  Widget _shareNote(BuildContext context, Map<Object?, Object?> s) {
+    final p = KuumaColors.of(context);
+    final recipient = context.t('casefile.recipient.${s['recipientType']}');
+    final byParent = s['reportedByParent'] as String?;
+    return KuumaCard(
+      leading: Icon(byParent == null ? Icons.ios_share : Icons.family_restroom, color: p.brand),
+      title: byParent == null
+          ? context.t('casefile.share.sent_to', {'recipient': recipient})
+          : context.t('casefile.share.parent_reported', {'recipient': recipient}),
+      subtitle: byParent == 'anonymous' ? context.t('casefile.share.anonymous') : null,
     );
   }
 

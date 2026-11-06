@@ -77,3 +77,22 @@ class Approval(Base):
     decided_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     signature: Mapped[str | None] = mapped_column(String(43), nullable=True)
     delivered: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Report(Base):
+    """A parent's report of a case. The server never sees the case or the link: the child's
+    phone builds the file, and the link comes back sealed with the family key."""
+
+    __tablename__ = "reports"
+    report_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    child_id: Mapped[str] = mapped_column(String(36), index=True)
+    case_id: Mapped[str] = mapped_column(String(36))
+    recipient_type: Mapped[str] = mapped_column(String(20))
+    anonymous: Mapped[bool] = mapped_column(Boolean)
+    signature: Mapped[str] = mapped_column(String(43))
+    sealed_child_name: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sealed_link: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivered: Mapped[bool] = mapped_column(Boolean, default=False)

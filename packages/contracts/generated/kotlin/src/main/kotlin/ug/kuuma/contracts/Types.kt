@@ -70,13 +70,13 @@ typealias Timestamp = String
 typealias Uuid = String
 
 /**
- * PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version.
+ * Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees.
  */
 @Serializable
 enum class AgeBracket(val wire: String) {
-    @SerialName("age_placeholder_a") AGE_PLACEHOLDER_A("age_placeholder_a"),
-    @SerialName("age_placeholder_b") AGE_PLACEHOLDER_B("age_placeholder_b"),
-    @SerialName("age_placeholder_c") AGE_PLACEHOLDER_C("age_placeholder_c"),
+    @SerialName("age_12_under") AGE_12_UNDER("age_12_under"),
+    @SerialName("age_13_15") AGE_13_15("age_13_15"),
+    @SerialName("age_16_18") AGE_16_18("age_16_18"),
     ;
 
     companion object {
@@ -284,6 +284,39 @@ enum class RecipientType(val wire: String) {
         fun fromWire(wire: String): RecipientType =
             entries.firstOrNull { it.wire == wire }
                 ?: throw IllegalArgumentException("Unknown RecipientType: $wire")
+    }
+}
+
+/**
+ * What the child's phone did with a parent's report request.
+ */
+@Serializable
+enum class ReportOutcome(val wire: String) {
+    @SerialName("ready") READY("ready"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ReportOutcome =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ReportOutcome: $wire")
+    }
+}
+
+/**
+ * A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.
+ */
+@Serializable
+enum class ReportStatus(val wire: String) {
+    @SerialName("requested") REQUESTED("requested"),
+    @SerialName("ready") READY("ready"),
+    @SerialName("failed") FAILED("failed"),
+    ;
+
+    companion object {
+        fun fromWire(wire: String): ReportStatus =
+            entries.firstOrNull { it.wire == wire }
+                ?: throw IllegalArgumentException("Unknown ReportStatus: $wire")
     }
 }
 

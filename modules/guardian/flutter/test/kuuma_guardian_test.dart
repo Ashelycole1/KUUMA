@@ -117,7 +117,7 @@ void main() {
   testWidgets('children: changing settings sends a new signed version', (tester) async {
     tall(tester);
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     api.pairChild(p.childId);
     await s.refresh();
     await tester.pumpWidget(tab(s, const ChildrenScreen()));
@@ -135,7 +135,7 @@ void main() {
 
   testWidgets('alerts: trend, guidance, and the message only on request', (tester) async {
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final sealed = FamilyCrypto(p.qr.familyKey).seal('Ojja kulaba!');
     api.addAlert(p.childId, sealedExcerpt: sealed);
     api.addAlert(p.childId, kind: AlertKind.tamper, severity: Severity.medium);
@@ -159,7 +159,7 @@ void main() {
 
   testWidgets('approvals: approve signs and sends the decision', (tester) async {
     final (s, api) = await unlocked();
-    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.agePlaceholderB, watchedApps: [AppSource.sms]);
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
     final req = api.addApproval(p.childId, recipient: RecipientType.police);
     await s.refresh();
     await tester.pumpWidget(tab(s, const ApprovalsScreen()));
@@ -168,6 +168,43 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Approved'), findsOneWidget);
     expect(api.calls.last, startsWith('decide:approve:'));
+  });
+
+  testWidgets('report: from an alert, anonymous by default, link ready in Requests', (tester) async {
+    tall(tester);
+    final (s, api) = await unlocked();
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    api.pairChild(p.childId);
+    final alert = api.addAlert(p.childId);
+    await s.refresh();
+    await tester.pumpWidget(tab(s, AlertDetailScreen(alert: alert)));
+    await tester.tap(find.byKey(const Key('report-case')));
+    await tester.pumpAndSettle();
+    expect(find.text('Keep my child anonymous'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('report-to-police')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('report-send')));
+    await tester.pumpAndSettle();
+    expect(api.calls.last, 'createReport:police:true');
+    final id = api.reportRequests.keys.single;
+
+    await tester.pumpWidget(tab(s, const ApprovalsScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Waiting'), findsOneWidget);
+    api.completeReport(id, FamilyCrypto(p.qr.familyKey).seal('http://kuuma/verify/s/x#k=secret'));
+    await s.refresh();
+    await tester.pumpAndSettle();
+    expect(find.text('Ready'), findsOneWidget);
+    expect(find.byKey(Key('report-copy-$id')), findsOneWidget);
+  });
+
+  testWidgets('tamper alerts have nothing to report', (tester) async {
+    final (s, api) = await unlocked();
+    final p = await s.addChild(nickname: 'Amara', bracket: AgeBracket.age1315, watchedApps: [AppSource.sms]);
+    final alert = api.addAlert(p.childId, kind: AlertKind.tamper, severity: Severity.medium);
+    await s.refresh();
+    await tester.pumpWidget(tab(s, AlertDetailScreen(alert: alert)));
+    expect(find.byKey(const Key('report-case')), findsNothing);
   });
 
   group('child setup wizard', () {

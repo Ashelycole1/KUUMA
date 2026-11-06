@@ -227,13 +227,13 @@ class CompanionModuleTest {
             Events.GUARDIAN_POLICY_UPDATED,
             GuardianPolicyUpdatedPayload(
                 caseId,
-                AgeBracket.AGE_PLACEHOLDER_B,
+                AgeBracket.AGE_13_15,
                 listOf(AppSource.WHATSAPP),
                 Thresholds(0.5, Severity.MEDIUM, Severity.HIGH),
                 3
             )
         )
-        assertEquals(AgeBracket.AGE_PLACEHOLDER_B, companion.ageBracket)
+        assertEquals(AgeBracket.AGE_13_15, companion.ageBracket)
     }
 
     @Test fun `remembers a bounded number of flags`() {

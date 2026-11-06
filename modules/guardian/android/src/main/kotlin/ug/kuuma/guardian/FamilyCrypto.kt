@@ -64,6 +64,10 @@ class FamilyCrypto(private val key: ByteArray) {
         /** Not decidedAt: the server stamps that after the parent signs. */
         fun decisionMessage(approvalId: String, requestId: String, decision: String) =
             "$approvalId|$requestId|$decision"
+
+        /** What the parent signs to report a case (same formula in kuuma_guardian). */
+        fun reportMessage(reportId: String, caseId: String, recipient: String, anonymous: Boolean) =
+            "report|$reportId|$caseId|$recipient|$anonymous"
     }
 }
 

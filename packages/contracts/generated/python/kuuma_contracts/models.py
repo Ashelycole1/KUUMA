@@ -48,11 +48,11 @@ Uuid = Annotated[str, StringConstraints(pattern='^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a
 
 
 class AgeBracket(StrEnum):
-    """PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version."""
+    """Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees."""
 
-    AGE_PLACEHOLDER_A = 'age_placeholder_a'
-    AGE_PLACEHOLDER_B = 'age_placeholder_b'
-    AGE_PLACEHOLDER_C = 'age_placeholder_c'
+    AGE_12_UNDER = 'age_12_under'
+    AGE_13_15 = 'age_13_15'
+    AGE_16_18 = 'age_16_18'
 
 
 class AlertKind(StrEnum):
@@ -156,6 +156,21 @@ class RecipientType(StrEnum):
     POLICE = 'police'
     PLATFORM = 'platform'
     LAWYER = 'lawyer'
+
+
+class ReportOutcome(StrEnum):
+    """What the child's phone did with a parent's report request."""
+
+    READY = 'ready'
+    FAILED = 'failed'
+
+
+class ReportStatus(StrEnum):
+    """A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it."""
+
+    REQUESTED = 'requested'
+    READY = 'ready'
+    FAILED = 'failed'
 
 
 class Severity(StrEnum):
@@ -359,6 +374,15 @@ class CasefileEvidenceSealedPayload(ContractModel):
     chain_index: int = Field(alias="chainIndex")
 
 
+class CasefileReportReadyPayload(ContractModel):
+    """PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment."""
+
+    request_id: Uuid = Field(alias="requestId")
+    case_id: Uuid = Field(alias="caseId")
+    status: ReportOutcome
+    link: str | None = Field(default=None)
+
+
 class CasefileShareCompletedPayload(ContractModel):
     """A share link was issued to the recipient."""
 
@@ -460,6 +484,16 @@ class GuardianPolicyUpdatedPayload(ContractModel):
     policy_version: int = Field(alias="policyVersion")
 
 
+class GuardianReportRequestedPayload(ContractModel):
+    """PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone."""
+
+    request_id: Uuid = Field(alias="requestId")
+    case_id: Uuid = Field(alias="caseId")
+    recipient_type: RecipientType = Field(alias="recipientType")
+    anonymous: bool
+    child_names: list[str] = Field(alias="childNames")
+
+
 class GuardianShareApprovedPayload(ContractModel):
     """A parent approved a share request."""
 
@@ -489,6 +523,7 @@ class HeartbeatResponse(ContractModel):
     server_time: Timestamp = Field(alias="serverTime")
     policy: Policy | None = Field(default=None)
     decisions: list[ApprovalResult] | None = Field(default=None)
+    reports: list[ReportOrder] | None = Field(default=None)
 
 
 class Interpretation(ContractModel):
@@ -567,6 +602,52 @@ class ReplyRisk(ContractModel):
     risky: bool
     spans: list[RiskySpan]
     suggestion_keys: list[AdviceKey] = Field(alias="suggestionKeys")
+
+
+class Report(ContractModel):
+    report_id: Uuid = Field(alias="reportId")
+    child_id: Uuid = Field(alias="childId")
+    case_id: Uuid = Field(alias="caseId")
+    recipient_type: RecipientType = Field(alias="recipientType")
+    anonymous: bool
+    status: ReportStatus
+    created_at: Timestamp = Field(alias="createdAt")
+    completed_at: Timestamp | None = Field(default=None, alias="completedAt")
+    sealed_link: SealedExcerpt | None = Field(default=None, alias="sealedLink")
+
+
+class ReportList(ContractModel):
+    reports: list[Report]
+
+
+class ReportOrder(ContractModel):
+    """A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies."""
+
+    report_id: Uuid = Field(alias="reportId")
+    case_id: Uuid = Field(alias="caseId")
+    recipient_type: RecipientType = Field(alias="recipientType")
+    anonymous: bool
+    signature: FamilySignature
+    sealed_child_name: SealedExcerpt | None = Field(default=None, alias="sealedChildName")
+    requested_at: Timestamp = Field(alias="requestedAt")
+
+
+class ReportRequest(ContractModel):
+    """POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous."""
+
+    report_id: Uuid = Field(alias="reportId")
+    case_id: Uuid = Field(alias="caseId")
+    recipient_type: RecipientType = Field(alias="recipientType")
+    anonymous: bool
+    signature: FamilySignature
+    sealed_child_name: SealedExcerpt | None = Field(default=None, alias="sealedChildName")
+
+
+class ReportResultRequest(ContractModel):
+    """POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed)."""
+
+    status: ReportOutcome
+    sealed_link: SealedExcerpt | None = Field(default=None, alias="sealedLink")
 
 
 class RiskySpan(ContractModel):
@@ -734,6 +815,13 @@ class CasefileEvidenceSealed(Envelope[CasefileEvidenceSealedPayload]):
     version: Literal[1] = 1
 
 
+class CasefileReportReady(Envelope[CasefileReportReadyPayload]):
+    """PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment."""
+
+    type: Literal["casefile.report.ready"] = "casefile.report.ready"
+    version: Literal[1] = 1
+
+
 class CasefileShareCompleted(Envelope[CasefileShareCompletedPayload]):
     """A share link was issued to the recipient."""
 
@@ -797,6 +885,13 @@ class GuardianPolicyUpdated(Envelope[GuardianPolicyUpdatedPayload]):
     version: Literal[1] = 1
 
 
+class GuardianReportRequested(Envelope[GuardianReportRequestedPayload]):
+    """PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone."""
+
+    type: Literal["guardian.report.requested"] = "guardian.report.requested"
+    version: Literal[1] = 1
+
+
 class GuardianShareApproved(Envelope[GuardianShareApprovedPayload]):
     """A parent approved a share request."""
 
@@ -854,6 +949,7 @@ EVENTS: dict[tuple[str, int], EventSpec] = {
     ("casefile.case.escalated", 1): EventSpec("casefile.case.escalated", 1, "casefile", "phone_to_cloud", False, CasefileCaseEscalated, CasefileCaseEscalatedPayload),
     ("casefile.case.updated", 1): EventSpec("casefile.case.updated", 1, "casefile", "phone_to_cloud", False, CasefileCaseUpdated, CasefileCaseUpdatedPayload),
     ("casefile.evidence.sealed", 1): EventSpec("casefile.evidence.sealed", 1, "casefile", "phone", False, CasefileEvidenceSealed, CasefileEvidenceSealedPayload),
+    ("casefile.report.ready", 1): EventSpec("casefile.report.ready", 1, "casefile", "phone", True, CasefileReportReady, CasefileReportReadyPayload),
     ("casefile.share.completed", 1): EventSpec("casefile.share.completed", 1, "casefile", "cloud", False, CasefileShareCompleted, CasefileShareCompletedPayload),
     ("casefile.share.requested", 1): EventSpec("casefile.share.requested", 1, "casefile", "phone_to_cloud", False, CasefileShareRequested, CasefileShareRequestedPayload),
     ("companion.advice.shown", 1): EventSpec("companion.advice.shown", 1, "companion", "phone_to_cloud", False, CompanionAdviceShown, CompanionAdviceShownPayload),
@@ -863,6 +959,7 @@ EVENTS: dict[tuple[str, int], EventSpec] = {
     ("guardian.alert.sent", 1): EventSpec("guardian.alert.sent", 1, "guardian", "cloud", False, GuardianAlertSent, GuardianAlertSentPayload),
     ("guardian.pairing.completed", 1): EventSpec("guardian.pairing.completed", 1, "guardian", "cloud_to_phone", False, GuardianPairingCompleted, GuardianPairingCompletedPayload),
     ("guardian.policy.updated", 1): EventSpec("guardian.policy.updated", 1, "guardian", "cloud_to_phone", False, GuardianPolicyUpdated, GuardianPolicyUpdatedPayload),
+    ("guardian.report.requested", 1): EventSpec("guardian.report.requested", 1, "guardian", "phone", True, GuardianReportRequested, GuardianReportRequestedPayload),
     ("guardian.share.approved", 1): EventSpec("guardian.share.approved", 1, "guardian", "cloud_to_phone", False, GuardianShareApproved, GuardianShareApprovedPayload),
     ("guardian.share.declined", 1): EventSpec("guardian.share.declined", 1, "guardian", "cloud_to_phone", False, GuardianShareDeclined, GuardianShareDeclinedPayload),
     ("sentinel.capture.ready", 1): EventSpec("sentinel.capture.ready", 1, "sentinel", "phone", True, SentinelCaptureReady, SentinelCaptureReadyPayload),

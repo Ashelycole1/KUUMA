@@ -93,6 +93,50 @@ class FakeGuardianParentApi implements GuardianParentApi {
     return _alerts.reversed.toList();
   }
 
+  final List<Report> _reports = [];
+  final Map<String, ReportRequest> reportRequests = {};
+
+  @override
+  Future<Report> createReport(String token, String childId, ReportRequest request) async {
+    _check(token);
+    if (!_children.containsKey(childId)) throw GuardianApiException(404, 'not_found');
+    if (reportRequests.containsKey(request.reportId)) throw GuardianApiException(409, 'duplicate_report');
+    calls.add('createReport:${request.recipientType.wire}:${request.anonymous}');
+    reportRequests[request.reportId] = request;
+    final r = Report(
+        reportId: request.reportId,
+        childId: childId,
+        caseId: request.caseId,
+        recipientType: request.recipientType,
+        anonymous: request.anonymous,
+        status: ReportStatus.requested,
+        createdAt: _iso(_clock()));
+    _reports.add(r);
+    return r;
+  }
+
+  @override
+  Future<List<Report>> reports(String token) async {
+    _check(token);
+    return _reports.reversed.toList();
+  }
+
+  /// What the child's phone would do: build the report and send back the sealed link.
+  void completeReport(String reportId, String sealedLink) {
+    final i = _reports.indexWhere((r) => r.reportId == reportId);
+    final r = _reports[i];
+    _reports[i] = Report(
+        reportId: r.reportId,
+        childId: r.childId,
+        caseId: r.caseId,
+        recipientType: r.recipientType,
+        anonymous: r.anonymous,
+        status: ReportStatus.ready,
+        createdAt: r.createdAt,
+        completedAt: _iso(_clock()),
+        sealedLink: sealedLink);
+  }
+
   @override
   Future<List<Approval>> approvals(String token) async {
     _check(token);

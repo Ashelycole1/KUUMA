@@ -29,6 +29,9 @@ import ug.kuuma.contracts.PairingRequest
 import ug.kuuma.contracts.PairingResponse
 import ug.kuuma.contracts.Policy
 import ug.kuuma.contracts.RecipientType
+import ug.kuuma.contracts.ReportOrder
+import ug.kuuma.contracts.ReportOutcome
+import ug.kuuma.contracts.ReportResultRequest
 import ug.kuuma.contracts.Severity
 import ug.kuuma.contracts.Thresholds
 import ug.kuuma.contracts.testing.ContractAssert
@@ -74,6 +77,13 @@ private class FakeApi(private val pairing: () -> PairingResponse) : GuardianApi 
         check()
         approvals += request
     }
+
+    val reportResults = mutableListOf<Pair<String, ReportResultRequest>>()
+
+    override fun reportResult(reportId: String, request: ReportResultRequest) {
+        check()
+        reportResults += reportId to request
+    }
 }
 
 private class Host : KuumaModule {
@@ -110,7 +120,7 @@ class GuardianEngineTest {
         signedBy: FamilyCrypto? = family
     ): Policy {
         val p = Policy(
-            AgeBracket.AGE_PLACEHOLDER_B,
+            AgeBracket.AGE_13_15,
             listOf(AppSource.WHATSAPP, AppSource.SMS),
             Thresholds(0.5, alertMin, Severity.MEDIUM),
             version
@@ -155,6 +165,55 @@ class GuardianEngineTest {
         )
     }
 
+    private fun reportOrder(signedBy: FamilyCrypto = family, anonymous: Boolean = true): ReportOrder {
+        val id = "abababab-abab-4bab-8bab-abababababab"
+        val sig = signedBy.sign(FamilyCrypto.reportMessage(id, caseId, RecipientType.POLICE.wire, anonymous))
+        return ReportOrder(
+            id,
+            caseId,
+            RecipientType.POLICE,
+            anonymous,
+            sig,
+            family.seal("Amara"),
+            "2026-11-06T09:00:00Z"
+        )
+    }
+
+    @Test fun `a parent's signed report reaches Casefile with the child's name, and the link goes back sealed`() {
+        pair()
+        published.clear()
+        val order = reportOrder()
+        api.nextHeartbeat = HeartbeatResponse(1, "2026-11-06T09:00:00Z", reports = listOf(order))
+        engine.heartbeat()
+        val (type, json) = published.single()
+        assertEquals("guardian.report.requested", type.type)
+        assertTrue(json.contains("\"childNames\":[\"Amara\"]"))
+        assertTrue(type.phoneOnly) // the name never leaves the phone
+        // Delivered twice by mistake: built once.
+        published.clear()
+        api.nextHeartbeat = HeartbeatResponse(1, "2026-11-06T09:00:00Z", reports = listOf(order))
+        engine.heartbeat()
+        assertTrue(published.isEmpty())
+
+        engine.onReportReady(order.reportId, ReportOutcome.READY, "http://kuuma/verify/s/x#k=secret")
+        val (id, result) = api.reportResults.single()
+        assertEquals(order.reportId, id)
+        assertEquals(ReportOutcome.READY, result.status)
+        assertEquals("http://kuuma/verify/s/x#k=secret", family.open(result.sealedLink!!))
+        assertFalse(result.toString().contains("secret"))
+    }
+
+    @Test fun `a report the family key did not sign is ignored`() {
+        pair()
+        published.clear()
+        val forged = reportOrder(signedBy = FamilyCrypto(ByteArray(32) { 1 }))
+        api.nextHeartbeat = HeartbeatResponse(1, "2026-11-06T09:00:00Z", reports = listOf(forged))
+        engine.heartbeat()
+        assertTrue(published.isEmpty())
+        engine.onReportReady(forged.reportId, ReportOutcome.READY, "http://x#k=y")
+        assertTrue(api.reportResults.isEmpty())
+    }
+
     @Test fun `the family key signs, verifies and seals`() {
         val p = policy()
         assertTrue(family.verifyPolicy(p))
@@ -163,14 +222,21 @@ class GuardianEngineTest {
         val sealed = family.seal("an offending message")
         assertTrue(Regex("^[A-Za-z0-9_-]{24,10000}$").matches(sealed))
         assertEquals("an offending message", family.open(sealed))
-        assertEquals("age_placeholder_b|sms,whatsapp|0.500|medium|medium|1", FamilyCrypto.policyMessage(p))
+        assertEquals("age_13_15|sms,whatsapp|0.500|medium|medium|1", FamilyCrypto.policyMessage(p))
     }
 
     /** The same vectors are in kuuma_guardian's Dart tests: both phones must agree byte for byte. */
     @Test fun `matches the shared test vectors`() {
         assertEquals("AwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dw", Base64Url.encode(familyKey))
-        assertEquals("HTf5k54Ky4WK7qoii-xrLoP0AsX-OyhchvkcHdP0p-Y", policy().signature)
+        assertEquals("1Z2SpGTAhTea1G_J43Odm0v-qGHapSnC8-dwt-zqCOs", policy().signature)
         assertEquals("Nkuba ku ssimu", family.open("AQIDBAUGBwgJCgsMHkkPkEcmYMuc3ecpeDg1Z9Np9K2c4ZXLkL4QaXM_"))
+        val report = FamilyCrypto.reportMessage(
+            "abababab-abab-4bab-8bab-abababababab",
+            "c0a5e1d2-3b4c-4d5e-8f6a-7b8c9d0e1f2a",
+            "police",
+            true
+        )
+        assertEquals("PU2xzpcn2JEBsap8txQTAKliN41666tZSX2ARLfISNo", family.sign(report))
     }
 
     @Test fun `pairing QR codes are parsed strictly`() {

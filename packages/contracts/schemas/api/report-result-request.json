@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.kuuma.ug/api/report-result-request.json",
+  "title": "ReportResultRequest",
+  "description": "POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status"
+  ],
+  "properties": {
+    "status": {
+      "$ref": "../types/report-outcome.json"
+    },
+    "sealedLink": {
+      "$ref": "../types/sealed-excerpt.json"
+    }
+  }
+}

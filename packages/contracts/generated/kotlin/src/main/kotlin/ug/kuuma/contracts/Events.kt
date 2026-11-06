@@ -83,6 +83,17 @@ data class CasefileEvidenceSealedPayload(
 ) : CloudSendablePayload
 
 /**
+ * PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.
+ */
+@Serializable
+data class CasefileReportReadyPayload(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val status: ReportOutcome,
+    val link: String? = null,
+) : PhoneOnlyPayload
+
+/**
  * A share link was issued to the recipient.
  */
 @Serializable
@@ -171,6 +182,21 @@ data class GuardianPolicyUpdatedPayload(
     val thresholds: Thresholds,
     val policyVersion: Long,
 ) : CloudSendablePayload
+
+/**
+ * PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.
+ */
+@Serializable
+data class GuardianReportRequestedPayload(
+    val requestId: Uuid,
+    val caseId: Uuid,
+    val recipientType: RecipientType,
+    val anonymous: Boolean,
+    /**
+     * Names to withhold in an anonymous report.
+     */
+    val childNames: List<String>,
+) : PhoneOnlyPayload
 
 /**
  * A parent approved a share request.
@@ -278,6 +304,11 @@ object Events {
         "casefile.evidence.sealed", 1, Namespace.CASEFILE, Where.PHONE,
         phoneOnly = false, serializer = CasefileEvidenceSealedPayload.serializer(),
     )
+    /** PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment. */
+    val CASEFILE_REPORT_READY: EventType<CasefileReportReadyPayload> = EventType(
+        "casefile.report.ready", 1, Namespace.CASEFILE, Where.PHONE,
+        phoneOnly = true, serializer = CasefileReportReadyPayload.serializer(),
+    )
     /** A share link was issued to the recipient. */
     val CASEFILE_SHARE_COMPLETED: EventType<CasefileShareCompletedPayload> = EventType(
         "casefile.share.completed", 1, Namespace.CASEFILE, Where.CLOUD,
@@ -323,6 +354,11 @@ object Events {
         "guardian.policy.updated", 1, Namespace.GUARDIAN, Where.CLOUD_TO_PHONE,
         phoneOnly = false, serializer = GuardianPolicyUpdatedPayload.serializer(),
     )
+    /** PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone. */
+    val GUARDIAN_REPORT_REQUESTED: EventType<GuardianReportRequestedPayload> = EventType(
+        "guardian.report.requested", 1, Namespace.GUARDIAN, Where.PHONE,
+        phoneOnly = true, serializer = GuardianReportRequestedPayload.serializer(),
+    )
     /** A parent approved a share request. */
     val GUARDIAN_SHARE_APPROVED: EventType<GuardianShareApprovedPayload> = EventType(
         "guardian.share.approved", 1, Namespace.GUARDIAN, Where.CLOUD_TO_PHONE,
@@ -358,6 +394,7 @@ object Events {
         CASEFILE_CASE_ESCALATED,
         CASEFILE_CASE_UPDATED,
         CASEFILE_EVIDENCE_SEALED,
+        CASEFILE_REPORT_READY,
         CASEFILE_SHARE_COMPLETED,
         CASEFILE_SHARE_REQUESTED,
         COMPANION_ADVICE_SHOWN,
@@ -367,6 +404,7 @@ object Events {
         GUARDIAN_ALERT_SENT,
         GUARDIAN_PAIRING_COMPLETED,
         GUARDIAN_POLICY_UPDATED,
+        GUARDIAN_REPORT_REQUESTED,
         GUARDIAN_SHARE_APPROVED,
         GUARDIAN_SHARE_DECLINED,
         SENTINEL_CAPTURE_READY,

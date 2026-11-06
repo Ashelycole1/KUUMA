@@ -37,7 +37,22 @@ class SentinelNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         if (WatchedApps.appFor(sbn.packageName) == null) return
         val module = SentinelModule.current ?: return
+        if (hiddenByAndroid(sbn)) {
+            module.submitHiddenNotification(snapshot(sbn))
+            return
+        }
         module.submitNotification(snapshot(sbn))
+    }
+
+    /** Android 15+: the system replaced this notification's text because it looked sensitive. */
+    private fun hiddenByAndroid(sbn: StatusBarNotification): Boolean {
+        if (Build.VERSION.SDK_INT < 35) return false
+        return runCatching {
+            val r = Ranking()
+            // Not in the public SDK yet, so looked up by name; absent means "not hidden".
+            currentRanking.getRanking(sbn.key, r) &&
+                Ranking::class.java.getMethod("hasSensitiveContent").invoke(r) == true
+        }.getOrDefault(false)
     }
 
     companion object {

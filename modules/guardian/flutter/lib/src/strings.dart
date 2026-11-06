@@ -83,6 +83,35 @@ const guardianStrings = <String, Map<String, String>>{
     'guardian.recipient.police': 'Police',
     'guardian.recipient.platform': 'The app or website',
     'guardian.recipient.lawyer': 'Lawyer',
+    // Parent reports
+    'guardian.report.button': 'Report this case',
+    'guardian.report.title': 'Report this case',
+    'guardian.report.hero_title': 'Send the evidence safely',
+    'guardian.report.hero_body':
+        "Kuuma builds a sealed case file on your child's phone and gives you a private link to send.",
+    'guardian.report.to': 'Send to',
+    'guardian.report.privacy': "Your child's privacy",
+    'guardian.report.anonymous': 'Keep my child anonymous',
+    'guardian.report.anonymous_on':
+        "Only the sender's messages are included. Your child's name, replies and friends are left out.",
+    'guardian.report.anonymous_off': "The file includes your child's replies. Their name may appear in messages.",
+    'guardian.report.anonymous_short': 'Anonymous',
+    'guardian.report.what_happens':
+        "Your child's phone builds the case file next time it checks in.\nThe link appears here, under Requests.\nCopy it and send it to the school, police, app or lawyer.",
+    'guardian.report.send': 'Send report request',
+    'guardian.report.sent': "Sent to your child's phone. The link appears in Requests when it is ready.",
+    'guardian.report.yours': 'Your reports',
+    'guardian.report.card_title': '{name} to {recipient}',
+    'guardian.report.status_requested': 'Waiting',
+    'guardian.report.status_ready': 'Ready',
+    'guardian.report.status_failed': 'Not sent',
+    'guardian.report.waiting': "Waiting for your child's phone to check in.",
+    'guardian.report.failed':
+        "Your child's phone could not build the file (it may have been offline). Try again later.",
+    'guardian.report.ready_body': 'The link opens the sealed case file. Send it only to the person you chose.',
+    'guardian.report.copy': 'Copy the link',
+    'guardian.report.copied': 'Link copied. Paste it into a message or email to the recipient.',
+    'guardian.report.cannot_open': 'This link could not be opened on this phone.',
     // Child's phone: setup wizard
     'guardian.wizard.intro_title': 'Set up Kuuma with a parent',
     'guardian.wizard.intro_body': 'A parent or guardian does this together with the child. It takes a few minutes.',

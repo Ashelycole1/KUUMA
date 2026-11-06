@@ -16,11 +16,11 @@ abstract final class ContractPatterns {
   static final RegExp uuid = RegExp(r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$');
 }
 
-/// PLACEHOLDER brackets until the team agrees them. Adding values is additive; renaming needs a new contract version.
+/// Age group of the child: 12 and under, 13 to 15, 16 to 18. Decides alert thresholds, advice depth and which screens the child sees.
 enum AgeBracket {
-  agePlaceholderA('age_placeholder_a'),
-  agePlaceholderB('age_placeholder_b'),
-  agePlaceholderC('age_placeholder_c');
+  age12Under('age_12_under'),
+  age1315('age_13_15'),
+  age1618('age_16_18');
 
   const AgeBracket(this.wire);
 
@@ -210,6 +210,35 @@ enum RecipientType {
   static RecipientType fromWire(String wire) =>
       values.firstWhere((v) => v.wire == wire,
           orElse: () => throw ArgumentError('Unknown RecipientType: $wire'));
+}
+
+/// What the child's phone did with a parent's report request.
+enum ReportOutcome {
+  ready('ready'),
+  failed('failed');
+
+  const ReportOutcome(this.wire);
+
+  final String wire;
+
+  static ReportOutcome fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown ReportOutcome: $wire'));
+}
+
+/// A parent's report of a case. requested: waiting for the child's phone to build it. ready: the share link exists (sealed for the parent). failed: the phone could not build it.
+enum ReportStatus {
+  requested('requested'),
+  ready('ready'),
+  failed('failed');
+
+  const ReportStatus(this.wire);
+
+  final String wire;
+
+  static ReportStatus fromWire(String wire) =>
+      values.firstWhere((v) => v.wire == wire,
+          orElse: () => throw ArgumentError('Unknown ReportStatus: $wire'));
 }
 
 /// How serious a harmful message is.
@@ -788,6 +817,31 @@ class CasefileEvidenceSealedPayload extends CloudSendablePayload {
       };
 }
 
+/// PHONE ONLY. Casefile built a parent's report. The link carries the decryption key in its #fragment.
+class CasefileReportReadyPayload extends PhoneOnlyPayload {
+  const CasefileReportReadyPayload({required this.requestId, required this.caseId, required this.status, this.link});
+
+  final String requestId;
+  final String caseId;
+  final ReportOutcome status;
+  final String? link;
+
+  factory CasefileReportReadyPayload.fromJson(Map<String, dynamic> json) => CasefileReportReadyPayload(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        status: ReportOutcome.fromWire(json['status'] as String),
+        link: json['link'] == null ? null : json['link'] as String,
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'status': status.wire,
+        if (link != null) 'link': link!,
+      };
+}
+
 /// A share link was issued to the recipient.
 class CasefileShareCompletedPayload extends CloudSendablePayload {
   const CasefileShareCompletedPayload({required this.requestId, required this.caseId, required this.recipientType, required this.expiresAt});
@@ -1071,6 +1125,35 @@ class GuardianPolicyUpdatedPayload extends CloudSendablePayload {
       };
 }
 
+/// PHONE ONLY. The parent asked for a case to be reported; the family-key signature has been checked. childNames never leave the phone.
+class GuardianReportRequestedPayload extends PhoneOnlyPayload {
+  const GuardianReportRequestedPayload({required this.requestId, required this.caseId, required this.recipientType, required this.anonymous, required this.childNames});
+
+  final String requestId;
+  final String caseId;
+  final RecipientType recipientType;
+  final bool anonymous;
+  /// Names to withhold in an anonymous report.
+  final List<String> childNames;
+
+  factory GuardianReportRequestedPayload.fromJson(Map<String, dynamic> json) => GuardianReportRequestedPayload(
+        requestId: json['requestId'] as String,
+        caseId: json['caseId'] as String,
+        recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        anonymous: json['anonymous'] as bool,
+        childNames: (json['childNames'] as List<dynamic>).map((e) => e as String).toList(),
+      );
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'requestId': requestId,
+        'caseId': caseId,
+        'recipientType': recipientType.wire,
+        'anonymous': anonymous,
+        'childNames': childNames,
+      };
+}
+
 /// A parent approved a share request.
 class GuardianShareApprovedPayload extends CloudSendablePayload {
   const GuardianShareApprovedPayload({required this.requestId, required this.caseId, required this.decidedAt});
@@ -1144,7 +1227,7 @@ class HeartbeatRequest {
 }
 
 class HeartbeatResponse {
-  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime, this.policy, this.decisions});
+  const HeartbeatResponse({required this.latestPolicyVersion, required this.serverTime, this.policy, this.decisions, this.reports});
 
   final int latestPolicyVersion;
   final String serverTime;
@@ -1152,12 +1235,15 @@ class HeartbeatResponse {
   final Policy? policy;
   /// Parent decisions on this child's approval requests not yet delivered.
   final List<ApprovalResult>? decisions;
+  /// Parent report requests for this child not yet delivered.
+  final List<ReportOrder>? reports;
 
   factory HeartbeatResponse.fromJson(Map<String, dynamic> json) => HeartbeatResponse(
         latestPolicyVersion: json['latestPolicyVersion'] as int,
         serverTime: json['serverTime'] as String,
         policy: json['policy'] == null ? null : Policy.fromJson(json['policy'] as Map<String, dynamic>),
         decisions: json['decisions'] == null ? null : (json['decisions'] as List<dynamic>).map((e) => ApprovalResult.fromJson(e as Map<String, dynamic>)).toList(),
+        reports: json['reports'] == null ? null : (json['reports'] as List<dynamic>).map((e) => ReportOrder.fromJson(e as Map<String, dynamic>)).toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -1165,6 +1251,7 @@ class HeartbeatResponse {
         'serverTime': serverTime,
         if (policy != null) 'policy': policy!.toJson(),
         if (decisions != null) 'decisions': decisions!.map((e) => e.toJson()).toList(),
+        if (reports != null) 'reports': reports!.map((e) => e.toJson()).toList(),
       };
 }
 
@@ -1398,6 +1485,142 @@ class ReplyRisk {
         'risky': risky,
         'spans': spans.map((e) => e.toJson()).toList(),
         'suggestionKeys': suggestionKeys,
+      };
+}
+
+class Report {
+  const Report({required this.reportId, required this.childId, required this.caseId, required this.recipientType, required this.anonymous, required this.status, required this.createdAt, this.completedAt, this.sealedLink});
+
+  final String reportId;
+  final String childId;
+  final String caseId;
+  final RecipientType recipientType;
+  final bool anonymous;
+  final ReportStatus status;
+  final String createdAt;
+  final String? completedAt;
+  /// The share link (its key is in the #fragment), sealed with the family key. Only the parent's phone can open it.
+  final String? sealedLink;
+
+  factory Report.fromJson(Map<String, dynamic> json) => Report(
+        reportId: json['reportId'] as String,
+        childId: json['childId'] as String,
+        caseId: json['caseId'] as String,
+        recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        anonymous: json['anonymous'] as bool,
+        status: ReportStatus.fromWire(json['status'] as String),
+        createdAt: json['createdAt'] as String,
+        completedAt: json['completedAt'] == null ? null : json['completedAt'] as String,
+        sealedLink: json['sealedLink'] == null ? null : json['sealedLink'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'reportId': reportId,
+        'childId': childId,
+        'caseId': caseId,
+        'recipientType': recipientType.wire,
+        'anonymous': anonymous,
+        'status': status.wire,
+        'createdAt': createdAt,
+        if (completedAt != null) 'completedAt': completedAt!,
+        if (sealedLink != null) 'sealedLink': sealedLink!,
+      };
+}
+
+class ReportList {
+  const ReportList({required this.reports});
+
+  final List<Report> reports;
+
+  factory ReportList.fromJson(Map<String, dynamic> json) => ReportList(
+        reports: (json['reports'] as List<dynamic>).map((e) => Report.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'reports': reports.map((e) => e.toJson()).toList(),
+      };
+}
+
+/// A parent's report request, delivered to the child's phone at its heartbeat. The phone builds the case file only if the family-key signature verifies.
+class ReportOrder {
+  const ReportOrder({required this.reportId, required this.caseId, required this.recipientType, required this.anonymous, required this.signature, this.sealedChildName, required this.requestedAt});
+
+  final String reportId;
+  final String caseId;
+  final RecipientType recipientType;
+  /// Leave out everything that could identify the child.
+  final bool anonymous;
+  final String signature;
+  /// The child's name as the parent knows it, sealed with the family key, so the phone can withhold messages that name the child. The server cannot read it.
+  final String? sealedChildName;
+  final String requestedAt;
+
+  factory ReportOrder.fromJson(Map<String, dynamic> json) => ReportOrder(
+        reportId: json['reportId'] as String,
+        caseId: json['caseId'] as String,
+        recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        anonymous: json['anonymous'] as bool,
+        signature: json['signature'] as String,
+        sealedChildName: json['sealedChildName'] == null ? null : json['sealedChildName'] as String,
+        requestedAt: json['requestedAt'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'reportId': reportId,
+        'caseId': caseId,
+        'recipientType': recipientType.wire,
+        'anonymous': anonymous,
+        'signature': signature,
+        if (sealedChildName != null) 'sealedChildName': sealedChildName!,
+        'requestedAt': requestedAt,
+      };
+}
+
+/// POST /v1/guardian/children/{childId}/reports. The parent reports a case. Signed with the family key over reportId|caseId|recipientType|anonymous.
+class ReportRequest {
+  const ReportRequest({required this.reportId, required this.caseId, required this.recipientType, required this.anonymous, required this.signature, this.sealedChildName});
+
+  final String reportId;
+  final String caseId;
+  final RecipientType recipientType;
+  final bool anonymous;
+  final String signature;
+  final String? sealedChildName;
+
+  factory ReportRequest.fromJson(Map<String, dynamic> json) => ReportRequest(
+        reportId: json['reportId'] as String,
+        caseId: json['caseId'] as String,
+        recipientType: RecipientType.fromWire(json['recipientType'] as String),
+        anonymous: json['anonymous'] as bool,
+        signature: json['signature'] as String,
+        sealedChildName: json['sealedChildName'] == null ? null : json['sealedChildName'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'reportId': reportId,
+        'caseId': caseId,
+        'recipientType': recipientType.wire,
+        'anonymous': anonymous,
+        'signature': signature,
+        if (sealedChildName != null) 'sealedChildName': sealedChildName!,
+      };
+}
+
+/// POST /v1/guardian/reports/{reportId}/result, from the child's phone (device-signed).
+class ReportResultRequest {
+  const ReportResultRequest({required this.status, this.sealedLink});
+
+  final ReportOutcome status;
+  final String? sealedLink;
+
+  factory ReportResultRequest.fromJson(Map<String, dynamic> json) => ReportResultRequest(
+        status: ReportOutcome.fromWire(json['status'] as String),
+        sealedLink: json['sealedLink'] == null ? null : json['sealedLink'] as String,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'status': status.wire,
+        if (sealedLink != null) 'sealedLink': sealedLink!,
       };
 }
 
@@ -1846,6 +2069,7 @@ abstract final class Events {
   static const EventSpec<CasefileCaseEscalatedPayload> casefileCaseEscalated = EventSpec('casefile.case.escalated', 1, 'casefile', 'phone_to_cloud', false, CasefileCaseEscalatedPayload.fromJson);
   static const EventSpec<CasefileCaseUpdatedPayload> casefileCaseUpdated = EventSpec('casefile.case.updated', 1, 'casefile', 'phone_to_cloud', false, CasefileCaseUpdatedPayload.fromJson);
   static const EventSpec<CasefileEvidenceSealedPayload> casefileEvidenceSealed = EventSpec('casefile.evidence.sealed', 1, 'casefile', 'phone', false, CasefileEvidenceSealedPayload.fromJson);
+  static const EventSpec<CasefileReportReadyPayload> casefileReportReady = EventSpec('casefile.report.ready', 1, 'casefile', 'phone', true, CasefileReportReadyPayload.fromJson);
   static const EventSpec<CasefileShareCompletedPayload> casefileShareCompleted = EventSpec('casefile.share.completed', 1, 'casefile', 'cloud', false, CasefileShareCompletedPayload.fromJson);
   static const EventSpec<CasefileShareRequestedPayload> casefileShareRequested = EventSpec('casefile.share.requested', 1, 'casefile', 'phone_to_cloud', false, CasefileShareRequestedPayload.fromJson);
   static const EventSpec<CompanionAdviceShownPayload> companionAdviceShown = EventSpec('companion.advice.shown', 1, 'companion', 'phone_to_cloud', false, CompanionAdviceShownPayload.fromJson);
@@ -1855,6 +2079,7 @@ abstract final class Events {
   static const EventSpec<GuardianAlertSentPayload> guardianAlertSent = EventSpec('guardian.alert.sent', 1, 'guardian', 'cloud', false, GuardianAlertSentPayload.fromJson);
   static const EventSpec<GuardianPairingCompletedPayload> guardianPairingCompleted = EventSpec('guardian.pairing.completed', 1, 'guardian', 'cloud_to_phone', false, GuardianPairingCompletedPayload.fromJson);
   static const EventSpec<GuardianPolicyUpdatedPayload> guardianPolicyUpdated = EventSpec('guardian.policy.updated', 1, 'guardian', 'cloud_to_phone', false, GuardianPolicyUpdatedPayload.fromJson);
+  static const EventSpec<GuardianReportRequestedPayload> guardianReportRequested = EventSpec('guardian.report.requested', 1, 'guardian', 'phone', true, GuardianReportRequestedPayload.fromJson);
   static const EventSpec<GuardianShareApprovedPayload> guardianShareApproved = EventSpec('guardian.share.approved', 1, 'guardian', 'cloud_to_phone', false, GuardianShareApprovedPayload.fromJson);
   static const EventSpec<GuardianShareDeclinedPayload> guardianShareDeclined = EventSpec('guardian.share.declined', 1, 'guardian', 'cloud_to_phone', false, GuardianShareDeclinedPayload.fromJson);
   static const EventSpec<SentinelCaptureReadyPayload> sentinelCaptureReady = EventSpec('sentinel.capture.ready', 1, 'sentinel', 'phone', true, SentinelCaptureReadyPayload.fromJson);
@@ -1866,6 +2091,7 @@ abstract final class Events {
     casefileCaseEscalated,
     casefileCaseUpdated,
     casefileEvidenceSealed,
+    casefileReportReady,
     casefileShareCompleted,
     casefileShareRequested,
     companionAdviceShown,
@@ -1875,6 +2101,7 @@ abstract final class Events {
     guardianAlertSent,
     guardianPairingCompleted,
     guardianPolicyUpdated,
+    guardianReportRequested,
     guardianShareApproved,
     guardianShareDeclined,
     sentinelCaptureReady,

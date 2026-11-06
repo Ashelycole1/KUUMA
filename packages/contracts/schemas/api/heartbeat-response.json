@@ -26,6 +26,13 @@
         "$ref": "approval-result.json"
       },
       "description": "Parent decisions on this child's approval requests not yet delivered."
+    },
+    "reports": {
+      "type": "array",
+      "items": {
+        "$ref": "../types/report-order.json"
+      },
+      "description": "Parent report requests for this child not yet delivered."
     }
   }
 }
